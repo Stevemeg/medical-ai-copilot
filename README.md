@@ -126,7 +126,7 @@ All answers are grounded in the retrieved document chunks and include document-l
 
 ---
 
-##  Why This Matters (For Recruiters)
+##  Why This Matters
 
 This project demonstrates:
 - **RAG system design** — building a production-style retrieval pipeline from scratch (chunking → embedding → indexing → retrieval → generation)
