@@ -160,7 +160,4 @@ This system provides informational responses based on indexed medical documents.
 
 ---
 
-##  Contact
 
-**[Your Name]**  
-[your.email@example.com] | [LinkedIn URL] | [GitHub URL]
