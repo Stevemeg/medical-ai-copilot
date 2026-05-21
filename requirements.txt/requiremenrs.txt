@@ -1,6 +1,0 @@
-streamlit
-sentence-transformers
-faiss-cpu
-torch
-transformers
-nltk
