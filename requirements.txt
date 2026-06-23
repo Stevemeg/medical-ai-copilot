@@ -1,11 +1,11 @@
 streamlit
-langchain
-langchain-community
 faiss-cpu
 sentence-transformers
-pypdf
-python-dotenv
+torch
+pdfplumber
 groq
-openai
 tiktoken
+nltk
+tqdm
 numpy
+rank_bm25
