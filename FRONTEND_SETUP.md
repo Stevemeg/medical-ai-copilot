@@ -1,68 +1,19 @@
-# Running the new custom frontend
+# Alternative HTML patient workspace
 
-This replaces the Streamlit UI (`app.py`) with a real, custom-built
-HTML/CSS/JS frontend and a small FastAPI backend. `app.py` still exists
-and still works independently if you ever want the Streamlit version back
--- this is an additional way to run the same underlying RAG pipeline, not
-a replacement for the Python backend logic in `backend/rag_pipeline.py`
-and `embeddings/retrieve.py`, which now enforce source lifecycle policies.
-
-## Why two processes now
-
-A real, fully custom interface (true pixel control, custom animations, no
-fighting a framework's default component styling) needs a real frontend
-serving real HTML/CSS/JS, separate from the Python backend that does the
-actual retrieval and generation work. This is the standard architecture
-for this kind of app -- it's not extra complexity for its own sake.
-
-## Step 1: Install dependencies
+The primary deployed interface is `app.py` (Streamlit). `frontend/index.html` is a second client for the same synthetic patient workflow and Ask Evidence API. It requires the FastAPI server.
 
 From the repository root with Python 3.11+:
 
-```
+```bash
 pip install -r requirements.txt
+uvicorn api_server:app --port 8000
 ```
 
-FastAPI, Uvicorn, and the other runtime dependencies are declared there.
+In another terminal:
 
-## Step 2: Start the API backend
-
-From the project root:
-
-```
-uvicorn api_server:app --reload --port 8000
-```
-
-Leave this running. You should see Uvicorn's startup log and
-`Application startup complete.` Confirm it's working by opening
-`http://localhost:8000/api/health` in a browser -- it should show
-`{"status":"ok"}`.
-
-## Step 3: Open the frontend
-
-Just open `frontend/index.html` directly in your browser (double-click
-it, or right-click → Open with → your browser). No build step, no server
-needed for the frontend itself -- it's a single static HTML file that
-calls the API backend via `fetch()`.
-
-If your browser blocks `fetch()` calls from a `file://` page for security
-reasons (some browsers do), serve the frontend folder with Python's
-built-in server instead:
-
-```
+```bash
 cd frontend
 python -m http.server 5500
 ```
 
-Then open `http://localhost:5500` in your browser.
-
-## What to expect
-
-- If the API backend isn't running, you'll see a red banner at the top of
-  the page ("Can't reach the API server...") instead of a silent failure.
-- The example question chips and "Indexed sources" panel work identically
-  to before, just rendered with full custom styling instead of Streamlit
-  widgets.
-- Citations group by document with combined, sorted page ranges (e.g.
-  "NICE NG19 — Diabetic Foot Problems · pp.6-7, 13-16, 27-29"), same logic
-  verified in the Streamlit version, now living in `api_server.py`.
+Open `http://localhost:5500`. The HTML client calls `http://localhost:8000`; change the `API` constant in `frontend/index.html` if the server uses another address. Its tabs show Patients, Clinical Review, Ask Evidence, and Knowledge Sources. Demo fixtures and imported patient snapshots use a local SQLite file that is ignored by Git. Do not import real patient records; the prototype has no authentication or production data protections.

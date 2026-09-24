@@ -19,14 +19,15 @@ from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
-from backend.rag_pipeline import answer_question
 from backend.knowledge_models import RetrievalPolicy
 from backend.source_registry import SourceRegistry
+from backend.patient_api import router as patient_router
 
 app = FastAPI(title="Medical AI Copilot API")
+app.include_router(patient_router)
 
 # CORS: wide open deliberately. This is a local-dev / portfolio deployment
-# with no patient data and no auth -- not a multi-tenant production
+# with synthetic patient data and no auth -- not a multi-tenant production
 # service. If this is ever deployed somewhere with real users or data,
 # restrict allow_origins to the actual frontend's domain.
 app.add_middleware(
@@ -90,15 +91,19 @@ def group_sources(raw_sources: list[str]) -> list[dict]:
         match = re.search(r"\d+", page_str)
         return int(match.group()) if match else 0
 
-    return [
-        {"name": name, "pages": sorted(grouped[name], key=page_sort_key)}
-        for name in order
-    ]
+    return [{"name": name, "pages": sorted(grouped[name], key=page_sort_key)} for name in order]
 
 
 class AskRequest(BaseModel):
     question: str
     policy: RetrievalPolicy = RetrievalPolicy.CURRENT_CLINICAL
+
+
+def answer_question(question: str, policy: RetrievalPolicy):
+    # Load the retrieval model only for evidence requests, not patient API imports.
+    from backend.rag_pipeline import answer_question as run
+
+    return run(question, policy=policy)
 
 
 @app.get("/api/health")
@@ -113,9 +118,26 @@ def examples():
 
 @app.get("/api/sources")
 def sources():
-    names = [SOURCE_DISPLAY_NAMES[v.legacy_source] for v in _registry.versions.values()
-             if _registry.eligible({"version_id": v.version_id}, RetrievalPolicy.CURRENT_CLINICAL)]
+    names = [
+        SOURCE_DISPLAY_NAMES[v.legacy_source]
+        for v in _registry.versions.values()
+        if _registry.eligible({"version_id": v.version_id}, RetrievalPolicy.CURRENT_CLINICAL)
+    ]
     return {"sources": sorted(names)}
+
+
+@app.get("/v1/knowledge-sources")
+def knowledge_sources():
+    return [
+        {
+            "title": _registry.documents[v.document_id].canonical_title,
+            "publisher": _registry.documents[v.document_id].publisher,
+            "source_type": _registry.documents[v.document_id].source_type,
+            "lifecycle": v.status,
+            "version": v.version_label,
+        }
+        for v in _registry.versions.values()
+    ]
 
 
 @app.post("/api/ask")

@@ -7,14 +7,12 @@ Usage:
     python embeddings/debug_sinbad.py
 """
 
-import json
 import numpy as np
-import faiss
 
 from pathlib import Path
-from sentence_transformers import SentenceTransformer
 
 import sys
+
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 import retrieve  # reuse the real module's loaded indexes, BM25, thresholds, etc.
 
@@ -68,15 +66,19 @@ print("=" * 70)
 print("STEP 4: What does the fused RRF comparison actually produce?")
 print("=" * 70)
 clinical_relevant = clinical_distances[0][0] <= retrieve.CLINICAL_RELEVANCE_THRESHOLD
-anatomy_relevant = anatomy_distances[0][0] <= retrieve.ANATOMY_RELEVANCE_THRESHOLD if retrieve.anatomy_index is not None else False
+anatomy_relevant = (
+    anatomy_distances[0][0] <= retrieve.ANATOMY_RELEVANCE_THRESHOLD if retrieve.anatomy_index is not None else False
+)
 
 clinical_fused, clinical_top_rrf = (
     retrieve._hybrid_results(clinical_indices[0], retrieve.clinical_bm25, retrieve.clinical_metadata, QUERY, 5)
-    if clinical_relevant else (None, -1.0)
+    if clinical_relevant
+    else (None, -1.0)
 )
 anatomy_fused, anatomy_top_rrf = (
     retrieve._hybrid_results(anatomy_indices[0], retrieve.anatomy_bm25, retrieve.anatomy_metadata, QUERY, 5)
-    if anatomy_relevant else (None, -1.0)
+    if anatomy_relevant
+    else (None, -1.0)
 )
 
 print("Clinical top RRF score:", clinical_top_rrf)

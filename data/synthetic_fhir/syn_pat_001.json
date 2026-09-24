@@ -1,0 +1,124 @@
+{
+  "resourceType": "Bundle",
+  "id": "synthetic-bundle-1",
+  "type": "collection",
+  "entry": [
+    {
+      "resource": {
+        "resourceType": "Patient",
+        "id": "SYN-PAT-001",
+        "meta": {
+          "tag": [
+            {
+              "system": "urn:medical-ai-copilot:synthetic",
+              "code": "synthetic"
+            }
+          ]
+        },
+        "identifier": [
+          {
+            "system": "urn:medical-ai-copilot:synthetic",
+            "value": "SYN-PAT-001"
+          }
+        ],
+        "name": [
+          {
+            "text": "Synthetic Patient A"
+          }
+        ],
+        "birthDate": "1972-04-12",
+        "gender": "female"
+      }
+    },
+    {
+      "resource": {
+        "resourceType": "Condition",
+        "id": "cond-a1",
+        "subject": {
+          "reference": "Patient/SYN-PAT-001"
+        },
+        "code": {
+          "text": "Type 2 diabetes mellitus",
+          "coding": [
+            {
+              "system": "http://hl7.org/fhir/sid/icd-10",
+              "code": "E11.9",
+              "display": "Type 2 diabetes mellitus"
+            }
+          ]
+        },
+        "clinicalStatus": {
+          "coding": [
+            {
+              "code": "active"
+            }
+          ]
+        },
+        "onsetDateTime": "2021-05-11",
+        "recordedDate": "2021-05-11"
+      }
+    },
+    {
+      "resource": {
+        "resourceType": "MedicationRequest",
+        "id": "med-a1",
+        "subject": {
+          "reference": "Patient/SYN-PAT-001"
+        },
+        "medicationCodeableConcept": {
+          "text": "Metformin"
+        },
+        "status": "active",
+        "intent": "order",
+        "authoredOn": "2025-04-08"
+      }
+    },
+    {
+      "resource": {
+        "resourceType": "Observation",
+        "id": "obs-a1",
+        "subject": {
+          "reference": "Patient/SYN-PAT-001"
+        },
+        "code": {
+          "text": "Hemoglobin A1c",
+          "coding": [
+            {
+              "system": "http://loinc.org",
+              "code": "4548-4",
+              "display": "Hemoglobin A1c"
+            }
+          ]
+        },
+        "status": "final",
+        "effectiveDateTime": "2025-08-12",
+        "valueQuantity": {
+          "value": 7.2,
+          "unit": "%"
+        }
+      }
+    },
+    {
+      "resource": {
+        "resourceType": "Encounter",
+        "id": "enc-a1",
+        "subject": {
+          "reference": "Patient/SYN-PAT-001"
+        },
+        "status": "finished",
+        "class": {
+          "code": "AMB"
+        },
+        "type": [
+          {
+            "text": "Outpatient visit"
+          }
+        ],
+        "period": {
+          "start": "2025-08-12T09:00:00Z",
+          "end": "2025-08-12T09:30:00Z"
+        }
+      }
+    }
+  ]
+}

@@ -1,0 +1,269 @@
+{
+  "resourceType": "Bundle",
+  "id": "synthetic-bundle-3",
+  "type": "collection",
+  "entry": [
+    {
+      "resource": {
+        "resourceType": "Patient",
+        "id": "SYN-PAT-003",
+        "meta": {
+          "tag": [
+            {
+              "system": "urn:medical-ai-copilot:synthetic",
+              "code": "synthetic"
+            }
+          ]
+        },
+        "identifier": [
+          {
+            "system": "urn:medical-ai-copilot:synthetic",
+            "value": "SYN-PAT-003"
+          }
+        ],
+        "name": [
+          {
+            "text": "Synthetic Patient C"
+          }
+        ],
+        "birthDate": "1958-02-18",
+        "gender": "female"
+      }
+    },
+    {
+      "resource": {
+        "resourceType": "Condition",
+        "id": "cond-c1",
+        "subject": {
+          "reference": "Patient/SYN-PAT-003"
+        },
+        "code": {
+          "text": "Type 2 diabetes mellitus",
+          "coding": [
+            {
+              "system": "http://hl7.org/fhir/sid/icd-10",
+              "code": "E11.9",
+              "display": "Type 2 diabetes mellitus"
+            }
+          ]
+        },
+        "clinicalStatus": {
+          "coding": [
+            {
+              "code": "active"
+            }
+          ]
+        },
+        "onsetDateTime": "2020-06-03",
+        "recordedDate": "2020-06-03"
+      }
+    },
+    {
+      "resource": {
+        "resourceType": "Condition",
+        "id": "cond-c2",
+        "subject": {
+          "reference": "Patient/SYN-PAT-003"
+        },
+        "code": {
+          "text": "Essential hypertension",
+          "coding": [
+            {
+              "system": "http://hl7.org/fhir/sid/icd-10",
+              "code": "I10",
+              "display": "Essential hypertension"
+            }
+          ]
+        },
+        "clinicalStatus": {
+          "coding": [
+            {
+              "code": "active"
+            }
+          ]
+        },
+        "onsetDateTime": "2022-09-20",
+        "recordedDate": "2022-09-20"
+      }
+    },
+    {
+      "resource": {
+        "resourceType": "MedicationRequest",
+        "id": "med-c1",
+        "subject": {
+          "reference": "Patient/SYN-PAT-003"
+        },
+        "medicationCodeableConcept": {
+          "text": "Metformin"
+        },
+        "status": "active",
+        "intent": "order",
+        "authoredOn": "2025-01-08"
+      }
+    },
+    {
+      "resource": {
+        "resourceType": "MedicationRequest",
+        "id": "med-c2",
+        "subject": {
+          "reference": "Patient/SYN-PAT-003"
+        },
+        "medicationCodeableConcept": {
+          "text": "Amlodipine"
+        },
+        "status": "active",
+        "intent": "order",
+        "authoredOn": "2025-01-08"
+      }
+    },
+    {
+      "resource": {
+        "resourceType": "Observation",
+        "id": "obs-c1",
+        "subject": {
+          "reference": "Patient/SYN-PAT-003"
+        },
+        "code": {
+          "text": "Hemoglobin A1c",
+          "coding": [
+            {
+              "system": "http://loinc.org",
+              "code": "4548-4",
+              "display": "Hemoglobin A1c"
+            }
+          ]
+        },
+        "status": "final",
+        "effectiveDateTime": "2025-02-12",
+        "valueQuantity": {
+          "value": 7.4,
+          "unit": "%"
+        }
+      }
+    },
+    {
+      "resource": {
+        "resourceType": "Observation",
+        "id": "obs-c2",
+        "subject": {
+          "reference": "Patient/SYN-PAT-003"
+        },
+        "code": {
+          "text": "Hemoglobin A1c",
+          "coding": [
+            {
+              "system": "http://loinc.org",
+              "code": "4548-4",
+              "display": "Hemoglobin A1c"
+            }
+          ]
+        },
+        "status": "final",
+        "effectiveDateTime": "2025-08-12",
+        "valueQuantity": {
+          "value": 7.1,
+          "unit": "%"
+        }
+      }
+    },
+    {
+      "resource": {
+        "resourceType": "Observation",
+        "id": "obs-c3",
+        "subject": {
+          "reference": "Patient/SYN-PAT-003"
+        },
+        "code": {
+          "text": "Blood pressure",
+          "coding": [
+            {
+              "system": "http://loinc.org",
+              "code": "85354-9",
+              "display": "Blood pressure"
+            }
+          ]
+        },
+        "status": "final",
+        "effectiveDateTime": "2025-08-12",
+        "component": [
+          {
+            "code": {
+              "text": "Systolic blood pressure",
+              "coding": [
+                {
+                  "system": "http://loinc.org",
+                  "code": "8480-6",
+                  "display": "Systolic blood pressure"
+                }
+              ]
+            },
+            "valueQuantity": {
+              "value": 136,
+              "unit": "mm[Hg]"
+            }
+          },
+          {
+            "code": {
+              "text": "Diastolic blood pressure",
+              "coding": [
+                {
+                  "system": "http://loinc.org",
+                  "code": "8462-4",
+                  "display": "Diastolic blood pressure"
+                }
+              ]
+            },
+            "valueQuantity": {
+              "value": 82,
+              "unit": "mm[Hg]"
+            }
+          }
+        ]
+      }
+    },
+    {
+      "resource": {
+        "resourceType": "Encounter",
+        "id": "enc-c1",
+        "subject": {
+          "reference": "Patient/SYN-PAT-003"
+        },
+        "status": "finished",
+        "class": {
+          "code": "AMB"
+        },
+        "type": [
+          {
+            "text": "Outpatient visit"
+          }
+        ],
+        "period": {
+          "start": "2025-02-12T11:00:00Z",
+          "end": "2025-02-12T11:25:00Z"
+        }
+      }
+    },
+    {
+      "resource": {
+        "resourceType": "Encounter",
+        "id": "enc-c2",
+        "subject": {
+          "reference": "Patient/SYN-PAT-003"
+        },
+        "status": "finished",
+        "class": {
+          "code": "AMB"
+        },
+        "type": [
+          {
+            "text": "Outpatient visit"
+          }
+        ],
+        "period": {
+          "start": "2025-08-12T11:00:00Z",
+          "end": "2025-08-12T11:25:00Z"
+        }
+      }
+    }
+  ]
+}

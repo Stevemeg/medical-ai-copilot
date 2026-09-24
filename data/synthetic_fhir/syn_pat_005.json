@@ -1,0 +1,147 @@
+{
+  "resourceType": "Bundle",
+  "id": "synthetic-bundle-5",
+  "type": "collection",
+  "entry": [
+    {
+      "resource": {
+        "resourceType": "Patient",
+        "id": "SYN-PAT-005",
+        "meta": {
+          "tag": [
+            {
+              "system": "urn:medical-ai-copilot:synthetic",
+              "code": "synthetic"
+            }
+          ]
+        },
+        "identifier": [
+          {
+            "system": "urn:medical-ai-copilot:synthetic",
+            "value": "SYN-PAT-005"
+          }
+        ],
+        "name": [
+          {
+            "text": "Synthetic Patient E"
+          }
+        ],
+        "birthDate": "1975-09-30",
+        "gender": "female"
+      }
+    },
+    {
+      "resource": {
+        "resourceType": "MedicationRequest",
+        "id": "med-e1",
+        "subject": {
+          "reference": "Patient/SYN-PAT-005"
+        },
+        "medicationCodeableConcept": {
+          "text": "Amoxicillin"
+        },
+        "status": "stopped",
+        "intent": "order",
+        "authoredOn": "2024-01-05"
+      }
+    },
+    {
+      "resource": {
+        "resourceType": "MedicationRequest",
+        "id": "med-e2",
+        "subject": {
+          "reference": "Patient/SYN-PAT-005"
+        },
+        "medicationCodeableConcept": {
+          "text": "Doxycycline"
+        },
+        "status": "active",
+        "intent": "order",
+        "authoredOn": "2025-03-07"
+      }
+    },
+    {
+      "resource": {
+        "resourceType": "AllergyIntolerance",
+        "id": "allergy-e1",
+        "patient": {
+          "reference": "Patient/SYN-PAT-005"
+        },
+        "code": {
+          "text": "Penicillin",
+          "coding": [
+            {
+              "system": "http://snomed.info/sct",
+              "code": "91936005",
+              "display": "Penicillin"
+            }
+          ]
+        },
+        "clinicalStatus": {
+          "coding": [
+            {
+              "code": "active"
+            }
+          ]
+        },
+        "verificationStatus": {
+          "coding": [
+            {
+              "code": "confirmed"
+            }
+          ]
+        },
+        "category": [
+          "medication"
+        ],
+        "criticality": "high",
+        "recordedDate": "2023-06-04",
+        "reaction": [
+          {
+            "manifestation": [
+              {
+                "text": "Rash"
+              }
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "resource": {
+        "resourceType": "Encounter",
+        "id": "enc-e1",
+        "subject": {
+          "reference": "Patient/SYN-PAT-005"
+        },
+        "status": "finished",
+        "class": {
+          "code": "AMB"
+        },
+        "type": [
+          {
+            "text": "Outpatient visit"
+          }
+        ],
+        "period": {
+          "start": "2025-03-07T08:00:00Z",
+          "end": "2025-03-07T08:20:00Z"
+        }
+      }
+    },
+    {
+      "resource": {
+        "resourceType": "Procedure",
+        "id": "proc-e1",
+        "subject": {
+          "reference": "Patient/SYN-PAT-005"
+        },
+        "code": {
+          "text": "Synthetic specimen collection"
+        },
+        "status": "completed",
+        "performedDateTime": "2025-03-07T08:15:00Z"
+      }
+    }
+  ]
+}

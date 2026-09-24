@@ -1,8 +1,8 @@
 <div align="center">
 
-# Medical AI Copilot — RAG Clinical Assistant
+# Medical AI Copilot — Synthetic Patient Review and Governed Evidence
 
-**A retrieval-augmented medical knowledge prototype with a governed source registry, lifecycle-aware retrieval, page-level source citations, hybrid search, and an audit trail.**
+**A medical AI copilot prototype combining governed evidence retrieval with structured synthetic patient-context review.**
 
 [![Python](https://img.shields.io/badge/python-3.11%2B-blue.svg)](https://www.python.org/)
 [![Streamlit](https://img.shields.io/badge/UI-Streamlit-FF4B4B.svg)](https://streamlit.io/)
@@ -51,6 +51,10 @@ In healthcare, factual reliability and **traceability** are not nice-to-haves. A
 
 ## The Solution
 
+The primary workspace now loads fictional FHIR R4-compatible patient Bundles, normalizes them into a typed patient context, and creates reproducible review snapshots. It shows supplied conditions, medications, allergies, observations, encounters, a deterministic timeline, and record availability. [Patient context documentation](PATIENT_CONTEXT.md) describes the supported subset and limitations. Clinical rule evaluation, diagnosis, and treatment recommendations are not implemented.
+
+Ask Evidence remains available as a separate general question workflow. Patient records are not automatically provided to it.
+
 A RAG pipeline that traces retrieved context to a registered source version and page:
 
 ```
@@ -64,6 +68,11 @@ Question -> registry policy filter -> hybrid retrieval (FAISS + BM25/RRF) -> rel
 - Logs every interaction to a **hash-chained, tamper-evident** audit trail
 
 ## Features
+
+**Synthetic patient review**
+- Five bundled fictional patients can be selected; supported synthetic collection Bundles can also be imported.
+- Normalized patient context, stable content hash, local SQLite persistence, deterministic timeline, and immutable review snapshots.
+- Streamlit and the alternative HTML client place patient review first, with Ask Evidence and source visibility in separate tabs.
 
 **Retrieval**
 - **Policy-aware dual-index retrieval**: only eligible source versions enter the selected FAISS/BM25 view; historical and reference modes are explicit.
@@ -92,10 +101,15 @@ Question -> registry policy filter -> hybrid retrieval (FAISS + BM25/RRF) -> rel
 
 ## Architecture
 
-The [knowledge governance guide](KNOWLEDGE_GOVERNANCE.md) contains the complete corpus audit, lifecycle policy, and rebuild procedure.
+The [knowledge governance guide](KNOWLEDGE_GOVERNANCE.md) contains the corpus audit, lifecycle policy, and rebuild procedure. The [patient context guide](PATIENT_CONTEXT.md) describes the supported FHIR subset and review snapshots.
 
 ```mermaid
 flowchart LR
+    FHIR[Synthetic FHIR collection Bundle] --> ADAPT[Validation and FHIR adapter]
+    ADAPT --> CTX[Normalized PatientContext]
+    CTX --> HASH[Context hash and SQLite snapshot]
+    HASH --> REVIEW[ClinicalReview and timeline]
+    REVIEW --> UI[Patient review workspace]
     PDF[Registered source PDF] --> REG[Registry and SHA-256 validation]
     REG --> PARSE[Page extraction and chunking]
     PARSE --> IDX[FAISS indexes and provenance manifests]
@@ -105,6 +119,7 @@ flowchart LR
     GATE --> GEN[Context-bounded generation]
     GEN --> CITE[Answer and source-version citations]
     CITE --> AUDIT[Hash-chained audit log]
+    CITE --> ASK[Ask Evidence]
 ```
 
 The original two-index storage keeps the large anatomy textbook separate from the other sources. At query time, policy filtering selects eligible vectors before semantic or lexical ranking. This prevents historical reports and the superseded NG28 snapshot from influencing the default clinical search.
@@ -124,47 +139,13 @@ Neither method is sufficient alone. Fusing both via RRF was a real fix for a rea
 
 ## User Interface
 
-A custom-themed Streamlit interface — question input, grounded answer, and expandable page-level citations for every response.
+The Streamlit workspace opens on **Patients**, where a bundled synthetic patient or supported JSON Bundle can be imported. **Clinical Review** creates and displays a persisted snapshot. **Ask Evidence** retains the governed general Q&A path, and **Knowledge Sources** shows registered lifecycle states. The alternative HTML client provides the same main workflow through the versioned API.
 
-| Query & grounded answer | Source citations |
-|---|---|
-| ![Query interface](assets/screenshots/Screenshot%202026-06-23%20111227.png) | ![Citations](assets/screenshots/Screenshot%202026-06-23%20112353.png) |
-
-| Relevance gate (out-of-scope refusal) | Audit trail |
-|---|---|
-| ![Relevance gate](assets/screenshots/Screenshot%202026-06-23%20114942.png) | ![Audit log](assets/screenshots/Screenshot%202026-06-23%20120845.png) |
-
-**Interface flow**
-
-Screenshots above show the earlier demo corpus; the current source list follows the registry policy.
-
-```
-┌──────────────────────────────────────────────────────────────┐
-│  Medical AI Copilot                                          │
-├──────────────────────────────────────────────────────────────┤
-│  Ask a clinical question:                                    │
-│  ┌────────────────────────────────────────────────────────┐  │
-│  │ How should a diabetic foot ulcer be managed?           │  │
-│  └────────────────────────────────────────────────────────┘  │
-│                                          [ Ask ]             │
-├──────────────────────────────────────────────────────────────┤
-│  ANSWER                                                      │
-│  Management follows a structured assessment pathway…         │
-│                                                              │
-│  ▸ SOURCES                                                   │
-│    NICE NG19 — Diabetic Foot Problems · pp.6-7, 13-15        │
-└──────────────────────────────────────────────────────────────┘
-```
-
-**Example questions to try**
-- How should a diabetic foot ulcer be managed?
-- When should statins be offered for cardiovascular risk reduction?
-- What is the SINBAD classification?
-- How should hypertension be diagnosed?
+Older screenshots in `assets/screenshots/` depict the earlier evidence-only interface and should not be read as pictures of the current patient workspace.
 
 ## Installation
 
-**Requirements:** Python 3.11+ · a [Groq](https://groq.com/) API key
+**Requirements:** Python 3.11+. A [Groq](https://groq.com/) API key is needed only for generated Ask Evidence answers; patient review and deterministic tests do not use it.
 
 ```bash
 git clone https://github.com/Stevemeg/medical-ai-copilot.git
@@ -177,7 +158,7 @@ pip install -r requirements.txt
 
 For development checks, use `pip install -r requirements-dev.txt` and run `pytest`. The registry and committed index provenance can be checked without an LLM key using `python -m backend.source_registry` and `python -m backend.index_provenance`.
 
-**Add secrets** — create `.streamlit/secrets.toml`:
+**For generated Ask Evidence answers**, create `.streamlit/secrets.toml`:
 
 ```toml
 GROQ_API_KEY = "your_api_key"
@@ -270,6 +251,11 @@ medical-ai-copilot/
 │
 ├── backend/
 │   ├── rag_pipeline.py             # Prompting, generation, answer assembly
+│   ├── fhir_adapter.py              # Supported FHIR R4 subset validation and normalization
+│   ├── patient_models.py            # Typed patient and review domain records
+│   ├── patient_context.py           # Context hash, queries, timeline, availability
+│   ├── patient_store.py             # Local SQLite patient and review snapshots
+│   ├── patient_api.py               # Versioned synthetic patient API
 │   ├── config.py                   # Secrets resolution (env var → secrets.toml)
 │   └── audit_log.py                # Tamper-evident hash-chained audit log
 │
@@ -284,7 +270,7 @@ medical-ai-copilot/
 │   └── debug_*.py                  # Reproduction scripts for real retrieval bugs
 │
 ├── frontend/
-│   └── index.html                  # Custom frontend (built, verified, not adopted — see Roadmap)
+│   └── index.html                  # Alternative patient review frontend served with the API
 │
 ├── assets/
 │   ├── architecture.png
@@ -293,6 +279,7 @@ medical-ai-copilot/
 └── data/
     ├── raw_docs/                   # Source PDFs
     ├── processed/                  # Page-tracked extracted text
+    ├── synthetic_fhir/             # Five fictional demo Bundles
     └── vector_store/
         ├── clinical_faiss.index / clinical_metadata.json
         └── anatomy_faiss.index / anatomy_metadata.json
@@ -320,19 +307,12 @@ These are stated plainly rather than buried — each is a real constraint of the
 - **Not for clinical use.** Not intended for diagnosis or treatment decisions — see `COMPLIANCE_CONSIDERATIONS.md` for an honest (non-legal) analysis of what real clinical deployment would require.
 - **Cross-guideline reconciliation (open issue).** Certain queries retrieve a chunk from a topically adjacent guideline, which the model sometimes tries to incorrectly cross-reference rather than ignore. This remains an open limitation; page-level context citations do not verify every generated claim.
 - **Ephemeral audit storage on free tier.** The hash-chaining is real and tested, but Streamlit Community Cloud's filesystem resets on redeploy. The code is correct; this hosting tier doesn't give it persistent storage.
+- **Local synthetic patient storage.** SQLite persists between local requests, but hosted filesystems may reset and there is no authentication. Do not import real patient records.
 - **Cold-start latency** on free-tier deployment.
 
 ## Roadmap
 
-| Status | Milestone |
-|---|---|
-| ✅ | Dual-index hybrid retrieval · RRF fusion · relevance gate · page-level citations · hash-chained audit log · self-contradiction prompt fix · cloud-realistic secrets · public demo deployment |
-| ☐ | Persistent audit storage (hosted DB rather than local SQLite, to survive ephemeral filesystems) |
-| ☐ | Fix cross-guideline reconciliation at the retrieval/context-assembly layer rather than via another prompt instruction (a prompt-level attempt already regressed and was reverted) |
-| ☐ | Expanded clinical guideline coverage |
-| ☐ | PDF upload with dynamic re-indexing |
-
-> **On the custom frontend:** a separate HTML/CSS/JS frontend with an API backend (`api_server.py`, `frontend/index.html`) was built and verified working during development, for pixel-level UI control beyond Streamlit's component model. It was deliberately **not** adopted as the primary interface — a two-process setup needing both services running and communicating correctly was judged too much operational risk for a public demo link, against a Streamlit version that already worked well.
+Phase 1 established governed source versions and lifecycle-aware retrieval. Phase 2 adds synthetic patient context and review snapshots. Clinical rules, real patient integration, and production security are outside this build.
 
 ## Disclaimer
 

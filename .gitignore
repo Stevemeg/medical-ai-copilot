@@ -14,3 +14,5 @@ htmlcov/
 data/processed/*.tmp
 data/vector_store/*.tmp
 data/audit_log.db
+data/patient_context.db
+data/patient_context.db-*

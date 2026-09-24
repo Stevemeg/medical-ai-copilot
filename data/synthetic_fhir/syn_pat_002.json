@@ -1,0 +1,209 @@
+{
+  "resourceType": "Bundle",
+  "id": "synthetic-bundle-2",
+  "type": "collection",
+  "entry": [
+    {
+      "resource": {
+        "resourceType": "Patient",
+        "id": "SYN-PAT-002",
+        "meta": {
+          "tag": [
+            {
+              "system": "urn:medical-ai-copilot:synthetic",
+              "code": "synthetic"
+            }
+          ]
+        },
+        "identifier": [
+          {
+            "system": "urn:medical-ai-copilot:synthetic",
+            "value": "SYN-PAT-002"
+          }
+        ],
+        "name": [
+          {
+            "text": "Synthetic Patient B"
+          }
+        ],
+        "birthDate": "1965-11-02",
+        "gender": "male"
+      }
+    },
+    {
+      "resource": {
+        "resourceType": "Condition",
+        "id": "cond-b1",
+        "subject": {
+          "reference": "Patient/SYN-PAT-002"
+        },
+        "code": {
+          "text": "Essential hypertension",
+          "coding": [
+            {
+              "system": "http://hl7.org/fhir/sid/icd-10",
+              "code": "I10",
+              "display": "Essential hypertension"
+            }
+          ]
+        },
+        "clinicalStatus": {
+          "coding": [
+            {
+              "code": "active"
+            }
+          ]
+        },
+        "onsetDateTime": "2019-03-04",
+        "recordedDate": "2019-03-04"
+      }
+    },
+    {
+      "resource": {
+        "resourceType": "MedicationRequest",
+        "id": "med-b1",
+        "subject": {
+          "reference": "Patient/SYN-PAT-002"
+        },
+        "medicationCodeableConcept": {
+          "text": "Amlodipine"
+        },
+        "status": "active",
+        "intent": "order",
+        "authoredOn": "2025-01-05"
+      }
+    },
+    {
+      "resource": {
+        "resourceType": "Observation",
+        "id": "obs-b1",
+        "subject": {
+          "reference": "Patient/SYN-PAT-002"
+        },
+        "code": {
+          "text": "Blood pressure",
+          "coding": [
+            {
+              "system": "http://loinc.org",
+              "code": "85354-9",
+              "display": "Blood pressure"
+            }
+          ]
+        },
+        "status": "final",
+        "effectiveDateTime": "2025-07-09T10:15:00+05:30",
+        "component": [
+          {
+            "code": {
+              "text": "Systolic blood pressure",
+              "coding": [
+                {
+                  "system": "http://loinc.org",
+                  "code": "8480-6",
+                  "display": "Systolic blood pressure"
+                }
+              ]
+            },
+            "valueQuantity": {
+              "value": 138,
+              "unit": "mm[Hg]"
+            }
+          },
+          {
+            "code": {
+              "text": "Diastolic blood pressure",
+              "coding": [
+                {
+                  "system": "http://loinc.org",
+                  "code": "8462-4",
+                  "display": "Diastolic blood pressure"
+                }
+              ]
+            },
+            "valueQuantity": {
+              "value": 84,
+              "unit": "mm[Hg]"
+            }
+          }
+        ]
+      }
+    },
+    {
+      "resource": {
+        "resourceType": "Observation",
+        "id": "obs-b2",
+        "subject": {
+          "reference": "Patient/SYN-PAT-002"
+        },
+        "code": {
+          "text": "Blood pressure",
+          "coding": [
+            {
+              "system": "http://loinc.org",
+              "code": "85354-9",
+              "display": "Blood pressure"
+            }
+          ]
+        },
+        "status": "final",
+        "effectiveDateTime": "2025-08-09T10:15:00+05:30",
+        "component": [
+          {
+            "code": {
+              "text": "Systolic blood pressure",
+              "coding": [
+                {
+                  "system": "http://loinc.org",
+                  "code": "8480-6",
+                  "display": "Systolic blood pressure"
+                }
+              ]
+            },
+            "valueQuantity": {
+              "value": 132,
+              "unit": "mm[Hg]"
+            }
+          },
+          {
+            "code": {
+              "text": "Diastolic blood pressure",
+              "coding": [
+                {
+                  "system": "http://loinc.org",
+                  "code": "8462-4",
+                  "display": "Diastolic blood pressure"
+                }
+              ]
+            },
+            "valueQuantity": {
+              "value": 82,
+              "unit": "mm[Hg]"
+            }
+          }
+        ]
+      }
+    },
+    {
+      "resource": {
+        "resourceType": "Encounter",
+        "id": "enc-b1",
+        "subject": {
+          "reference": "Patient/SYN-PAT-002"
+        },
+        "status": "finished",
+        "class": {
+          "code": "AMB"
+        },
+        "type": [
+          {
+            "text": "Outpatient visit"
+          }
+        ],
+        "period": {
+          "start": "2025-08-09T10:00:00+05:30",
+          "end": "2025-08-09T10:45:00+05:30"
+        }
+      }
+    }
+  ]
+}

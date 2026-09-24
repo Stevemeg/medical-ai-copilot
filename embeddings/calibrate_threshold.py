@@ -129,7 +129,7 @@ def show_distances(label, questions, index, metadata):
         all_top1.append(top1_dist)
         print(f"  [{top1_dist:7.2f}]  {q!r:60s}  -> {top1_source}")
     arr = np.array(all_top1)
-    print(f"\n  top-1 distance stats for this group:")
+    print("\n  top-1 distance stats for this group:")
     print(f"  min={arr.min():.2f}  max={arr.max():.2f}  mean={arr.mean():.2f}  median={np.median(arr):.2f}")
     return arr
 
@@ -145,7 +145,7 @@ def show_bm25_scores(label, questions, bm25_index):
         all_top1.append(top1)
         print(f"  [{top1:7.3f}]  {q!r:60s}")
     arr = np.array(all_top1)
-    print(f"\n  top-1 BM25 score stats for this group:")
+    print("\n  top-1 BM25 score stats for this group:")
     print(f"  min={arr.min():.3f}  max={arr.max():.3f}  mean={arr.mean():.3f}  median={np.median(arr):.3f}")
     return arr
 
@@ -184,8 +184,12 @@ def calibrate_index(index_name, index, metadata, relevant_questions):
     if bm25_index is None:
         return
 
-    irrelevant_bm25 = show_bm25_scores(f"{index_name.upper()} INDEX -- irrelevant questions (BM25)", IRRELEVANT_QUESTIONS, bm25_index)
-    exact_term_bm25 = show_bm25_scores(f"{index_name.upper()} INDEX -- exact-term questions (BM25)", EXACT_TERM_QUESTIONS, bm25_index)
+    irrelevant_bm25 = show_bm25_scores(
+        f"{index_name.upper()} INDEX -- irrelevant questions (BM25)", IRRELEVANT_QUESTIONS, bm25_index
+    )
+    exact_term_bm25 = show_bm25_scores(
+        f"{index_name.upper()} INDEX -- exact-term questions (BM25)", EXACT_TERM_QUESTIONS, bm25_index
+    )
 
     print(f"\n{'=' * 60}")
     print(f"{index_name.upper()} INDEX BM25 SUMMARY")
