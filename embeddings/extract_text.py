@@ -1,7 +1,8 @@
-import json
 import pdfplumber
 from pathlib import Path
 from tqdm import tqdm
+from backend.source_registry import RegistryError, SourceRegistry
+from backend.ingestion import extract_registered_pdf
 
 # Project root is the parent of this file's parent directory (embeddings/ -> project root)
 BASE_DIR = Path(__file__).resolve().parent.parent
@@ -53,11 +54,16 @@ def extract_pdf_text(pdf_path: Path) -> list[dict]:
     return pages_out
 
 
-for pdf_path in tqdm(list(RAW_DIR.glob("*.pdf"))):
-    pages_out = extract_pdf_text(pdf_path)
+def main() -> None:
+    registry = SourceRegistry()
+    registered = {registry.source_path(v) for v in registry.versions.values()}
+    unknown = {path.resolve() for path in RAW_DIR.glob("*.pdf")} - registered
+    if unknown:
+        raise RegistryError("Unregistered PDF present in raw corpus")
+    for version in tqdm(registry.versions.values()):
+        output_file = extract_registered_pdf(registry, version.version_id, OUT_DIR, extract_pdf_text)
+        print(f"Saved: {output_file.name}")
 
-    output_file = OUT_DIR / f"{pdf_path.stem}.json"
-    with open(output_file, "w", encoding="utf-8") as f:
-        json.dump(pages_out, f, indent=2)
 
-    print(f"Saved: {output_file.name} ({len(pages_out)} pages)")
+if __name__ == "__main__":
+    main()

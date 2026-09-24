@@ -1,0 +1,44 @@
+{
+  "schema_version": 1,
+  "chunks_sha256": "2a35b3cebcb042ff512501aa8b226a8d2741b6b1e4819b0d54ee279fc2f90542",
+  "registry_sha256": "88dfac3f361abf2232430e39f510d6d75f568dfa5b99ca48d956eab654a2bf53",
+  "chunker_version": "sentence-token-page-v1:cl100k_base:600:100",
+  "processed_sources": [
+    {
+      "version_id": "cdc-multiple-chronic-conditions-2025-04-17",
+      "processed_sha256": "c76886dc32a59b655be293d9ea62c2287bc8d257d765c67b8f61e6126e615660"
+    },
+    {
+      "version_id": "moh-diabetes-257fdae09864",
+      "processed_sha256": "7d03cd8a3ed338c78052f80a94a536f350e88c6263bd0c401aa7eb1194402785"
+    },
+    {
+      "version_id": "nice-ng136-2026-02-26",
+      "processed_sha256": "ee097a0c5386f252ffebea2e0267ac96a3cb242def27e47dcdfa6f5a3afdfedc"
+    },
+    {
+      "version_id": "nice-ng19-2019-10-11",
+      "processed_sha256": "e743633514e405c81773c14479125521ea07d7ba5da3bad38c05281a81b4b858"
+    },
+    {
+      "version_id": "nice-ng238-2023-12-14",
+      "processed_sha256": "d200754e808bcb9ec227f02ebde24c0fdac18528365614e7e151ef0b28a93856"
+    },
+    {
+      "version_id": "nice-ng28-2022-06-29",
+      "processed_sha256": "9feff3a8df8390600b1090772c4673f7538e0eb3d70d7d4f69c955e6688a19c4"
+    },
+    {
+      "version_id": "openstax-anatomy-physiology-4f353d6c8e05",
+      "processed_sha256": "517935254376ac2af0f9a7d9d1ba4ce17a31c5930dfe6b9d81db12e175327054"
+    },
+    {
+      "version_id": "who-global-tb-report-2020-10-15",
+      "processed_sha256": "c629dc576bf5fca94b07f72938c1a257ce63f998e3fe0edafa6ef4e58584b95b"
+    },
+    {
+      "version_id": "who-world-malaria-report-2019-12-04",
+      "processed_sha256": "1dfbf1e7df7edb38d426ce4f2b153c3562d16b50f522c5b375f4ebb5548c975c"
+    }
+  ]
+}

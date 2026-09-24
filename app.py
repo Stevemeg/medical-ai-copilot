@@ -8,6 +8,8 @@ import time
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), "..")))
 
 from backend.rag_pipeline import answer_question
+from backend.source_registry import SourceRegistry
+from backend.knowledge_models import RetrievalPolicy
 
 st.set_page_config(
     page_title="Medical AI Copilot",
@@ -19,8 +21,7 @@ st.set_page_config(
 # -----------------------------------
 # Design tokens
 # -----------------------------------
-# See PHASE_5_DESIGN_NOTES.md for the full design rationale. Summary:
-# this app's visual language borrows from how clinical guidelines (NICE,
+# This app's visual language borrows from how clinical guidelines (NICE,
 # WHO) are actually typeset -- numbered recommendation chips, a document-
 # width reading column, and a single restrained clinical-teal accent --
 # rather than generic chatbot or AI-tool defaults.
@@ -35,22 +36,9 @@ HAIRLINE = "#DBDDD7"
 # -----------------------------------
 # Source name mapping
 # -----------------------------------
-# Maps real raw source filenames (as they exist in the indexed corpus) to
-# clean, recruiter-readable display names. Falls back to a cleaned-up
-# version of the raw filename for any source not in this map, so a new
-# corpus document never breaks display -- it just looks slightly less
-# polished until this map is updated.
-SOURCE_DISPLAY_NAMES = {
-    "nice_diabetic_foot_guideline.pdf.pdf.txt": "NICE NG19 — Diabetic Foot Problems",
-    "nice_hypertension_guideline.pdf.pdf.txt": "NICE NG136 — Hypertension",
-    "nice_cvd_lipid_guideline.pdf.pdf.txt": "NICE NG238 — Cardiovascular Risk & Lipids",
-    "nice_type2_diabetes_guideline.pdf.txt": "NICE NG28 — Type 2 Diabetes",
-    "moh_diabetes_mellitus_guideline.pdf.txt": "MoH — Diabetes Mellitus Guideline",
-    "who_doc_1.pdf.txt": "WHO — Tuberculosis Report",
-    "who_doc_2.pdf.txt": "WHO — Malaria Report",
-    "cdc_chronic_disease_overview.pdf.txt": "CDC — Chronic Disease Overview",
-    "openstax_anatomy_physiology.pdf.txt": "OpenStax — Anatomy & Physiology",
-}
+# Resolve legacy citation labels through canonical registry metadata.
+_registry = SourceRegistry()
+SOURCE_DISPLAY_NAMES = {v.legacy_source: _registry.display_name(v) for v in _registry.versions.values()}
 
 
 def clean_fallback_name(raw_source: str) -> str:
@@ -129,7 +117,7 @@ EXAMPLE_QUESTIONS = [
     "How should a diabetic foot ulcer be managed?",
     "When should statins be offered for cardiovascular risk reduction?",
     "What is the SINBAD classification?",
-    "Explain insulin resistance.",
+    "How should hypertension be diagnosed?",
 ]
 
 # -----------------------------------
@@ -405,8 +393,7 @@ st.markdown(
     """
     <div class="disclaimer">
         ⚠️ Educational and research tool only — not a substitute for professional
-        medical advice. Answers are generated from indexed clinical guidelines
-        (NICE, WHO, MoH) and reference material, with sources cited below each answer.
+        medical advice. Default answers use only registered current clinical guidelines, with sources cited below each answer.
     </div>
     """,
     unsafe_allow_html=True,
@@ -440,7 +427,7 @@ if not st.session_state.messages and not st.session_state.pending_question:
     st.markdown('<div class="example-label" style="margin-top:1.6rem;">Indexed sources</div>', unsafe_allow_html=True)
     corpus_chips = "".join(
         f'<span class="corpus-chip">{name}</span>'
-        for name in sorted(set(SOURCE_DISPLAY_NAMES.values()))
+        for name in sorted(SOURCE_DISPLAY_NAMES[v.legacy_source] for v in _registry.versions.values() if _registry.eligible({"version_id": v.version_id}, RetrievalPolicy.CURRENT_CLINICAL))
     )
     st.markdown(f'<div class="corpus-row">{corpus_chips}</div>', unsafe_allow_html=True)
 
@@ -495,7 +482,7 @@ def run_turn(question: str):
         st.markdown('<div class="assistant-marker"></div>', unsafe_allow_html=True)
 
         with st.spinner("Reviewing clinical guidelines..."):
-            result = answer_question(question)
+            result = answer_question(question, policy=RetrievalPolicy.CURRENT_CLINICAL)
 
         st.write_stream(stream_words(result["answer"]))
 
@@ -531,7 +518,7 @@ if prompt := st.chat_input("Ask about a clinical guideline, condition, or treatm
 st.markdown(
     """
     <div class="app-footer">
-        Built on NICE, WHO, MoH, and OpenStax reference material · Retrieval-augmented, citation-grounded
+        Current guideline retrieval from registered sources · Retrieval-augmented, citation-grounded
     </div>
     """,
     unsafe_allow_html=True,

@@ -3,6 +3,10 @@ import numpy as np
 from pathlib import Path
 from sentence_transformers import SentenceTransformer
 import faiss
+from backend.knowledge_models import SourceType
+from backend.source_registry import SourceRegistry
+from backend.index_provenance import validate_chunks_manifest, validate_manifest, write_manifest
+from backend.source_registry import StaleArtifact
 
 # Project root is the parent of this file's parent directory (embeddings/ -> project root)
 BASE_DIR = Path(__file__).resolve().parent.parent
@@ -56,24 +60,16 @@ EMBEDDING_MODEL_NAME = "all-MiniLM-L6-v2"
 # the OLD production index while you think you're testing a new one.
 MODEL_TAG = ""
 
-# Sources to route into the ANATOMY index rather than the CLINICAL index.
-# These are background/educational textbook sources -- useful for
-# foundational physiology questions, but they shouldn't compete with actual
-# clinical guidelines for diagnostic/treatment questions (confirmed in
-# audit: this source was 64-70% of a single mixed index and occasionally
-# out-competed guideline chunks for clinically-relevant queries). Add new
-# source filenames here if more background/textbook material is indexed
-# later -- everything not listed here goes into the clinical index.
-ANATOMY_SOURCES = {
-    "openstax_anatomy_physiology.pdf.txt",
-}
+# Route sources by registered evidence class; retrieval applies lifecycle policies.
+registry = SourceRegistry()
+validate_chunks_manifest(CHUNKS_FILE, registry)
 
 # Load chunks
 with open(CHUNKS_FILE, "r", encoding="utf-8") as f:
     chunks = json.load(f)
 
-clinical_chunks = [c for c in chunks if c["source"] not in ANATOMY_SOURCES]
-anatomy_chunks = [c for c in chunks if c["source"] in ANATOMY_SOURCES]
+clinical_chunks = [registry.enrich(c) for c in chunks if registry.resolve(c)[0].source_type not in (SourceType.TEXTBOOK, SourceType.PATIENT_EDUCATION)]
+anatomy_chunks = [registry.enrich(c) for c in chunks if registry.resolve(c)[0].source_type in (SourceType.TEXTBOOK, SourceType.PATIENT_EDUCATION)]
 
 print(f"Embedding model: {EMBEDDING_MODEL_NAME}")
 print(f"Clinical chunks: {len(clinical_chunks)}")
@@ -81,25 +77,39 @@ print(f"Anatomy chunks: {len(anatomy_chunks)}")
 
 if not clinical_chunks:
     raise ValueError(
-        "No chunks matched the clinical index -- check ANATOMY_SOURCES "
-        "isn't accidentally matching every source filename."
+        "No non-reference chunks are available for indexing."
     )
 if not anatomy_chunks:
     print(
-        "Warning: no chunks matched ANATOMY_SOURCES. The anatomy index "
-        "will be empty. This is fine if you've intentionally removed "
-        "those source files, but check ANATOMY_SOURCES if not."
+        "Warning: no reference chunks are available; reference index will be empty."
     )
 
 # Load embedding model (shared across both indexes -- same embedding space,
 # just partitioned into two separate FAISS indexes)
-model = SentenceTransformer(EMBEDDING_MODEL_NAME)
+model = None
 
 
 def build_index(chunk_list, index_filename, meta_filename, label):
+    global model
+    index_file = VECTOR_DIR / index_filename
+    meta_file = VECTOR_DIR / meta_filename
     if not chunk_list:
+        for path in (index_file, meta_file, index_file.with_suffix(".manifest.json")):
+            path.unlink(missing_ok=True)
         print(f"Skipping {label} index -- no chunks to embed.")
         return
+
+    if index_file.is_file() and meta_file.is_file():
+        try:
+            validate_manifest(index_file, meta_file, registry)
+            if json.loads(meta_file.read_text(encoding="utf-8")) == chunk_list:
+                print(f"Skipping unchanged {label} index.")
+                return
+        except (StaleArtifact, ValueError, OSError):
+            pass
+
+    if model is None:
+        model = SentenceTransformer(EMBEDDING_MODEL_NAME)
 
     texts = [c["text"] for c in chunk_list]
 
@@ -111,12 +121,10 @@ def build_index(chunk_list, index_filename, meta_filename, label):
     index = faiss.IndexFlatL2(dimension)
     index.add(embeddings)
 
-    index_file = VECTOR_DIR / index_filename
-    meta_file = VECTOR_DIR / meta_filename
-
     faiss.write_index(index, str(index_file))
     with open(meta_file, "w", encoding="utf-8") as f:
         json.dump(chunk_list, f, indent=2)
+    write_manifest(index_file, meta_file, registry)
 
     print(f"{label} FAISS index saved to: {index_file}")
     print(f"{label} metadata saved to: {meta_file}")

@@ -7,9 +7,7 @@ component model.
 Run with:
     uvicorn api_server:app --reload --port 8000
 
-The existing Streamlit app (app.py) is untouched and still works
-independently -- this is an additional way to run the same backend logic,
-not a replacement for it.
+The Streamlit app uses the same governed retrieval path.
 """
 
 import re
@@ -22,6 +20,8 @@ from pydantic import BaseModel
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 from backend.rag_pipeline import answer_question
+from backend.knowledge_models import RetrievalPolicy
+from backend.source_registry import SourceRegistry
 
 app = FastAPI(title="Medical AI Copilot API")
 
@@ -37,27 +37,17 @@ app.add_middleware(
 )
 
 # -----------------------------------
-# Source name mapping (same mapping used previously in the Streamlit app,
-# now living here since the frontend is plain JS and shouldn't duplicate
-# this Python-side parsing logic)
+# Source names come from the registry; legacy filename labels remain accepted.
 # -----------------------------------
-SOURCE_DISPLAY_NAMES = {
-    "nice_diabetic_foot_guideline.pdf.pdf.txt": "NICE NG19 — Diabetic Foot Problems",
-    "nice_hypertension_guideline.pdf.pdf.txt": "NICE NG136 — Hypertension",
-    "nice_cvd_lipid_guideline.pdf.pdf.txt": "NICE NG238 — Cardiovascular Risk & Lipids",
-    "nice_type2_diabetes_guideline.pdf.txt": "NICE NG28 — Type 2 Diabetes",
-    "moh_diabetes_mellitus_guideline.pdf.txt": "MoH — Diabetes Mellitus Guideline",
-    "who_doc_1.pdf.txt": "WHO — Tuberculosis Report",
-    "who_doc_2.pdf.txt": "WHO — Malaria Report",
-    "cdc_chronic_disease_overview.pdf.txt": "CDC — Chronic Disease Overview",
-    "openstax_anatomy_physiology.pdf.txt": "OpenStax — Anatomy & Physiology",
-}
+_registry = SourceRegistry()
+SOURCE_DISPLAY_NAMES = {v.legacy_source: _registry.display_name(v) for v in _registry.versions.values()}
+
 
 EXAMPLE_QUESTIONS = [
     "How should a diabetic foot ulcer be managed?",
     "When should statins be offered for cardiovascular risk reduction?",
     "What is the SINBAD classification?",
-    "Explain insulin resistance.",
+    "How should hypertension be diagnosed?",
 ]
 
 
@@ -108,6 +98,7 @@ def group_sources(raw_sources: list[str]) -> list[dict]:
 
 class AskRequest(BaseModel):
     question: str
+    policy: RetrievalPolicy = RetrievalPolicy.CURRENT_CLINICAL
 
 
 @app.get("/api/health")
@@ -120,10 +111,18 @@ def examples():
     return {"questions": EXAMPLE_QUESTIONS}
 
 
+@app.get("/api/sources")
+def sources():
+    names = [SOURCE_DISPLAY_NAMES[v.legacy_source] for v in _registry.versions.values()
+             if _registry.eligible({"version_id": v.version_id}, RetrievalPolicy.CURRENT_CLINICAL)]
+    return {"sources": sorted(names)}
+
+
 @app.post("/api/ask")
 def ask(req: AskRequest):
-    result = answer_question(req.question)
+    result = answer_question(req.question, policy=req.policy)
     return {
         "answer": result["answer"],
         "sources": group_sources(result["sources"]),
+        "citations": result["citations"],
     }

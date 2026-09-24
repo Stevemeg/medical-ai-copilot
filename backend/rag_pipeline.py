@@ -1,9 +1,9 @@
 from embeddings.retrieve import retrieve
 from groq import Groq
-import streamlit as st
 
 from backend.config import get_groq_api_key
 from backend.audit_log import log_interaction
+from backend.knowledge_models import RetrievalPolicy
 
 # -----------------------------------
 # Groq Client
@@ -130,20 +130,21 @@ def call_llm(prompt: str) -> str:
 # Main RAG Pipeline
 # -----------------------------------
 
-def answer_question(question: str, top_k: int = 5):
+def answer_question(question: str, top_k: int = 5, policy: RetrievalPolicy = RetrievalPolicy.CURRENT_CLINICAL):
 
-    retrieved_chunks = retrieve(question, top_k=top_k)
+    retrieved_chunks = retrieve(question, top_k=top_k, policy=policy)
 
     if not retrieved_chunks:
         no_info_answer = "I don't have relevant information on this in the indexed medical documents."
         log_interaction(question, no_info_answer, [])
         return {
             "answer": no_info_answer,
-            "sources": []
+            "sources": [], "citations": []
         }
 
     context = "\n\n".join(
-        f"Source: {c['source']}{format_page_range(c.get('page_start'), c.get('page_end'))}\n"
+        f"Source: {c['publisher']} - {c['canonical_title']} ({c['version_id']}, {c['lifecycle_status']})"
+        f"{format_page_range(c.get('page_start'), c.get('page_end'))}\n"
         f"{sanitize_text(c['text'])}"
         for c in retrieved_chunks
     )
@@ -173,11 +174,16 @@ Answer:
             seen.add(label)
             sources.append(label)
 
+    citations = [{key: c.get(key) for key in (
+        "chunk_id", "document_id", "version_id", "canonical_title", "publisher",
+        "source_type", "jurisdiction", "lifecycle_status", "published_at", "updated_at",
+        "source_url", "page_start", "page_end", "section", "recommendation_id"
+    )} for c in retrieved_chunks]
     log_interaction(question, answer, sources)
 
     return {
         "answer": answer,
-        "sources": sources
+        "sources": sources, "citations": citations
     }
 
 # -----------------------------------

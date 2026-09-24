@@ -1,0 +1,51 @@
+{
+  "schema_version": 1,
+  "index_sha256": "e8ac15799513aaf546e9e6ed22fecb6885d09f5c78d934efebd2df5621c41450",
+  "metadata_sha256": "1e727086bd0179f152b350cc2e081cc82c64c674185d859fe2ee5b43e68c5ff3",
+  "registry_sha256": "88dfac3f361abf2232430e39f510d6d75f568dfa5b99ca48d956eab654a2bf53",
+  "embedding_model": "all-MiniLM-L6-v2",
+  "chunker_version": "sentence-token-page-v1:cl100k_base:600:100",
+  "document_versions": [
+    {
+      "version_id": "cdc-multiple-chronic-conditions-2025-04-17",
+      "source_sha256": "9d4f9a51fbabfac1e55b1754709407d0bf13a9888ebf9ec505cb1c40286ed96a",
+      "parser_version": "pdfplumber-page-v1"
+    },
+    {
+      "version_id": "moh-diabetes-257fdae09864",
+      "source_sha256": "257fdae09864354e9799f6fa2853398bd5fccdd0ac5f763f9f4f3401e1172222",
+      "parser_version": "pdfplumber-page-v1"
+    },
+    {
+      "version_id": "nice-ng136-2026-02-26",
+      "source_sha256": "07f00ff626bb0aa930912fdf66cb0d05d2be6fca69469dbbce66233b063f6348",
+      "parser_version": "pdfplumber-page-v1"
+    },
+    {
+      "version_id": "nice-ng19-2019-10-11",
+      "source_sha256": "c7576531412760e33a7b7ed852fb14a3e8da233d98b74d4531a6e391420a8392",
+      "parser_version": "pdfplumber-page-v1"
+    },
+    {
+      "version_id": "nice-ng238-2023-12-14",
+      "source_sha256": "ca66058149bff1c48dc33dbbb44323edcbbcfb55cfe082d9d4dd3f4dd6d41929",
+      "parser_version": "pdfplumber-page-v1"
+    },
+    {
+      "version_id": "nice-ng28-2022-06-29",
+      "source_sha256": "a627970df397d730db84c5b5185b7310fc30ea55c53d091fc62e5410751aa0fd",
+      "parser_version": "pdfplumber-page-v1"
+    },
+    {
+      "version_id": "who-global-tb-report-2020-10-15",
+      "source_sha256": "e0c5d3baba9402e2b55a03f6dc3d2645a069009aaa4ae26df01748c7e0581a5f",
+      "parser_version": "pdfplumber-page-v1"
+    },
+    {
+      "version_id": "who-world-malaria-report-2019-12-04",
+      "source_sha256": "0adb3ead034da8125a2d7579b477b63a2e9598fdebede29d772806c67639c00d",
+      "parser_version": "pdfplumber-page-v1"
+    }
+  ],
+  "chunk_count": 1134
+}

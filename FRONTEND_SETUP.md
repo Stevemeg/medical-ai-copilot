@@ -5,7 +5,7 @@ HTML/CSS/JS frontend and a small FastAPI backend. `app.py` still exists
 and still works independently if you ever want the Streamlit version back
 -- this is an additional way to run the same underlying RAG pipeline, not
 a replacement for the Python backend logic in `backend/rag_pipeline.py`
-and `embeddings/retrieve.py`, which are completely unchanged.
+and `embeddings/retrieve.py`, which now enforce source lifecycle policies.
 
 ## Why two processes now
 
@@ -15,15 +15,15 @@ serving real HTML/CSS/JS, separate from the Python backend that does the
 actual retrieval and generation work. This is the standard architecture
 for this kind of app -- it's not extra complexity for its own sake.
 
-## Step 1: Install the new dependency
+## Step 1: Install dependencies
+
+From the repository root with Python 3.11+:
 
 ```
-pip install fastapi
+pip install -r requirements.txt
 ```
 
-(`uvicorn`, the server that runs FastAPI, was likely already installed as
-a dependency of the `groq` package -- if `uvicorn --version` fails, also
-run `pip install uvicorn`.)
+FastAPI, Uvicorn, and the other runtime dependencies are declared there.
 
 ## Step 2: Start the API backend
 

@@ -2,9 +2,9 @@
 
 # Medical AI Copilot — RAG Clinical Assistant
 
-**A Retrieval-Augmented Generation system that answers clinical questions from indexed medical guidelines — with dual-index hybrid retrieval, page-level source citations, a zero-LLM-call relevance gate, and a tamper-evident hash-chained audit trail.**
+**A retrieval-augmented medical knowledge prototype with a governed source registry, lifecycle-aware retrieval, page-level source citations, hybrid search, and an audit trail.**
 
-[![Python](https://img.shields.io/badge/python-3.10%2B-blue.svg)](https://www.python.org/)
+[![Python](https://img.shields.io/badge/python-3.11%2B-blue.svg)](https://www.python.org/)
 [![Streamlit](https://img.shields.io/badge/UI-Streamlit-FF4B4B.svg)](https://streamlit.io/)
 [![FAISS](https://img.shields.io/badge/vector-FAISS%20dual--index-009688.svg)](https://faiss.ai/)
 [![BM25](https://img.shields.io/badge/keyword-BM25%20%2B%20RRF-orange.svg)](https://pypi.org/project/rank-bm25/)
@@ -51,22 +51,22 @@ In healthcare, factual reliability and **traceability** are not nice-to-haves. A
 
 ## The Solution
 
-A RAG pipeline built so that every answer is anchored to a specific page of a specific trusted guideline:
+A RAG pipeline that traces retrieved context to a registered source version and page:
 
 ```
-Question → dual-index selection → hybrid retrieval (FAISS + BM25 → RRF) → relevance gate → grounded generation → cited answer + audit entry
+Question -> registry policy filter -> hybrid retrieval (FAISS + BM25/RRF) -> relevance gate -> generation -> context citations + audit entry
 ```
 
-- Retrieves **only** from a fixed, indexed corpus of trusted clinical guidelines
-- Grounds every answer in retrieved context — never outside knowledge
-- Cites **page-level** sources for every claim
+- Default retrieval uses only registered, ingested current clinical guidelines; historical and reference evidence require explicit policies
+- The generation prompt instructs the model to use retrieved context; individual generated claims are not independently checked
+- Returns page-level citations for retrieved context; individual generated claims are not independently verified
 - Refuses cleanly, **with no LLM call at all**, when nothing relevant is indexed
 - Logs every interaction to a **hash-chained, tamper-evident** audit trail
 
 ## Features
 
 **Retrieval**
-- **Dual-index architecture** — clinical guidelines and anatomy/physiology reference are indexed *separately*, with the correct index selected per query by raw FAISS distance
+- **Policy-aware dual-index retrieval**: only eligible source versions enter the selected FAISS/BM25 view; historical and reference modes are explicit.
 - **Hybrid search within the selected index** — FAISS semantic + BM25 keyword, fused via **Reciprocal Rank Fusion**
 - **Relevance gate** — genuinely out-of-scope questions return a clean "I don't have relevant information" response with **zero LLM calls** (no cost, no hallucination surface)
 
@@ -84,65 +84,30 @@ Question → dual-index selection → hybrid retrieval (FAISS + BM25 → RRF) �
 
 ## Design Principles
 
-1. **Grounding over completeness.** The system answers from the indexed corpus or says it can't. Filling gaps with unrestricted LLM knowledge would defeat the entire purpose.
-2. **Every claim is traceable.** Page-level citations, not document-level hand-waving.
+1. **Grounding over completeness.** The system answers from eligible indexed context or says it can't. Filling gaps with unrestricted LLM knowledge would defeat the entire purpose.
+2. **Context is traceable.** Retrieved chunks have page and source-version provenance; generated claims are not yet checked individually.
 3. **Refuse cheaply.** The relevance gate short-circuits before the LLM, not after — out-of-scope questions cost nothing and can't hallucinate.
 4. **Auditability is tested, not asserted.** The tamper-evidence property was verified adversarially.
 5. **Debug by reproduction.** Every retrieval fix in this repo came from reproducing a real failure and measuring it — the `debug_*.py` scripts are kept in-tree as evidence.
 
 ## Architecture
 
-<img src="assets/architecture.png" alt="System architecture" width="100%">
-
-<details>
-<summary><b>Detailed pipeline view (Mermaid)</b></summary>
+The [knowledge governance guide](KNOWLEDGE_GOVERNANCE.md) contains the complete corpus audit, lifecycle policy, and rebuild procedure.
 
 ```mermaid
-flowchart TB
-    subgraph Ingestion["Offline Ingestion"]
-        PDF["Source PDFs<br/>NICE · WHO · MoH · CDC · OpenStax"]
-        PDF --> EXTRACT["extract_text.py<br/>page-tracked JSON"]
-        EXTRACT --> CHUNK["chunk_text.py<br/>token-bounded chunks<br/>+ page ranges"]
-        CHUNK --> EMBED["SentenceTransformers<br/>MiniLM embeddings"]
-        EMBED --> BUILD["build_faiss_index.py"]
-        BUILD --> CIDX[("Clinical Index<br/>FAISS + BM25")]
-        BUILD --> AIDX[("Anatomy Index<br/>FAISS + BM25")]
-    end
-
-    subgraph Query["Query Time"]
-        Q["User question"] --> SELECT{"Index selection<br/>by raw FAISS distance"}
-        CIDX -.-> SELECT
-        AIDX -.-> SELECT
-
-        SELECT -->|lower distance wins| HYBRID["Hybrid retrieval<br/>within selected index"]
-
-        subgraph HYBRID_D["retrieve.py"]
-            FA["FAISS<br/>semantic top-k"] --> RRF["Reciprocal Rank Fusion"]
-            BM["BM25<br/>keyword top-k"] --> RRF
-        end
-
-        HYBRID --> HYBRID_D
-        RRF --> GATE{"Relevance gate<br/>threshold met?"}
-
-        GATE -->|no| REFUSE["'No relevant information'<br/>ZERO LLM calls"]
-        GATE -->|yes| LLM["Groq · Llama 3.1 8B<br/>grounded generation prompt"]
-
-        LLM --> ANS["Answer + page-level citations<br/>NICE NG19 · pp.6-7, 13-15"]
-    end
-
-    subgraph Audit["Audit Trail"]
-        ANS --> LOG["audit_log.py"]
-        REFUSE --> LOG
-        LOG --> CHAIN[("SQLite<br/>hash-chained entries<br/>entry_n = H(entry_n-1 + payload)")]
-    end
-
-    ANS --> UI["Streamlit UI"]
-    REFUSE --> UI
+flowchart LR
+    PDF[Registered source PDF] --> REG[Registry and SHA-256 validation]
+    REG --> PARSE[Page extraction and chunking]
+    PARSE --> IDX[FAISS indexes and provenance manifests]
+    IDX --> POLICY[Lifecycle and source-type filter]
+    POLICY --> SEARCH[FAISS and BM25 with RRF]
+    SEARCH --> GATE[Relevance gate]
+    GATE --> GEN[Context-bounded generation]
+    GEN --> CITE[Answer and source-version citations]
+    CITE --> AUDIT[Hash-chained audit log]
 ```
 
-</details>
-
-**Why two indexes instead of one:** during early development, a large anatomy/physiology textbook was indexed alongside much smaller clinical guideline documents. The textbook's sheer chunk volume dominated retrieval for clinical questions — a corpus-imbalance bug found by reproduction, not assumption. Splitting into two indexes and selecting per-query by FAISS distance fixed it structurally rather than by threshold-tuning around it.
+The original two-index storage keeps the large anatomy textbook separate from the other sources. At query time, policy filtering selects eligible vectors before semantic or lexical ranking. This prevents historical reports and the superseded NG28 snapshot from influencing the default clinical search.
 
 ## Why Hybrid Retrieval
 
@@ -171,6 +136,8 @@ A custom-themed Streamlit interface — question input, grounded answer, and exp
 
 **Interface flow**
 
+Screenshots above show the earlier demo corpus; the current source list follows the registry policy.
+
 ```
 ┌──────────────────────────────────────────────────────────────┐
 │  Medical AI Copilot                                          │
@@ -186,7 +153,6 @@ A custom-themed Streamlit interface — question input, grounded answer, and exp
 │                                                              │
 │  ▸ SOURCES                                                   │
 │    NICE NG19 — Diabetic Foot Problems · pp.6-7, 13-15        │
-│    MoH Diabetes Mellitus Guideline · pp.22                   │
 └──────────────────────────────────────────────────────────────┘
 ```
 
@@ -194,11 +160,11 @@ A custom-themed Streamlit interface — question input, grounded answer, and exp
 - How should a diabetic foot ulcer be managed?
 - When should statins be offered for cardiovascular risk reduction?
 - What is the SINBAD classification?
-- Explain insulin resistance.
+- How should hypertension be diagnosed?
 
 ## Installation
 
-**Requirements:** Python 3.10+ · a [Groq](https://groq.com/) API key
+**Requirements:** Python 3.11+ · a [Groq](https://groq.com/) API key
 
 ```bash
 git clone https://github.com/Stevemeg/medical-ai-copilot.git
@@ -208,6 +174,8 @@ python -m venv venv
 # Windows: .\venv\Scripts\Activate.ps1  |  Linux/macOS: source venv/bin/activate
 pip install -r requirements.txt
 ```
+
+For development checks, use `pip install -r requirements-dev.txt` and run `pytest`. The registry and committed index provenance can be checked without an LLM key using `python -m backend.source_registry` and `python -m backend.index_provenance`.
 
 **Add secrets** — create `.streamlit/secrets.toml`:
 
@@ -223,7 +191,7 @@ Or set `GROQ_API_KEY` as a real environment variable — `backend/config.py` che
 streamlit run app.py
 ```
 
-**Rebuilding the indexes** (only needed if you change the source corpus):
+**Rebuilding the indexes** (required after a registered source or parser/chunker change; see [knowledge governance](KNOWLEDGE_GOVERNANCE.md)):
 
 ```bash
 python -m embeddings.extract_text        # PDFs → page-tracked JSON
@@ -241,6 +209,8 @@ python -m embeddings.debug_bm25_gap           # BM25 vs FAISS coverage gaps
 ```
 
 ## Example Output
+
+Illustrative output from an earlier demo run; generated wording and cited pages may vary after lifecycle filtering.
 
 ```
 Q: What is the SINBAD classification?
@@ -272,15 +242,15 @@ answer this question.
 - **Tamper-evident audit logging** with the tamper-detection property adversarially tested
 - **Cloud-realistic secrets management** with a documented migration path per provider
 - **Honest compliance analysis** (HIPAA / FDA CDS) in `COMPLIANCE_CONSIDERATIONS.md`, including catching and correcting an outdated regulatory reference during writing
-- End-to-end production deployment on Streamlit Community Cloud
+- Public demo deployment on Streamlit Community Cloud
 
 ## Indexed Sources
 
-NICE NG19 (Diabetic Foot Problems) · NICE NG136 (Hypertension) · NICE NG238 (Cardiovascular Risk & Lipids) · NICE NG28 (Type 2 Diabetes) · MoH Diabetes Mellitus Guideline · WHO Tuberculosis Report · WHO Malaria Report · CDC Chronic Disease Overview · OpenStax Anatomy & Physiology
+Default clinical retrieval includes the registered current NICE NG19, NG136, and NG238 snapshots. The older NG28 PDF, WHO reports, CDC article, India MoHFW FAQ, and OpenStax textbook remain registered for explicit historical or reference access. See the [source inventory and lifecycle](KNOWLEDGE_GOVERNANCE.md#corpus-audit-verified-24-september-2026).
 
 ## Deployment
 
-Deployed on **Streamlit Community Cloud**. The FAISS indexes are committed to the repository rather than rebuilt at deploy time — a deliberate choice: rebuilding on every cold start would require the raw source PDFs to be present and would add real startup latency, for no benefit in a context where the corpus doesn't change at runtime.
+Deployed on **Streamlit Community Cloud**. The FAISS indexes are committed to the repository rather than rebuilt at deploy time — a deliberate choice: rebuilding on every cold start would require the raw source PDFs to be present and would add real startup latency, while startup validates source hashes and index manifests. Rebuild whenever the registered corpus changes.
 
 **Secrets:** `GROQ_API_KEY` is set via Streamlit Cloud's Secrets management. `backend/config.py` checks `os.environ` first — which is how Streamlit Cloud actually exposes root-level secrets — before falling back to `st.secrets`, so the same code path works unchanged in both environments.
 
@@ -348,7 +318,7 @@ These are stated plainly rather than buried — each is a real constraint of the
 
 - **Corpus-bounded answers.** Responses are limited to indexed documents. This is a deliberate design choice (grounding over completeness), not a gap to be filled with unrestricted LLM knowledge.
 - **Not for clinical use.** Not intended for diagnosis or treatment decisions — see `COMPLIANCE_CONSIDERATIONS.md` for an honest (non-legal) analysis of what real clinical deployment would require.
-- **Cross-guideline reconciliation (open issue).** Certain queries retrieve a chunk from a topically adjacent guideline, which the model sometimes tries to incorrectly cross-reference rather than ignore. Documented in `PROJECT_NOTES.md`, including a fix that was attempted, found to cause a worse regression, and reverted.
+- **Cross-guideline reconciliation (open issue).** Certain queries retrieve a chunk from a topically adjacent guideline, which the model sometimes tries to incorrectly cross-reference rather than ignore. This remains an open limitation; page-level context citations do not verify every generated claim.
 - **Ephemeral audit storage on free tier.** The hash-chaining is real and tested, but Streamlit Community Cloud's filesystem resets on redeploy. The code is correct; this hosting tier doesn't give it persistent storage.
 - **Cold-start latency** on free-tier deployment.
 
@@ -356,7 +326,7 @@ These are stated plainly rather than buried — each is a real constraint of the
 
 | Status | Milestone |
 |---|---|
-| ✅ | Dual-index hybrid retrieval · RRF fusion · relevance gate · page-level citations · hash-chained audit log · self-contradiction prompt fix · cloud-realistic secrets · production deployment |
+| ✅ | Dual-index hybrid retrieval · RRF fusion · relevance gate · page-level citations · hash-chained audit log · self-contradiction prompt fix · cloud-realistic secrets · public demo deployment |
 | ☐ | Persistent audit storage (hosted DB rather than local SQLite, to survive ephemeral filesystems) |
 | ☐ | Fix cross-guideline reconciliation at the retrieval/context-assembly layer rather than via another prompt instruction (a prompt-level attempt already regressed and was reverted) |
 | ☐ | Expanded clinical guideline coverage |
@@ -366,7 +336,7 @@ These are stated plainly rather than buried — each is a real constraint of the
 
 ## Disclaimer
 
-This project provides informational responses based on indexed medical documents and is intended for **educational and research purposes only**. It does not provide medical diagnosis, treatment recommendations, or professional healthcare advice. Always consult a qualified healthcare professional.
+This project provides informational responses based on indexed medical documents and is intended for **educational and research purposes only**. It does not provide patient-specific diagnosis, treatment decisions, or professional healthcare advice. Always consult a qualified healthcare professional.
 
 ## Contact
 

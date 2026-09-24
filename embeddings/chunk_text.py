@@ -2,6 +2,11 @@ import json
 from pathlib import Path
 import nltk
 import tiktoken
+import hashlib
+from dataclasses import asdict
+from backend.source_registry import SourceRegistry, StaleArtifact, sha256_file
+from backend.knowledge_models import EvidenceChunk
+from backend.index_provenance import write_chunks_manifest
 
 nltk.download("punkt")
 nltk.download("punkt_tab")
@@ -24,6 +29,7 @@ def detokenize(tokens):
     return tokenizer.decode(tokens)
 
 all_chunks = []
+registry = SourceRegistry()
 
 # Some PDF-extracted text loses sentence-boundary punctuation/spacing in
 # places, which makes nltk.sent_tokenize occasionally treat an entire
@@ -65,27 +71,50 @@ def make_chunk(tokens, source_name, chunk_id, pages_seen):
     whole-document spans that resulted from an earlier version of this
     function that never reset current_pages at all.
     """
-    return {
-        "text": detokenize(tokens),
-        "source": source_name,
-        "chunk_id": chunk_id,
-        "page_start": min(pages_seen),
-        "page_end": max(pages_seen),
+    version = registry.by_legacy_source[source_name]
+    document = registry.documents[version.document_id]
+    chunk_text = detokenize(tokens)
+    evidence = EvidenceChunk(
+        chunk_id=f"{version.version_id}:{chunk_id}",
+        document_id=document.document_id,
+        version_id=version.version_id,
+        text=chunk_text,
+        page_start=min(pages_seen),
+        page_end=max(pages_seen),
+        section=None,
+        recommendation_id=None,
+        content_sha256=hashlib.sha256(chunk_text.encode("utf-8")).hexdigest(),
+        source=source_name,
+    )
+    return asdict(evidence) | {
+        "source_type": document.source_type.value,
+        "jurisdiction": document.jurisdiction,
+        "lifecycle_status": version.status.value,
+        "source_sha256": version.sha256,
     }
 
 
 for json_file in DATA_DIR.glob("*.json"):
+    if json_file.name.endswith(".provenance.json"):
+        continue
+    source_name = json_file.stem + ".txt"
+    if source_name not in registry.by_legacy_source:
+        raise StaleArtifact("Unregistered processed source")
+    version = registry.by_legacy_source[source_name]
+    sidecar = json_file.with_suffix(".provenance.json")
+    try:
+        provenance = json.loads(sidecar.read_text(encoding="utf-8"))
+    except (OSError, ValueError) as exc:
+        raise StaleArtifact("Processed source lacks valid provenance") from exc
+    if (provenance.get("version_id") != version.version_id or
+        provenance.get("source_sha256") != version.sha256 or
+        provenance.get("processed_sha256") != sha256_file(json_file) or
+        provenance.get("parser_version") != version.parser_version):
+        raise StaleArtifact("Processed source provenance is stale")
     with open(json_file, "r", encoding="utf-8") as f:
         pages = json.load(f)
 
-    # Reconstruct the source name to exactly match what the old .txt-based
-    # pipeline used (json_file.stem already equals the original PDF's
-    # pdf_path.stem, e.g. "openstax_anatomy_physiology.pdf" -- Path.stem
-    # only strips the LAST extension, so appending ".pdf.txt" here would
-    # double up the .pdf suffix. Just ".txt" reproduces the original
-    # source string exactly, which matters because ANATOMY_SOURCES in
-    # build_faiss_index.py and any existing chunks.json data match against
-    # this literal string.)
+    # Preserve the legacy source label for compatibility; registry identities are canonical.
     source_name = json_file.stem + ".txt"
 
     # Tokenize sentence-by-sentence WITHIN each page, rather than joining all
@@ -162,3 +191,4 @@ with open(OUT_FILE, "w", encoding="utf-8") as f:
     json.dump(all_chunks, f, indent=2)
 
 print(f"Saved {len(all_chunks)} chunks to {OUT_FILE}")
+write_chunks_manifest(OUT_FILE, registry)

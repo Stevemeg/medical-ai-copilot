@@ -1,0 +1,266 @@
+{
+  "schema_version": 1,
+  "sources": [
+    {
+      "document_id": "nice-ng28",
+      "canonical_title": "Type 2 diabetes in adults: management",
+      "publisher": "NICE",
+      "source_type": "clinical_guideline",
+      "jurisdiction": "UK",
+      "guideline_code": "NG28",
+      "canonical_source_url": "https://www.nice.org.uk/guidance/ng28",
+      "license": "NICE notice of rights; repository redistribution rights unverified",
+      "versions": [
+        {
+          "version_id": "nice-ng28-2022-06-29",
+          "version_label": "2022-06-29",
+          "published_at": "2015-12-02",
+          "updated_at": "2022-06-29",
+          "retrieved_at": null,
+          "valid_from": null,
+          "valid_until": null,
+          "status": "superseded",
+          "supersedes_version_id": null,
+          "superseded_by_version_id": null,
+          "sha256": "a627970df397d730db84c5b5185b7310fc30ea55c53d091fc62e5410751aa0fd",
+          "parser_version": "pdfplumber-page-v1",
+          "ingestion_status": "ingested",
+          "source_path": "data/raw_docs/nice_type2_diabetes_guideline.pdf.pdf",
+          "legacy_source": "nice_type2_diabetes_guideline.pdf.txt"
+        }
+      ]
+    },
+    {
+      "document_id": "nice-ng19",
+      "canonical_title": "Diabetic foot problems: prevention and management",
+      "publisher": "NICE",
+      "source_type": "clinical_guideline",
+      "jurisdiction": "UK",
+      "guideline_code": "NG19",
+      "canonical_source_url": "https://www.nice.org.uk/guidance/ng19",
+      "license": "NICE notice of rights; repository redistribution rights unverified",
+      "versions": [
+        {
+          "version_id": "nice-ng19-2019-10-11",
+          "version_label": "2019-10-11",
+          "published_at": "2015-08-26",
+          "updated_at": "2019-10-11",
+          "retrieved_at": null,
+          "valid_from": null,
+          "valid_until": null,
+          "status": "current",
+          "supersedes_version_id": null,
+          "superseded_by_version_id": null,
+          "sha256": "c7576531412760e33a7b7ed852fb14a3e8da233d98b74d4531a6e391420a8392",
+          "parser_version": "pdfplumber-page-v1",
+          "ingestion_status": "ingested",
+          "source_path": "data/raw_docs/nice_diabetic_foot_guideline.pdf.pdf.pdf",
+          "legacy_source": "nice_diabetic_foot_guideline.pdf.pdf.txt"
+        }
+      ]
+    },
+    {
+      "document_id": "nice-ng136",
+      "canonical_title": "Hypertension in adults: diagnosis and management",
+      "publisher": "NICE",
+      "source_type": "clinical_guideline",
+      "jurisdiction": "UK",
+      "guideline_code": "NG136",
+      "canonical_source_url": "https://www.nice.org.uk/guidance/ng136",
+      "license": "NICE notice of rights; repository redistribution rights unverified",
+      "versions": [
+        {
+          "version_id": "nice-ng136-2026-02-26",
+          "version_label": "2026-02-26",
+          "published_at": "2019-08-28",
+          "updated_at": "2026-02-26",
+          "retrieved_at": null,
+          "valid_from": null,
+          "valid_until": null,
+          "status": "current",
+          "supersedes_version_id": null,
+          "superseded_by_version_id": null,
+          "sha256": "07f00ff626bb0aa930912fdf66cb0d05d2be6fca69469dbbce66233b063f6348",
+          "parser_version": "pdfplumber-page-v1",
+          "ingestion_status": "ingested",
+          "source_path": "data/raw_docs/nice_hypertension_guideline.pdf.pdf.pdf",
+          "legacy_source": "nice_hypertension_guideline.pdf.pdf.txt"
+        }
+      ]
+    },
+    {
+      "document_id": "nice-ng238",
+      "canonical_title": "Cardiovascular disease: risk assessment and reduction, including lipid modification",
+      "publisher": "NICE",
+      "source_type": "clinical_guideline",
+      "jurisdiction": "UK",
+      "guideline_code": "NG238",
+      "canonical_source_url": "https://www.nice.org.uk/guidance/ng238",
+      "license": "NICE notice of rights; repository redistribution rights unverified",
+      "versions": [
+        {
+          "version_id": "nice-ng238-2023-12-14",
+          "version_label": "2023-12-14",
+          "published_at": "2023-12-14",
+          "updated_at": null,
+          "retrieved_at": null,
+          "valid_from": null,
+          "valid_until": null,
+          "status": "current",
+          "supersedes_version_id": null,
+          "superseded_by_version_id": null,
+          "sha256": "ca66058149bff1c48dc33dbbb44323edcbbcfb55cfe082d9d4dd3f4dd6d41929",
+          "parser_version": "pdfplumber-page-v1",
+          "ingestion_status": "ingested",
+          "source_path": "data/raw_docs/nice_cvd_lipid_guideline.pdf.pdf.pdf",
+          "legacy_source": "nice_cvd_lipid_guideline.pdf.pdf.txt"
+        }
+      ]
+    },
+    {
+      "document_id": "moh-diabetes",
+      "canonical_title": "Diabetes Mellitus (FAQs)",
+      "publisher": "Ministry of Health and Family Welfare, India",
+      "source_type": "patient_education",
+      "jurisdiction": "India",
+      "guideline_code": null,
+      "canonical_source_url": "https://ncdc.mohfw.gov.in/NCDC_MOHFW/uploads/pdf/Diabetes%20Mellitus%20English%20FAQs.pdf",
+      "license": null,
+      "versions": [
+        {
+          "version_id": "moh-diabetes-257fdae09864",
+          "version_label": null,
+          "published_at": null,
+          "updated_at": null,
+          "retrieved_at": null,
+          "valid_from": null,
+          "valid_until": null,
+          "status": "unknown",
+          "supersedes_version_id": null,
+          "superseded_by_version_id": null,
+          "sha256": "257fdae09864354e9799f6fa2853398bd5fccdd0ac5f763f9f4f3401e1172222",
+          "parser_version": "pdfplumber-page-v1",
+          "ingestion_status": "ingested",
+          "source_path": "data/raw_docs/moh_diabetes_mellitus_guideline.pdf.pdf",
+          "legacy_source": "moh_diabetes_mellitus_guideline.pdf.txt"
+        }
+      ]
+    },
+    {
+      "document_id": "who-global-tb-report",
+      "canonical_title": "Global tuberculosis report 2020",
+      "publisher": "World Health Organization",
+      "source_type": "public_health_report",
+      "jurisdiction": "WHO-global",
+      "guideline_code": "ISBN 978-92-4-001313-1",
+      "canonical_source_url": "https://www.who.int/publications/i/item/9789240013131",
+      "license": "CC BY-NC-SA 3.0 IGO (WHO publication listing)",
+      "versions": [
+        {
+          "version_id": "who-global-tb-report-2020-10-15",
+          "version_label": "2020-10-15",
+          "published_at": "2020-10-15",
+          "updated_at": null,
+          "retrieved_at": null,
+          "valid_from": null,
+          "valid_until": null,
+          "status": "historical",
+          "supersedes_version_id": null,
+          "superseded_by_version_id": null,
+          "sha256": "e0c5d3baba9402e2b55a03f6dc3d2645a069009aaa4ae26df01748c7e0581a5f",
+          "parser_version": "pdfplumber-page-v1",
+          "ingestion_status": "ingested",
+          "source_path": "data/raw_docs/who_doc_1.pdf.pdf",
+          "legacy_source": "who_doc_1.pdf.txt"
+        }
+      ]
+    },
+    {
+      "document_id": "who-world-malaria-report",
+      "canonical_title": "World malaria report 2019",
+      "publisher": "World Health Organization",
+      "source_type": "public_health_report",
+      "jurisdiction": "WHO-global",
+      "guideline_code": "ISBN 978-92-4-156572-1",
+      "canonical_source_url": "https://www.who.int/publications/i/item/9789241565721",
+      "license": "CC BY-NC-SA 3.0 IGO (PDF rights page)",
+      "versions": [
+        {
+          "version_id": "who-world-malaria-report-2019-12-04",
+          "version_label": "2019-12-04",
+          "published_at": "2019-12-04",
+          "updated_at": null,
+          "retrieved_at": null,
+          "valid_from": null,
+          "valid_until": null,
+          "status": "historical",
+          "supersedes_version_id": null,
+          "superseded_by_version_id": null,
+          "sha256": "0adb3ead034da8125a2d7579b477b63a2e9598fdebede29d772806c67639c00d",
+          "parser_version": "pdfplumber-page-v1",
+          "ingestion_status": "ingested",
+          "source_path": "data/raw_docs/who_doc_2.pdf.pdf",
+          "legacy_source": "who_doc_2.pdf.txt"
+        }
+      ]
+    },
+    {
+      "document_id": "cdc-multiple-chronic-conditions",
+      "canonical_title": "Trends in Multiple Chronic Conditions Among US Adults, By Life Stage, Behavioral Risk Factor Surveillance System, 2013–2023",
+      "publisher": "Centers for Disease Control and Prevention",
+      "source_type": "original_research",
+      "jurisdiction": "US",
+      "guideline_code": "DOI 10.5888/pcd22.240539",
+      "canonical_source_url": "https://www.cdc.gov/pcd/issues/2025/24_0539.htm",
+      "license": null,
+      "versions": [
+        {
+          "version_id": "cdc-multiple-chronic-conditions-2025-04-17",
+          "version_label": "2025-04-17",
+          "published_at": "2025-04-17",
+          "updated_at": null,
+          "retrieved_at": null,
+          "valid_from": null,
+          "valid_until": null,
+          "status": "historical",
+          "supersedes_version_id": null,
+          "superseded_by_version_id": null,
+          "sha256": "9d4f9a51fbabfac1e55b1754709407d0bf13a9888ebf9ec505cb1c40286ed96a",
+          "parser_version": "pdfplumber-page-v1",
+          "ingestion_status": "ingested",
+          "source_path": "data/raw_docs/cdc_chronic_disease_overview.pdf.pdf",
+          "legacy_source": "cdc_chronic_disease_overview.pdf.txt"
+        }
+      ]
+    },
+    {
+      "document_id": "openstax-anatomy-physiology",
+      "canonical_title": "Anatomy & Physiology",
+      "publisher": "OpenStax",
+      "source_type": "textbook",
+      "jurisdiction": "global",
+      "guideline_code": null,
+      "canonical_source_url": "https://openstax.org/books/anatomy-and-physiology/pages/1-introduction",
+      "license": "PDF states CC BY 4.0 with attribution requirements; verify reuse terms before distribution",
+      "versions": [
+        {
+          "version_id": "openstax-anatomy-physiology-4f353d6c8e05",
+          "version_label": null,
+          "published_at": null,
+          "updated_at": null,
+          "retrieved_at": null,
+          "valid_from": null,
+          "valid_until": null,
+          "status": "unknown",
+          "supersedes_version_id": null,
+          "superseded_by_version_id": null,
+          "sha256": "4f353d6c8e050405bce3f8c4c50513f06b5d1f041b2c5bdbf4241a5a5c04fc66",
+          "parser_version": "pdfplumber-page-v1",
+          "ingestion_status": "ingested",
+          "source_path": "data/raw_docs/openstax_anatomy_physiology.pdf.pdf",
+          "legacy_source": "openstax_anatomy_physiology.pdf.txt"
+        }
+      ]
+    }
+  ]
+}

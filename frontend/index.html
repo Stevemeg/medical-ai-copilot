@@ -432,7 +432,7 @@
   <div class="main-inner">
     <div class="disclaimer">
       <span class="icon">⚠️</span>
-      <span>Educational and research tool only — not a substitute for professional medical advice. Answers are generated from indexed clinical guidelines (NICE, WHO, MoH) and reference material, with sources cited below each answer.</span>
+      <span>Educational and research tool only — not a substitute for professional medical advice. Default answers use only registered current clinical guidelines, with sources cited below each answer.</span>
     </div>
 
     <div class="conn-banner" id="conn-banner">
@@ -464,7 +464,7 @@
       </svg>
     </button>
   </div>
-  <p class="footer-note">Built on NICE, WHO, MoH, and OpenStax reference material · Retrieval-augmented, citation-grounded</p>
+  <p class="footer-note">Current guideline retrieval from registered sources · Retrieval-augmented, citation-grounded</p>
 </footer>
 
 <script>
@@ -479,27 +479,18 @@ const sendBtn = document.getElementById("send-btn");
 const connBanner = document.getElementById("conn-banner");
 const mainEl = document.querySelector("main");
 
-// Known indexed sources, shown in the empty state. Mirrors the backend's
-// SOURCE_DISPLAY_NAMES mapping -- kept here too since this is a static
-// listing the page can render instantly without an API round trip, and
-// it changes only when the corpus itself changes.
-const INDEXED_SOURCES = [
-  "NICE NG19 — Diabetic Foot Problems",
-  "NICE NG136 — Hypertension",
-  "NICE NG238 — Cardiovascular Risk & Lipids",
-  "NICE NG28 — Type 2 Diabetes",
-  "MoH — Diabetes Mellitus Guideline",
-  "WHO — Tuberculosis Report",
-  "WHO — Malaria Report",
-  "CDC — Chronic Disease Overview",
-  "OpenStax — Anatomy & Physiology",
-].sort();
+// The API supplies currently eligible guideline names from the registry.
+let indexedSources = [];
 
 let isWaiting = false;
 let userHasScrolledUp = false;
 
-function renderCorpusChips() {
-  corpusRow.innerHTML = INDEXED_SOURCES
+async function renderCorpusChips() {
+  try {
+    const response = await fetch(`${API_BASE}/api/sources`);
+    if (response.ok) indexedSources = (await response.json()).sources || [];
+  } catch (_) { indexedSources = []; }
+  corpusRow.innerHTML = indexedSources
     .map(name => `<span class="corpus-chip">${escapeHtml(name)}</span>`)
     .join("");
 }
@@ -509,7 +500,7 @@ async function loadExamples() {
     "How should a diabetic foot ulcer be managed?",
     "When should statins be offered for cardiovascular risk reduction?",
     "What is the SINBAD classification?",
-    "Explain insulin resistance.",
+    "How should hypertension be diagnosed?",
   ];
   try {
     const res = await fetch(`${API_BASE}/api/examples`);
