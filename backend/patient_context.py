@@ -66,8 +66,13 @@ def _time_key(value: str | None) -> tuple[str, str]:
 
 
 def latest_observation(context: PatientContext, system: str, code: str) -> Observation | None:
-    matches = observations_by_code(context, system, code)
+    """Return the latest *dated* observation; ties use observation ID."""
+    matches = (o for o in observations_by_code(context, system, code) if o.effective)
     return max(matches, key=lambda o: (_time_key(o.effective), o.observation_id), default=None)
+
+
+def observations_with_unknown_date(context: PatientContext, system: str, code: str) -> tuple[Observation, ...]:
+    return tuple(o for o in observations_by_code(context, system, code) if not o.effective)
 
 
 def observations_within(

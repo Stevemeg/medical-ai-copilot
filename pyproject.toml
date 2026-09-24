@@ -13,5 +13,5 @@ ignore = ["E501"]
 
 [tool.mypy]
 python_version = "3.11"
-files = ["backend/knowledge_models.py", "backend/source_registry.py", "backend/index_provenance.py", "backend/ingestion.py", "backend/patient_models.py", "backend/fhir_adapter.py", "backend/patient_context.py", "backend/patient_store.py", "backend/patient_api.py"]
+files = ["backend/knowledge_models.py", "backend/source_registry.py", "backend/index_provenance.py", "backend/ingestion.py", "backend/patient_models.py", "backend/fhir_adapter.py", "backend/patient_context.py", "backend/patient_store.py", "backend/patient_api.py", "backend/clinical_models.py", "backend/clinical_rules.py", "backend/clinical_review.py"]
 ignore_missing_imports = true

@@ -27,7 +27,7 @@ Locally stored sources are verified on registry load. A missing file or changed 
 
 | Bundled source | Publisher / type / jurisdiction | Snapshot | Lifecycle | Action |
 |---|---|---|---|---|
-| NICE NG19 diabetic foot | NICE / guideline / UK | Updated 11 Oct 2019 | Current | Included in default clinical retrieval; [NICE listing](https://www.nice.org.uk/guidance/ng19) matches PDF |
+| NICE NG19 diabetic foot | NICE / guideline / UK | Bundled PDF updated 11 Oct 2019 | Superseded | Excluded from default clinical retrieval and active rules. [Current recommendations](https://www.nice.org.uk/guidance/ng19/chapter/recommendations) include 2023 changes elsewhere in the guideline; 1.3.3 remains semantically consistent with the PDF, but the bundled document is not the current whole-guideline version. Explicit historical retrieval only. |
 | NICE NG136 hypertension | NICE / guideline / UK | Updated 26 Feb 2026 | Current | Included; [NICE listing](https://www.nice.org.uk/guidance/ng136) matches PDF |
 | NICE NG238 cardiovascular risk | NICE / guideline / UK | Published 14 Dec 2023; no later date in PDF | Current | Included; [NICE guidance](https://www.nice.org.uk/guidance/ng238) identifies this edition |
 | NICE NG28 type 2 diabetes | NICE / guideline / UK | Updated 29 Jun 2022 | Superseded | Retained for explicit historical use; [NICE now lists 18 Feb 2026](https://www.nice.org.uk/guidance/ng28) |
@@ -37,7 +37,7 @@ Locally stored sources are verified on registry load. A missing file or changed 
 | CDC multiple chronic conditions article | CDC / original research / US | Published 17 Apr 2025; data through 2023 | Historical snapshot | Excluded from guideline retrieval; [CDC article](https://www.cdc.gov/pcd/issues/2025/24_0539.htm) |
 | OpenStax Anatomy & Physiology | OpenStax / textbook / global | 2013 edition indicated in PDF; exact revision unverified | Unknown | Explicit reference only; [OpenStax source](https://openstax.org/books/anatomy-and-physiology/pages/1-introduction) |
 
-The older NICE PDF is not replaced with a downloaded 2026 PDF because its redistribution rights were not established. The same caution applies to new publisher material. Existing PDFs remain in the repository; their rights should be reviewed before any redistribution or commercial deployment. No snapshot is marked current solely because its filename sounds recent. Currentness is a registry assertion last checked on the audit date, not a live publisher feed.
+The older NICE PDFs are not replaced with downloaded current PDFs because redistribution rights were not established. The same caution applies to new publisher material. Existing PDFs remain in the repository; their rights should be reviewed before any redistribution or commercial deployment. No snapshot is marked current solely because its filename sounds recent. Currentness is a registry assertion last checked on the audit date, not a live publisher feed. Phase 3 corrected NG19's lifecycle after checking the 2023 changes and refreshed chunk/index manifests against the new registry hash without changing source bytes or embeddings.
 
 ## Rebuild and validation
 

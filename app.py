@@ -2,6 +2,7 @@
 
 import json
 import os
+from datetime import date
 from pathlib import Path
 
 import streamlit as st
@@ -9,10 +10,21 @@ import streamlit as st
 from backend.fhir_adapter import FHIRInputError, parse_bundle
 from backend.knowledge_models import RetrievalPolicy
 from backend.patient_api import DEMO_LABELS, FIXTURES
-from backend.patient_context import active_conditions, active_medications, data_availability, known_allergies, timeline
+from backend.patient_context import (
+    active_conditions,
+    active_medications,
+    context_hash,
+    data_availability,
+    known_allergies,
+    timeline,
+)
 from backend.patient_store import SQLitePatientRepository
 from backend.rag_pipeline import answer_question
 from backend.source_registry import SourceRegistry
+from backend.clinical_models import ActionType, EvaluationRequest, FindingStatus, RecordCoverage
+from backend.clinical_review import ClinicalReviewEngine
+from backend.clinical_rules import annual_window_start
+from backend.patient_store import ReviewCompleted
 
 st.set_page_config(page_title="Medical AI Copilot", layout="wide")
 st.markdown(
@@ -30,13 +42,15 @@ st.title("Medical AI Copilot")
 st.caption("Governed evidence retrieval and structured synthetic patient review")
 st.markdown('<span class="synthetic">SYNTHETIC DEMO DATA ONLY</span>', unsafe_allow_html=True)
 st.info(
-    "Prototype for clinician review. The patient workspace presents supplied records; it does not evaluate care gaps or make treatment decisions."
+    "Prototype for clinician review. Deterministic findings identify possible follow-up items in synthetic records; clinician review is required."
 )
 
 repository = SQLitePatientRepository(
     os.environ.get("PATIENT_DB_PATH", str(Path(__file__).resolve().parent / "data" / "patient_context.db"))
 )
 registry = SourceRegistry()
+rule_engine = ClinicalReviewEngine(repository)
+DEMO_MANIFEST = json.loads((FIXTURES / "manifest.json").read_text(encoding="utf-8"))["fixtures"]
 
 
 def import_bundle(raw):
@@ -209,8 +223,111 @@ with review_tab:
             st.caption(
                 f"Review {review.review_id} · {review.status.value} · snapshot {review.patient_context_hash[:16]}…"
             )
-            st.markdown("#### Findings")
-            st.write("No rule-based clinical findings are available for this review.")
+            demo_number = review.patient_snapshot.patient.source_patient_id.removeprefix("SYN-PAT-")
+            demo_key = f"syn_pat_{demo_number}"
+            demo = DEMO_MANIFEST.get(demo_key)
+            if demo:
+                fixture_context, _ = parse_bundle(
+                    json.loads((FIXTURES / f"{demo_key}.json").read_text(encoding="utf-8"))
+                )
+                if context_hash(fixture_context) != review.patient_context_hash:
+                    demo = None
+            default_as_of = date.fromisoformat(demo["evaluation_as_of"]) if demo else date.today()
+            with st.expander("Evaluation context", expanded=not repository.list_findings(review_id)):
+                as_of = st.date_input("Evaluate as of", value=default_as_of, key=f"asof-{review_id}")
+                coverage_demo = demo.get("record_coverage") if demo else None
+                assert_coverage = st.checkbox(
+                    "Assert complete record coverage", value=coverage_demo is not None, key=f"coverage-{review_id}"
+                )
+                coverage = None
+                coverage_valid = True
+                if assert_coverage:
+                    start = st.date_input(
+                        "Coverage starts",
+                        value=date.fromisoformat(coverage_demo["start_date"])
+                        if coverage_demo
+                        else annual_window_start(as_of),
+                        key=f"start-{review_id}",
+                    )
+                    end = st.date_input(
+                        "Coverage ends",
+                        value=date.fromisoformat(coverage_demo["end_date"]) if coverage_demo else as_of,
+                        key=f"end-{review_id}",
+                    )
+                    types = st.multiselect(
+                        "Complete resource types",
+                        ["Encounter", "Procedure", "Condition", "Observation"],
+                        default=coverage_demo["complete_resource_types"] if coverage_demo else [],
+                        key=f"types-{review_id}",
+                    )
+                    try:
+                        coverage = RecordCoverage(start_date=start, end_date=end, complete_resource_types=tuple(types))
+                    except ValueError as exc:
+                        coverage_valid = False
+                        st.error(str(exc))
+                if review.status.value != "completed" and st.button(
+                    "Evaluate snapshot", key=f"evaluate-{review_id}", disabled=not coverage_valid
+                ):
+                    try:
+                        request = EvaluationRequest(as_of=as_of, record_coverage=coverage)
+                        rule_engine.evaluate(review_id, request)
+                        st.rerun()
+                    except (ValueError, ReviewCompleted) as exc:
+                        st.error(str(exc))
+            findings = repository.list_findings(review_id)
+            if findings:
+                gap_count = sum(f.status is FindingStatus.POTENTIAL_CARE_GAP for f in findings)
+                needs_count = sum(f.status is FindingStatus.INSUFFICIENT_DATA for f in findings)
+                satisfied_count = sum(f.status is FindingStatus.SATISFIED for f in findings)
+                a, b, c = st.columns(3)
+                a.metric("Potential care gaps", gap_count)
+                b.metric("Needs more information", needs_count)
+                c.metric("Satisfied checks", satisfied_count)
+                for finding in findings:
+                    if finding.status is FindingStatus.NOT_APPLICABLE:
+                        continue
+                    with st.container(border=True):
+                        st.markdown(f"#### {finding.title}")
+                        st.write(f"**{finding.status.value.replace('_', ' ').title()}**")
+                        if finding.status is FindingStatus.POTENTIAL_CARE_GAP:
+                            st.caption("Review required")
+                        st.write(finding.rationale)
+                        st.json(finding.observed_values)
+                        if finding.missing_data:
+                            st.write("Missing information: " + ", ".join(finding.missing_data))
+                            if finding.status is FindingStatus.INSUFFICIENT_DATA:
+                                st.caption("This is not classified as a care gap.")
+                        for evidence in finding.evidence_refs:
+                            with st.expander("Evidence"):
+                                st.write(
+                                    f"{evidence.publisher} · {evidence.guideline_title} · recommendation {evidence.recommendation_id}"
+                                )
+                                st.write(
+                                    f"Document version: {evidence.version_id} · Lifecycle: {evidence.lifecycle_status} · Verified: {evidence.source_verified_on}"
+                                )
+                                st.link_button("View official source", evidence.canonical_source_url)
+                        action = st.selectbox(
+                            "Clinician disposition",
+                            list(ActionType),
+                            format_func=lambda x: x.value.replace("_", " ").title(),
+                            key=f"action-{finding.finding_id}",
+                        )
+                        note = st.text_input("Optional note", key=f"note-{finding.finding_id}")
+                        if st.button("Record action", key=f"save-{finding.finding_id}"):
+                            repository.add_action(finding.finding_id, action, note or None)
+                            st.rerun()
+                        history = repository.list_actions(finding.finding_id)
+                        if history:
+                            st.caption(
+                                "Action history: "
+                                + "; ".join(f"{item.action_type.value} ({item.created_at.date()})" for item in history)
+                            )
+                with st.expander("Not applicable checks"):
+                    for finding in findings:
+                        if finding.status is FindingStatus.NOT_APPLICABLE:
+                            st.write(f"{finding.title}: {finding.rationale}")
+            else:
+                st.caption("Evaluate this review snapshot to see deterministic findings.")
             st.markdown("#### Supplied and unavailable record information")
             st.write("Supplied: " + (", ".join(review.data_availability.available_data_types) or "none"))
             st.write("Not supplied: " + (", ".join(review.data_availability.missing_data_types) or "none"))

@@ -48,7 +48,7 @@
           "retrieved_at": null,
           "valid_from": null,
           "valid_until": null,
-          "status": "current",
+          "status": "superseded",
           "supersedes_version_id": null,
           "superseded_by_version_id": null,
           "sha256": "c7576531412760e33a7b7ed852fb14a3e8da233d98b74d4531a6e391420a8392",

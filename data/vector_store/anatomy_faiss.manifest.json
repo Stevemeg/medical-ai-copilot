@@ -2,7 +2,7 @@
   "schema_version": 1,
   "index_sha256": "eca964646c815b885599a507938de69dabaffdf56b60bfd8b106555af9ed2d83",
   "metadata_sha256": "e0e64ab70aeb4fa96b1e51cdb34a22333b422d7976ce5169d2ff89c8d8924528",
-  "registry_sha256": "88dfac3f361abf2232430e39f510d6d75f568dfa5b99ca48d956eab654a2bf53",
+  "registry_sha256": "0e52c0ecf47a6c7d1dfbfa859da23f56657bb3dd67ac37d8ac284999824ed331",
   "embedding_model": "all-MiniLM-L6-v2",
   "chunker_version": "sentence-token-page-v1:cl100k_base:600:100",
   "document_versions": [

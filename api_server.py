@@ -14,7 +14,9 @@ import re
 import sys
 from pathlib import Path
 
-from fastapi import FastAPI
+from fastapi import FastAPI, Request
+from fastapi.exceptions import RequestValidationError
+from fastapi.responses import JSONResponse
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
 
@@ -25,6 +27,22 @@ from backend.patient_api import router as patient_router
 
 app = FastAPI(title="Medical AI Copilot API")
 app.include_router(patient_router)
+
+
+@app.exception_handler(RequestValidationError)
+async def phase3_validation_error(request: Request, exc: RequestValidationError):
+    path = request.url.path
+    if path.startswith("/v1/reviews/") and path.endswith("/evaluate"):
+        return JSONResponse(
+            status_code=422,
+            content={"detail": {"code": "invalid_evaluation_context", "message": "Evaluation context is invalid"}},
+        )
+    if path.startswith("/v1/findings/") and path.endswith("/actions"):
+        return JSONResponse(
+            status_code=422, content={"detail": {"code": "invalid_action", "message": "Finding action is invalid"}}
+        )
+    return JSONResponse(status_code=422, content={"detail": exc.errors()})
+
 
 # CORS: wide open deliberately. This is a local-dev / portfolio deployment
 # with synthetic patient data and no auth -- not a multi-tenant production

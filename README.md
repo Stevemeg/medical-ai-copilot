@@ -51,7 +51,7 @@ In healthcare, factual reliability and **traceability** are not nice-to-haves. A
 
 ## The Solution
 
-The primary workspace now loads fictional FHIR R4-compatible patient Bundles, normalizes them into a typed patient context, and creates reproducible review snapshots. It shows supplied conditions, medications, allergies, observations, encounters, a deterministic timeline, and record availability. [Patient context documentation](PATIENT_CONTEXT.md) describes the supported subset and limitations. Clinical rule evaluation, diagnosis, and treatment recommendations are not implemented.
+The primary workspace loads fictional FHIR R4-compatible patient Bundles, normalizes them into typed patient context, and creates reproducible review snapshots. It shows supplied records, a deterministic timeline, and an **evidence-bound deterministic hypertension annual-review check**. A planned diabetes foot-assessment check is suppressed because its bundled NG19 evidence version is stale. Findings distinguish potential care gaps from insufficient data and require human review. [Patient context documentation](PATIENT_CONTEXT.md) describes the supported FHIR subset; [clinical rule documentation](CLINICAL_RULES.md) describes rule scope and limitations. Diagnosis and treatment recommendations are not implemented.
 
 Ask Evidence remains available as a separate general question workflow. Patient records are not automatically provided to it.
 
@@ -72,6 +72,7 @@ Question -> registry policy filter -> hybrid retrieval (FAISS + BM25/RRF) -> rel
 **Synthetic patient review**
 - Five bundled fictional patients can be selected; supported synthetic collection Bundles can also be imported.
 - Normalized patient context, stable content hash, local SQLite persistence, deterministic timeline, and immutable review snapshots.
+- One offline, versioned hypertension annual follow-up rule uses current governed NICE evidence and explicit record coverage. The foot-assessment candidate fails closed pending a governed current NG19 source. Finding dispositions are append-only demo actions.
 - Streamlit and the alternative HTML client place patient review first, with Ask Evidence and source visibility in separate tabs.
 
 **Retrieval**
@@ -101,17 +102,23 @@ Question -> registry policy filter -> hybrid retrieval (FAISS + BM25/RRF) -> rel
 
 ## Architecture
 
-The [knowledge governance guide](KNOWLEDGE_GOVERNANCE.md) contains the corpus audit, lifecycle policy, and rebuild procedure. The [patient context guide](PATIENT_CONTEXT.md) describes the supported FHIR subset and review snapshots.
+The [knowledge governance guide](KNOWLEDGE_GOVERNANCE.md) contains the corpus audit, lifecycle policy, and rebuild procedure. The [patient context guide](PATIENT_CONTEXT.md) describes the supported FHIR subset and review snapshots. The [clinical rule guide](CLINICAL_RULES.md) contains the rule catalogue, evidence check, coverage semantics, and human-review limits.
 
 ```mermaid
 flowchart LR
     FHIR[Synthetic FHIR collection Bundle] --> ADAPT[Validation and FHIR adapter]
     ADAPT --> CTX[Normalized PatientContext]
     CTX --> HASH[Context hash and SQLite snapshot]
-    HASH --> REVIEW[ClinicalReview and timeline]
-    REVIEW --> UI[Patient review workspace]
+    HASH --> REVIEW[ClinicalReview snapshot]
+    REVIEW --> EVAL[Explicit as-of and record coverage]
+    EVAL --> RULES[Rule registry and evidence binding]
+    RULES --> ENGINE[Deterministic rule engine]
+    ENGINE --> FINDING[Structured immutable findings]
+    FINDING --> ACTION[Clinician action history]
+    FINDING --> UI[Clinical Review workspace]
     PDF[Registered source PDF] --> REG[Registry and SHA-256 validation]
     REG --> PARSE[Page extraction and chunking]
+    REG --> RULES
     PARSE --> IDX[FAISS indexes and provenance manifests]
     IDX --> POLICY[Lifecycle and source-type filter]
     POLICY --> SEARCH[FAISS and BM25 with RRF]
@@ -139,7 +146,7 @@ Neither method is sufficient alone. Fusing both via RRF was a real fix for a rea
 
 ## User Interface
 
-The Streamlit workspace opens on **Patients**, where a bundled synthetic patient or supported JSON Bundle can be imported. **Clinical Review** creates and displays a persisted snapshot. **Ask Evidence** retains the governed general Q&A path, and **Knowledge Sources** shows registered lifecycle states. The alternative HTML client provides the same main workflow through the versioned API.
+The Streamlit workspace opens on **Patients**, where a bundled synthetic patient or supported JSON Bundle can be imported. **Clinical Review** creates a snapshot, accepts an explicit evaluation date and record-coverage assertion, and displays deterministic findings, evidence cards, and action history. **Ask Evidence** retains the governed general Q&A path, and **Knowledge Sources** shows registered lifecycle states. The versioned API exposes the Phase 3 workflow; the alternative HTML client has not yet been updated with the new finding controls.
 
 Older screenshots in `assets/screenshots/` depict the earlier evidence-only interface and should not be read as pictures of the current patient workspace.
 
@@ -191,7 +198,7 @@ python -m embeddings.debug_bm25_gap           # BM25 vs FAISS coverage gaps
 
 ## Example Output
 
-Illustrative output from an earlier demo run; generated wording and cited pages may vary after lifecycle filtering.
+Illustrative output from an earlier historical-evidence demo run; NG19 is now excluded from default current-clinical retrieval. Generated wording and cited pages may vary.
 
 ```
 Q: What is the SINBAD classification?
@@ -227,7 +234,7 @@ answer this question.
 
 ## Indexed Sources
 
-Default clinical retrieval includes the registered current NICE NG19, NG136, and NG238 snapshots. The older NG28 PDF, WHO reports, CDC article, India MoHFW FAQ, and OpenStax textbook remain registered for explicit historical or reference access. See the [source inventory and lifecycle](KNOWLEDGE_GOVERNANCE.md#corpus-audit-verified-24-september-2026).
+Default clinical retrieval includes the registered current NICE NG136 and NG238 snapshots. The bundled NG19 and NG28 PDFs are superseded and available only through explicit historical access. WHO reports, the CDC article, India MoHFW FAQ, and OpenStax textbook retain their governed historical or reference policies. See the [source inventory and lifecycle](KNOWLEDGE_GOVERNANCE.md#corpus-audit-verified-24-september-2026).
 
 ## Deployment
 
@@ -312,7 +319,7 @@ These are stated plainly rather than buried — each is a real constraint of the
 
 ## Roadmap
 
-Phase 1 established governed source versions and lifecycle-aware retrieval. Phase 2 adds synthetic patient context and review snapshots. Clinical rules, real patient integration, and production security are outside this build.
+Phase 1 established governed source versions and lifecycle-aware retrieval. Phase 2 added synthetic patient context and review snapshots. Phase 3 adds one active deterministic annual follow-up check, a suppressed diabetes foot-assessment candidate, structured findings, and unauthenticated demo dispositions. Current NG19 evidence ingestion, real patient integration, and production security remain outside this build.
 
 ## Disclaimer
 

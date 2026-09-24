@@ -16,6 +16,9 @@ from backend.fhir_adapter import FHIRInputError, parse_bundle
 from backend.patient_context import data_availability, timeline
 from backend.patient_models import ClinicalReview, DataAvailability, PatientContext, TimelineEvent
 from backend.patient_store import PatientNotFound, ReviewNotFound, SQLitePatientRepository
+from backend.patient_store import FindingNotFound, ReviewCompleted
+from backend.clinical_models import ActionRequest, ClinicalFinding, EvaluationRequest, FindingAction
+from backend.clinical_review import ClinicalReviewEngine, EvaluationConflict
 
 router = APIRouter(prefix="/v1")
 log = logging.getLogger(__name__)
@@ -214,5 +217,67 @@ def complete_review(review_id: str, repository: SQLitePatientRepository = Depend
         return repository.complete_review(review_id)
     except ReviewNotFound as exc:
         raise _api_error(404, "review_not_found", "Review not found") from exc
+    except (sqlite3.Error, ValueError) as exc:
+        raise _storage_error(exc) from exc
+
+
+@router.post("/reviews/{review_id}/evaluate", response_model=tuple[ClinicalFinding, ...])
+def evaluate_review(
+    review_id: str, request: EvaluationRequest, repository: SQLitePatientRepository = Depends(get_repository)
+) -> tuple[ClinicalFinding, ...]:
+    try:
+        return ClinicalReviewEngine(repository).evaluate(review_id, request)
+    except ReviewNotFound as exc:
+        raise _api_error(404, "review_not_found", "Review not found") from exc
+    except ReviewCompleted as exc:
+        raise _api_error(409, "review_completed", "Completed review cannot be evaluated") from exc
+    except EvaluationConflict as exc:
+        raise _api_error(409, "evaluation_conflict", str(exc)) from exc
+    except (sqlite3.Error, ValueError) as exc:
+        raise _storage_error(exc) from exc
+
+
+@router.get("/reviews/{review_id}/findings", response_model=tuple[ClinicalFinding, ...])
+def list_findings(
+    review_id: str, repository: SQLitePatientRepository = Depends(get_repository)
+) -> tuple[ClinicalFinding, ...]:
+    try:
+        return repository.list_findings(review_id)
+    except ReviewNotFound as exc:
+        raise _api_error(404, "review_not_found", "Review not found") from exc
+    except (sqlite3.Error, ValueError) as exc:
+        raise _storage_error(exc) from exc
+
+
+@router.get("/findings/{finding_id}", response_model=ClinicalFinding)
+def get_finding(finding_id: str, repository: SQLitePatientRepository = Depends(get_repository)) -> ClinicalFinding:
+    try:
+        return repository.get_finding(finding_id)
+    except FindingNotFound as exc:
+        raise _api_error(404, "finding_not_found", "Finding not found") from exc
+    except (sqlite3.Error, ValueError) as exc:
+        raise _storage_error(exc) from exc
+
+
+@router.post("/findings/{finding_id}/actions", response_model=FindingAction, status_code=201)
+def add_finding_action(
+    finding_id: str, request: ActionRequest, repository: SQLitePatientRepository = Depends(get_repository)
+) -> FindingAction:
+    try:
+        return repository.add_action(finding_id, request.action_type, request.note)
+    except FindingNotFound as exc:
+        raise _api_error(404, "finding_not_found", "Finding not found") from exc
+    except (sqlite3.Error, ValueError) as exc:
+        raise _storage_error(exc) from exc
+
+
+@router.get("/findings/{finding_id}/actions", response_model=tuple[FindingAction, ...])
+def list_finding_actions(
+    finding_id: str, repository: SQLitePatientRepository = Depends(get_repository)
+) -> tuple[FindingAction, ...]:
+    try:
+        return repository.list_actions(finding_id)
+    except FindingNotFound as exc:
+        raise _api_error(404, "finding_not_found", "Finding not found") from exc
     except (sqlite3.Error, ValueError) as exc:
         raise _storage_error(exc) from exc

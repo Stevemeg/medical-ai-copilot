@@ -57,6 +57,34 @@
         "onsetDateTime": "2024-01-10",
         "recordedDate": "2024-01-10"
       }
+    },
+    {
+      "resource": {
+        "resourceType": "Condition",
+        "id": "cond-d2",
+        "subject": {
+          "reference": "Patient/SYN-PAT-004"
+        },
+        "code": {
+          "text": "Essential hypertension",
+          "coding": [
+            {
+              "system": "http://hl7.org/fhir/sid/icd-10",
+              "code": "I10",
+              "display": "Essential hypertension"
+            }
+          ]
+        },
+        "clinicalStatus": {
+          "coding": [
+            {
+              "code": "active"
+            }
+          ]
+        },
+        "onsetDateTime": "2023-01-10",
+        "recordedDate": "2023-01-10"
+      }
     }
   ]
 }

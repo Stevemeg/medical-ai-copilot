@@ -196,12 +196,19 @@
         },
         "type": [
           {
-            "text": "Outpatient visit"
+            "text": "Hypertension annual care review",
+            "coding": [
+              {
+                "system": "urn:medical-ai-copilot:synthetic-clinical-event",
+                "code": "HTN-ANNUAL-REVIEW",
+                "display": "Hypertension annual care review"
+              }
+            ]
           }
         ],
         "period": {
-          "start": "2025-08-09T10:00:00+05:30",
-          "end": "2025-08-09T10:45:00+05:30"
+          "start": "2025-05-12T10:00:00+05:30",
+          "end": "2025-05-12T10:45:00+05:30"
         }
       }
     }

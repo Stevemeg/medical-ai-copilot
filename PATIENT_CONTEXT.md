@@ -11,7 +11,7 @@ Synthetic collection Bundle -> structural validation -> FHIR adapter
 Governed source registry -> lifecycle-aware evidence retrieval -> Ask Evidence
 ```
 
-The patient path and Ask Evidence path are separate. Patient records are not automatically sent to the LLM. Current clinical retrieval still excludes the superseded bundled NICE NG28 2022 version. The review has no clinical findings or recommendations in this phase.
+The patient path and Ask Evidence path are separate. Patient records are not automatically sent to the LLM. Current clinical retrieval excludes the superseded bundled NICE NG28 2022 and NG19 2019 versions. Phase 3 adds a narrow deterministic hypertension annual follow-up finding; the foot-assessment candidate is suppressed pending current governed evidence. See [clinical rules](CLINICAL_RULES.md).
 
 ## Supported import subset
 
@@ -27,7 +27,7 @@ The scoped structure follows the [HL7 FHIR R4 Bundle definition](https://hl7.org
 
 Raw FHIR is accepted only at the import boundary. `PatientContext` is a typed internal model containing the patient, conditions, observations, medications, allergies, encounters, procedures, and source metadata. Resource arrays and coding arrays are sorted deterministically. SHA-256 is computed over canonical JSON of normalized content, so Bundle entry order and unused transport fields do not affect it. A meaningful normalized content change creates a new hash.
 
-SQLite stores normalized context JSON, its hash, an independent UUID patient ID, and review JSON. Raw Bundles are not persisted. Reimporting unchanged content is idempotent. Reimporting changed content with the same synthetic source patient ID updates that patient row and keeps its UUID; existing reviews retain their copied context and original hash. Every explicit review creation makes a new review UUID. A review can be marked completed; no clinical findings are generated. Local `data/patient_context.db` is ignored by Git. SQLite provides local persistence between requests but is not a shared production storage or security system.
+SQLite stores normalized context JSON, its hash, an independent UUID patient ID, and review JSON. Raw Bundles are not persisted. Reimporting unchanged content is idempotent. Reimporting changed content with the same synthetic source patient ID updates that patient row and keeps its UUID; existing reviews retain their copied context and original hash. Every explicit review creation makes a new review UUID. Phase 3 findings and clinician actions use separate SQLite tables. A review can be marked completed; completed reviews cannot be evaluated. Local `data/patient_context.db` is ignored by Git. SQLite provides local persistence between requests but is not a shared production storage or security system.
 
 ## Context queries and timeline
 
@@ -39,7 +39,7 @@ The timeline combines conditions, observations, medication requests, allergies, 
 
 The versioned API provides `POST /v1/fhir/validate`, `POST /v1/patients/import`, `GET /v1/patients`, `GET /v1/patients/{id}`, `POST /v1/patients/{id}/reviews`, `GET /v1/patients/{id}/reviews`, `GET /v1/reviews/{id}`, and `POST /v1/reviews/{id}/complete`. Demo fixture routes are `GET /v1/demo-patients` and `POST /v1/demo-patients/{key}/load`. `GET /v1/knowledge-sources` exposes registry lifecycle metadata. Existing `/api/ask` remains the separate Ask Evidence route.
 
-The Streamlit and custom HTML workspaces show patient selection/import, summary, timeline, data availability, review snapshot, Ask Evidence, and knowledge sources. All bundled records in `data/synthetic_fhir/` are fictional. The interface uses the current records as supplied; it does **not** evaluate clinical care gaps, diagnose, prescribe, assess guideline adherence, or issue autonomous recommendations.
+The Streamlit workspace shows patient selection/import, summary, timeline, data availability, review snapshots, deterministic Phase 3 findings, Ask Evidence, and knowledge sources. The alternative HTML client has not yet been updated with Phase 3 finding controls. All bundled records in `data/synthetic_fhir/` are fictional. Potential care gaps require clinician review; the interface does not diagnose, prescribe, or issue autonomous treatment recommendations.
 
 Normal application logs contain operation identifiers, counts, and hashes; they do not include raw Bundles or normalized patient payloads. The current local prototype has no authentication and must not be used with real patient data.
 

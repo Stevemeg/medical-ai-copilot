@@ -94,15 +94,31 @@ def blood_pressure(rid, number, systolic, diastolic, effective):
     )
 
 
-def encounter(rid, number, start, end):
+EVENT_SYSTEM = "urn:medical-ai-copilot:synthetic-clinical-event"
+
+
+def encounter(rid, number, start, end, event_code=None):
     return link(
         "Encounter",
         rid,
         number,
         status="finished",
         **{"class": {"code": "AMB"}},
-        type=[concept("Outpatient visit")],
+        type=[concept("Hypertension annual care review", EVENT_SYSTEM, event_code)]
+        if event_code
+        else [concept("Outpatient visit")],
         period={"start": start, "end": end},
+    )
+
+
+def foot_assessment(rid, number, performed):
+    return link(
+        "Procedure",
+        rid,
+        number,
+        code=concept("Diabetic foot-risk assessment", EVENT_SYSTEM, "DIABETIC-FOOT-RISK-ASSESSMENT"),
+        status="completed",
+        performedDateTime=performed,
     )
 
 
@@ -113,6 +129,7 @@ fixtures = {
         medication("med-a1", 1, "Metformin", "2025-04-08"),
         observation("obs-a1", 1, "Hemoglobin A1c", "4548-4", 7.2, "%", "2025-08-12"),
         encounter("enc-a1", 1, "2025-08-12T09:00:00Z", "2025-08-12T09:30:00Z"),
+        foot_assessment("proc-a1", 1, "2026-03-03T09:00:00Z"),
     ],
     2: [
         patient(2, "1965-11-02", "male"),
@@ -120,7 +137,7 @@ fixtures = {
         medication("med-b1", 2, "Amlodipine", "2025-01-05"),
         blood_pressure("obs-b1", 2, 138, 84, "2025-07-09T10:15:00+05:30"),
         blood_pressure("obs-b2", 2, 132, 82, "2025-08-09T10:15:00+05:30"),
-        encounter("enc-b1", 2, "2025-08-09T10:00:00+05:30", "2025-08-09T10:45:00+05:30"),
+        encounter("enc-b1", 2, "2025-05-12T10:00:00+05:30", "2025-05-12T10:45:00+05:30", "HTN-ANNUAL-REVIEW"),
     ],
     3: [
         patient(3, "1958-02-18", "female"),
@@ -133,8 +150,14 @@ fixtures = {
         blood_pressure("obs-c3", 3, 136, 82, "2025-08-12"),
         encounter("enc-c1", 3, "2025-02-12T11:00:00Z", "2025-02-12T11:25:00Z"),
         encounter("enc-c2", 3, "2025-08-12T11:00:00Z", "2025-08-12T11:25:00Z"),
+        encounter("enc-c3", 3, "2026-03-10T11:00:00Z", "2026-03-10T11:25:00Z", "HTN-ANNUAL-REVIEW"),
+        foot_assessment("proc-c1", 3, "2025-05-20T11:00:00Z"),
     ],
-    4: [patient(4, "1980-07-27", "other"), condition("cond-d1", 4, "Type 2 diabetes mellitus", "E11.9", "2024-01-10")],
+    4: [
+        patient(4, "1980-07-27", "other"),
+        condition("cond-d1", 4, "Type 2 diabetes mellitus", "E11.9", "2024-01-10"),
+        condition("cond-d2", 4, "Essential hypertension", "I10", "2023-01-10"),
+    ],
     5: [
         patient(5, "1975-09-30", "female"),
         medication("med-e1", 5, "Amoxicillin", "2024-01-05", status="stopped"),

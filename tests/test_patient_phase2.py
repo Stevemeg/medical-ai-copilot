@@ -49,10 +49,10 @@ def expect_error(raw: dict, code: str) -> None:
 @pytest.mark.parametrize(
     "number,counts",
     [
-        (1, {"Patient": 1, "Condition": 1, "MedicationRequest": 1, "Observation": 1, "Encounter": 1}),
+        (1, {"Patient": 1, "Condition": 1, "MedicationRequest": 1, "Observation": 1, "Encounter": 1, "Procedure": 1}),
         (2, {"Patient": 1, "Condition": 1, "MedicationRequest": 1, "Observation": 2, "Encounter": 1}),
-        (3, {"Patient": 1, "Condition": 2, "MedicationRequest": 2, "Observation": 3, "Encounter": 2}),
-        (4, {"Patient": 1, "Condition": 1}),
+        (3, {"Patient": 1, "Condition": 2, "MedicationRequest": 2, "Observation": 3, "Encounter": 3, "Procedure": 1}),
+        (4, {"Patient": 1, "Condition": 2}),
         (5, {"Patient": 1, "MedicationRequest": 2, "AllergyIntolerance": 1, "Encounter": 1, "Procedure": 1}),
     ],
 )
@@ -168,12 +168,12 @@ def test_context_status_and_availability():
     assert len(known_allergies(context)) == 1
     assert "observations" in data_availability(context).missing_data_types
     incomplete, _ = parse_bundle(bundle(4))
-    assert len(active_conditions(incomplete)) == 1
+    assert len(active_conditions(incomplete)) == 2
     assert "allergies" in data_availability(incomplete).missing_data_types
     assert "overdue" not in json.dumps(data_availability(incomplete).model_dump())
     inactive = bundle(4)
     resource(inactive, "Condition")["clinicalStatus"]["coding"][0]["code"] = "inactive"
-    assert active_conditions(parse_bundle(inactive)[0]) == ()
+    assert [condition.condition_id for condition in active_conditions(parse_bundle(inactive)[0])] == ["cond-d2"]
     assert data_availability(parse_bundle(bundle(1))[0]).last_observation_dates["Hemoglobin A1c"] == "2025-08-12"
     raw = bundle(5)
     resource(raw, "MedicationRequest")["medicationCodeableConcept"]["coding"] = [
@@ -208,8 +208,8 @@ def test_timeline_order_undated_and_ties():
     events = timeline(context)
     assert events[-1].event_id == "observation:obs-a1"
     assert events == timeline(context)
-    assert events[0].timestamp == "2025-08-12T09:00:00Z"
-    assert [event.event_type for event in events[:2]] == ["encounter", "procedure"]
+    tied = [event for event in events if event.timestamp == "2025-08-12T09:00:00Z"]
+    assert [event.event_type for event in tied] == ["encounter", "procedure"]
 
 
 def test_sqlite_idempotent_update_and_immutable_review(tmp_path):
@@ -221,7 +221,7 @@ def test_sqlite_idempotent_update_and_immutable_review(tmp_path):
     assert repo.import_context(context) == (patient_id, digest, False)
     review = repo.create_review(patient_id)
     assert review.patient_context_hash == digest
-    assert not review.findings and not review.evidence
+    assert repo.list_findings(review.review_id) == ()
     changed_raw = bundle(3)
     resource(changed_raw, "Observation")["valueQuantity"]["value"] = 8.1
     new_digest = repo.import_context(parse_bundle(changed_raw)[0])[1]

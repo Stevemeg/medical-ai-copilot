@@ -119,6 +119,27 @@
           "end": "2025-08-12T09:30:00Z"
         }
       }
+    },
+    {
+      "resource": {
+        "resourceType": "Procedure",
+        "id": "proc-a1",
+        "subject": {
+          "reference": "Patient/SYN-PAT-001"
+        },
+        "code": {
+          "text": "Diabetic foot-risk assessment",
+          "coding": [
+            {
+              "system": "urn:medical-ai-copilot:synthetic-clinical-event",
+              "code": "DIABETIC-FOOT-RISK-ASSESSMENT",
+              "display": "Diabetic foot-risk assessment"
+            }
+          ]
+        },
+        "status": "completed",
+        "performedDateTime": "2026-03-03T09:00:00Z"
+      }
     }
   ]
 }

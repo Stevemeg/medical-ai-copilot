@@ -264,6 +264,56 @@
           "end": "2025-08-12T11:25:00Z"
         }
       }
+    },
+    {
+      "resource": {
+        "resourceType": "Encounter",
+        "id": "enc-c3",
+        "subject": {
+          "reference": "Patient/SYN-PAT-003"
+        },
+        "status": "finished",
+        "class": {
+          "code": "AMB"
+        },
+        "type": [
+          {
+            "text": "Hypertension annual care review",
+            "coding": [
+              {
+                "system": "urn:medical-ai-copilot:synthetic-clinical-event",
+                "code": "HTN-ANNUAL-REVIEW",
+                "display": "Hypertension annual care review"
+              }
+            ]
+          }
+        ],
+        "period": {
+          "start": "2026-03-10T11:00:00Z",
+          "end": "2026-03-10T11:25:00Z"
+        }
+      }
+    },
+    {
+      "resource": {
+        "resourceType": "Procedure",
+        "id": "proc-c1",
+        "subject": {
+          "reference": "Patient/SYN-PAT-003"
+        },
+        "code": {
+          "text": "Diabetic foot-risk assessment",
+          "coding": [
+            {
+              "system": "urn:medical-ai-copilot:synthetic-clinical-event",
+              "code": "DIABETIC-FOOT-RISK-ASSESSMENT",
+              "display": "Diabetic foot-risk assessment"
+            }
+          ]
+        },
+        "status": "completed",
+        "performedDateTime": "2025-05-20T11:00:00Z"
+      }
     }
   ]
 }

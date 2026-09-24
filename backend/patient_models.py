@@ -148,7 +148,4 @@ class ClinicalReview(Record):
     patient_snapshot: PatientContext
     timeline: tuple[TimelineEvent, ...]
     data_availability: DataAvailability
-    findings: tuple[str, ...] = ()
-    evidence: tuple[str, ...] = ()
-    clinician_actions: tuple[str, ...] = ()
     completed_at: str | None = None

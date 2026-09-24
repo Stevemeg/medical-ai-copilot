@@ -65,6 +65,8 @@ def registry_data(tmp_path: Path):
 
 def test_real_registry_and_corpus_provenance():
     registry = SourceRegistry()
+    assert not registry.eligible({"version_id": "nice-ng19-2019-10-11"}, RetrievalPolicy.CURRENT_CLINICAL)
+    assert registry.eligible({"version_id": "nice-ng19-2019-10-11"}, RetrievalPolicy.HISTORICAL_ONLY)
     validate_chunks_manifest(registry.root / "data/chunks.json", registry)
     chunks = json.loads((registry.root / "data/chunks.json").read_text(encoding="utf-8"))
     assert len(registry.versions) == 9
