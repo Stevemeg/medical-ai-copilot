@@ -51,7 +51,7 @@ In healthcare, factual reliability and **traceability** are not nice-to-haves. A
 
 ## The Solution
 
-The primary workspace loads fictional FHIR R4-compatible patient Bundles, normalizes them into typed patient context, and creates reproducible review snapshots. It shows supplied records, a deterministic timeline, and an **evidence-bound deterministic hypertension annual-review check**. A planned diabetes foot-assessment check is suppressed because its bundled NG19 evidence version is stale. Findings distinguish potential care gaps from insufficient data and require human review. [Patient context documentation](PATIENT_CONTEXT.md) describes the supported FHIR subset; [clinical rule documentation](CLINICAL_RULES.md) describes rule scope and limitations. Diagnosis and treatment recommendations are not implemented.
+The primary workspace loads fictional FHIR R4-compatible patient Bundles, normalizes them into typed patient context, and creates reproducible review snapshots. It shows supplied records, a deterministic timeline, and **evidence-bound deterministic hypertension annual-review and diabetic-foot-assessment checks**. Findings distinguish potential care gaps from insufficient data and require human review. [Patient context documentation](PATIENT_CONTEXT.md) describes the supported FHIR subset; [clinical rule documentation](CLINICAL_RULES.md) describes rule scope and limitations. Diagnosis and treatment recommendations are not implemented.
 
 Ask Evidence remains available as a separate general question workflow. Patient records are not automatically provided to it.
 
@@ -72,7 +72,7 @@ Question -> registry policy filter -> hybrid retrieval (FAISS + BM25/RRF) -> rel
 **Synthetic patient review**
 - Five bundled fictional patients can be selected; supported synthetic collection Bundles can also be imported.
 - Normalized patient context, stable content hash, local SQLite persistence, deterministic timeline, and immutable review snapshots.
-- One offline, versioned hypertension annual follow-up rule uses current governed NICE evidence and explicit record coverage. The foot-assessment candidate fails closed pending a governed current NG19 source. Finding dispositions are append-only demo actions.
+- Two offline, versioned annual follow-up rules use governed NICE evidence and explicit record coverage. Hypertension review links a current local NG136 document and verified recommendation; diabetic-foot assessment links a verified current NG19 recommendation snapshot while its old local PDF remains superseded. Finding dispositions are append-only demo actions.
 - Streamlit and the alternative HTML client place patient review first, with Ask Evidence and source visibility in separate tabs.
 
 **Retrieval**
@@ -117,6 +117,9 @@ flowchart LR
     FINDING --> ACTION[Clinician action history]
     FINDING --> UI[Clinical Review workspace]
     PDF[Registered source PDF] --> REG[Registry and SHA-256 validation]
+    NICE[Official NICE recommendation] --> VERIFY[Explicit governance verification]
+    VERIFY --> RECREG[Recommendation fingerprint registry]
+    RECREG --> RULES
     REG --> PARSE[Page extraction and chunking]
     REG --> RULES
     PARSE --> IDX[FAISS indexes and provenance manifests]
@@ -163,7 +166,7 @@ python -m venv venv
 pip install -r requirements.txt
 ```
 
-For development checks, use `pip install -r requirements-dev.txt` and run `pytest`. The registry and committed index provenance can be checked without an LLM key using `python -m backend.source_registry` and `python -m backend.index_provenance`.
+For development checks, use `pip install -r requirements-dev.txt` and run `pytest`. The retrieval registry and committed index provenance can be checked without an LLM key using `python -m backend.source_registry` and `python -m backend.index_provenance`. The separate, explicit online rule-evidence governance check is `python -m scripts.verify_rule_evidence`; it reports NICE recommendation fingerprint matches or drift and is not part of patient evaluation or the normal offline test suite.
 
 **For generated Ask Evidence answers**, create `.streamlit/secrets.toml`:
 
@@ -319,7 +322,7 @@ These are stated plainly rather than buried — each is a real constraint of the
 
 ## Roadmap
 
-Phase 1 established governed source versions and lifecycle-aware retrieval. Phase 2 added synthetic patient context and review snapshots. Phase 3 adds one active deterministic annual follow-up check, a suppressed diabetes foot-assessment candidate, structured findings, and unauthenticated demo dispositions. Current NG19 evidence ingestion, real patient integration, and production security remain outside this build.
+Phase 1 established governed source versions and lifecycle-aware retrieval. Phase 2 added synthetic patient context and review snapshots. Phase 3 adds two narrow deterministic annual follow-up checks, structured findings, a separate authoritative recommendation verification registry, and unauthenticated demo dispositions. Current NG19 full-document ingestion, real patient integration, and production security remain outside this build.
 
 ## Disclaimer
 

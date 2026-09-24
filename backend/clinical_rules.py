@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import logging
 import re
 from datetime import date
 from typing import Protocol, cast
@@ -17,6 +18,13 @@ from backend.clinical_models import (
 )
 from backend.knowledge_models import IngestionStatus, Lifecycle, SourceType
 from backend.patient_models import Concept, PatientContext
+from backend.rule_evidence import (
+    EvidenceBasis,
+    RecommendationEvidenceError,
+    RecommendationEvidenceRegistry,
+    VerifiedRecommendationEvidence,
+    validate_current_recommendation,
+)
 from backend.source_registry import SourceRegistry
 
 SYNTHETIC_SYSTEM = "urn:medical-ai-copilot:synthetic-clinical-event"
@@ -25,6 +33,7 @@ HTN_CODES = {(ICD10_SYSTEM, "I10")}
 T2D_CODES = {(ICD10_SYSTEM, "E11.9"), (ICD10_SYSTEM, "E11")}
 HTN_REVIEW_CODE = (SYNTHETIC_SYSTEM, "HTN-ANNUAL-REVIEW")
 FOOT_ASSESSMENT_CODE = (SYNTHETIC_SYSTEM, "DIABETIC-FOOT-RISK-ASSESSMENT")
+LOG = logging.getLogger(__name__)
 
 
 class RuleEvidenceError(ValueError):
@@ -65,10 +74,6 @@ def _adult_state(context: PatientContext, as_of: date) -> str:
         return "unknown"
     born = date.fromisoformat(context.patient.birth_date)
     return "adult" if (as_of.year - born.year - ((as_of.month, as_of.day) < (born.month, born.day))) >= 18 else "minor"
-
-
-def _event_date(value: str | None) -> date | None:
-    return date.fromisoformat(value[:10]) if value else None
 
 
 class ClinicalRule(Protocol):
@@ -211,32 +216,95 @@ class AnnualEventRule:
 
 
 class RuleRegistry:
-    def __init__(self, evidence_registry: SourceRegistry):
+    def __init__(
+        self,
+        evidence_registry: SourceRegistry,
+        recommendation_registry: RecommendationEvidenceRegistry | None = None,
+    ):
         self.evidence_registry = evidence_registry
+        self.recommendation_registry = recommendation_registry
+        if self.recommendation_registry is None:
+            try:
+                self.recommendation_registry = RecommendationEvidenceRegistry()
+            except RecommendationEvidenceError:
+                LOG.warning("recommendation_evidence_registry_unavailable")
         self.rules: dict[tuple[str, str], ClinicalRule] = {}
 
     def evidence(self, definition: RuleDefinition) -> RuleEvidenceReference:
         doc = self.evidence_registry.documents.get(definition.source_document_id)
-        version = self.evidence_registry.versions.get(definition.source_version_id)
-        if doc is None or version is None or version.document_id != doc.document_id:
-            raise RuleEvidenceError("evidence document or version is unavailable")
+        if doc is None or doc.source_type is not SourceType.CLINICAL_GUIDELINE:
+            raise RuleEvidenceError("evidence document is not a registered clinical guideline")
+        if definition.evidence_basis is EvidenceBasis.LOCAL_CURRENT_DOCUMENT:
+            version = self.evidence_registry.versions.get(definition.source_version_id or "")
+            if version is None or version.document_id != doc.document_id:
+                raise RuleEvidenceError("evidence document or version is unavailable")
+            if version.status is not Lifecycle.CURRENT or version.ingestion_status is not IngestionStatus.INGESTED:
+                raise RuleEvidenceError("evidence is not an ingested current clinical guideline")
+            if not doc.canonical_source_url:
+                raise RuleEvidenceError("canonical evidence URL is unavailable")
+            snapshot = self._snapshot(definition) if definition.evidence_id else None
+            return RuleEvidenceReference(
+                evidence_id=snapshot.evidence_id if snapshot else None,
+                evidence_basis=EvidenceBasis.LOCAL_CURRENT_DOCUMENT,
+                document_id=doc.document_id,
+                version_id=version.version_id,
+                recommendation_id=definition.recommendation_id,
+                canonical_source_url=snapshot.canonical_source_url if snapshot else doc.canonical_source_url,
+                source_verified_on=snapshot.verified_on if snapshot else definition.source_verified_on,
+                publisher=doc.publisher,
+                guideline_title=doc.canonical_title,
+                guideline_code=doc.guideline_code,
+                jurisdiction=doc.jurisdiction,
+                lifecycle_status=version.status.value,
+                verification_status=snapshot.verification_status if snapshot else None,
+                recommendation_sha256=snapshot.recommendation_sha256 if snapshot else None,
+            )
+        if definition.evidence_basis is EvidenceBasis.AUTHORITATIVE_RECOMMENDATION_SNAPSHOT:
+            if definition.source_version_id is not None:
+                raise RuleEvidenceError("recommendation snapshot must not claim a local document version")
+            snapshot = self._snapshot(definition)
+            return RuleEvidenceReference(
+                evidence_id=snapshot.evidence_id,
+                evidence_basis=EvidenceBasis.AUTHORITATIVE_RECOMMENDATION_SNAPSHOT,
+                document_id=doc.document_id,
+                recommendation_id=snapshot.recommendation_id,
+                canonical_source_url=snapshot.canonical_source_url,
+                source_verified_on=snapshot.verified_on,
+                publisher=snapshot.publisher,
+                guideline_title=doc.canonical_title,
+                guideline_code=snapshot.guideline_code,
+                jurisdiction=snapshot.jurisdiction,
+                verification_status=snapshot.verification_status,
+                recommendation_sha256=snapshot.recommendation_sha256,
+            )
+        raise RuleEvidenceError("unsupported evidence basis")
+
+    def _snapshot(self, definition: RuleDefinition) -> VerifiedRecommendationEvidence:
+        if self.recommendation_registry is None or definition.evidence_id is None:
+            raise RuleEvidenceError("recommendation evidence registry or ID is unavailable")
+        try:
+            self.recommendation_registry.refresh_if_changed()
+        except RecommendationEvidenceError as exc:
+            raise RuleEvidenceError("recommendation evidence registry is unavailable") from exc
+        snapshot = self.recommendation_registry.evidence.get(definition.evidence_id)
+        if snapshot is None:
+            raise RuleEvidenceError("recommendation evidence is unavailable")
+        try:
+            validate_current_recommendation(snapshot)
+        except RecommendationEvidenceError as exc:
+            raise RuleEvidenceError("recommendation evidence is not current and authoritative") from exc
+        doc = self.evidence_registry.documents.get(definition.source_document_id)
         if (
-            doc.source_type is not SourceType.CLINICAL_GUIDELINE
-            or version.status is not Lifecycle.CURRENT
-            or version.ingestion_status is not IngestionStatus.INGESTED
+            doc is None
+            or snapshot.document_id != doc.document_id
+            or snapshot.publisher != doc.publisher
+            or snapshot.jurisdiction != doc.jurisdiction
+            or snapshot.guideline_code != doc.guideline_code
+            or snapshot.recommendation_id != definition.recommendation_id
+            or snapshot.verified_on != definition.source_verified_on
         ):
-            raise RuleEvidenceError("evidence is not an ingested current clinical guideline")
-        if not doc.canonical_source_url:
-            raise RuleEvidenceError("canonical evidence URL is unavailable")
-        return RuleEvidenceReference(
-            document_id=doc.document_id,
-            version_id=version.version_id,
-            recommendation_id=definition.recommendation_id,
-            canonical_source_url=doc.canonical_source_url,
-            source_verified_on=definition.source_verified_on,
-            publisher=doc.publisher,
-            guideline_title=doc.canonical_title,
-        )
+            raise RuleEvidenceError("recommendation evidence does not match rule or document identity")
+        return snapshot
 
     def register(self, rule: ClinicalRule) -> None:
         d = rule.definition
@@ -260,8 +328,11 @@ class RuleRegistry:
         return tuple(latest[key] for key in sorted(latest))
 
 
-def default_registry(evidence_registry: SourceRegistry | None = None) -> RuleRegistry:
-    registry = RuleRegistry(evidence_registry or SourceRegistry())
+def default_registry(
+    evidence_registry: SourceRegistry | None = None,
+    recommendation_registry: RecommendationEvidenceRegistry | None = None,
+) -> RuleRegistry:
+    registry = RuleRegistry(evidence_registry or SourceRegistry(), recommendation_registry)
     definitions = (
         (
             "HTN_ANNUAL_CARE_REVIEW",
@@ -270,6 +341,8 @@ def default_registry(evidence_registry: SourceRegistry | None = None) -> RuleReg
             "nice-ng136",
             "nice-ng136-2026-02-26",
             "1.4.24",
+            EvidenceBasis.LOCAL_CURRENT_DOCUMENT,
+            "nice-ng136-rec-1.4.24",
             HTN_CODES,
             HTN_REVIEW_CODE,
             "Encounter",
@@ -279,14 +352,28 @@ def default_registry(evidence_registry: SourceRegistry | None = None) -> RuleReg
             "Diabetes annual foot-risk assessment",
             "diabetes",
             "nice-ng19",
-            "nice-ng19-2019-10-11",
+            None,
             "1.3.3",
+            EvidenceBasis.AUTHORITATIVE_RECOMMENDATION_SNAPSHOT,
+            "nice-ng19-rec-1.3.3",
             T2D_CODES,
             FOOT_ASSESSMENT_CODE,
             "Procedure",
         ),
     )
-    for rule_id, title, domain, doc_id, version_id, rec_id, condition_codes, event_code, resource_type in definitions:
+    for (
+        rule_id,
+        title,
+        domain,
+        doc_id,
+        version_id,
+        rec_id,
+        basis,
+        evidence_id,
+        condition_codes,
+        event_code,
+        resource_type,
+    ) in definitions:
         definition = RuleDefinition(
             rule_id=rule_id,
             rule_version="1.0.0",
@@ -302,6 +389,8 @@ def default_registry(evidence_registry: SourceRegistry | None = None) -> RuleReg
             recommendation_id=rec_id,
             source_verified_on=date(2026, 9, 24),
             rule_kind="annual_coded_event",
+            evidence_basis=basis,
+            evidence_id=evidence_id,
         )
         try:
             registry.register(
@@ -311,7 +400,9 @@ def default_registry(evidence_registry: SourceRegistry | None = None) -> RuleReg
             # Keep the application available, but expose this rule as suppressed.
             registry.register(
                 AnnualEventRule(
-                    definition.model_copy(update={"status": RuleStatus.DISABLED}),
+                    definition.model_copy(
+                        update={"status": RuleStatus.DISABLED, "suppression_reason": "rule_evidence_unavailable"}
+                    ),
                     condition_codes,
                     event_code,
                     cast(ResourceType, resource_type),

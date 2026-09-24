@@ -1,6 +1,6 @@
 # Knowledge governance (Phase 1)
 
-This repository is an educational prototype. Its default retrieval scope is registered, ingested **current clinical guidelines** only. It does not determine what is clinically appropriate for a patient.
+This repository is an educational prototype. Its default retrieval scope is registered, ingested **current clinical guidelines** only. It does not determine what is clinically appropriate for a patient. Deterministic rule evidence has a separate recommendation-level registry described below.
 
 ## Source lifecycle
 
@@ -27,7 +27,7 @@ Locally stored sources are verified on registry load. A missing file or changed 
 
 | Bundled source | Publisher / type / jurisdiction | Snapshot | Lifecycle | Action |
 |---|---|---|---|---|
-| NICE NG19 diabetic foot | NICE / guideline / UK | Bundled PDF updated 11 Oct 2019 | Superseded | Excluded from default clinical retrieval and active rules. [Current recommendations](https://www.nice.org.uk/guidance/ng19/chapter/recommendations) include 2023 changes elsewhere in the guideline; 1.3.3 remains semantically consistent with the PDF, but the bundled document is not the current whole-guideline version. Explicit historical retrieval only. |
+| NICE NG19 diabetic foot | NICE / guideline / UK | Bundled PDF updated 11 Oct 2019 | Superseded | Excluded from default clinical retrieval and active rules **as a local document**. [Current recommendations](https://www.nice.org.uk/guidance/ng19/chapter/recommendations) include 2023 changes elsewhere in the guideline; 1.3.3 remains current, but the bundled document is not the current whole-guideline version. Explicit historical retrieval only. |
 | NICE NG136 hypertension | NICE / guideline / UK | Updated 26 Feb 2026 | Current | Included; [NICE listing](https://www.nice.org.uk/guidance/ng136) matches PDF |
 | NICE NG238 cardiovascular risk | NICE / guideline / UK | Published 14 Dec 2023; no later date in PDF | Current | Included; [NICE guidance](https://www.nice.org.uk/guidance/ng238) identifies this edition |
 | NICE NG28 type 2 diabetes | NICE / guideline / UK | Updated 29 Jun 2022 | Superseded | Retained for explicit historical use; [NICE now lists 18 Feb 2026](https://www.nice.org.uk/guidance/ng28) |
@@ -53,6 +53,12 @@ pytest
 Before registering a new source, verify the publisher, type, jurisdiction, lifecycle and redistribution rights; create a stable document ID and version ID; record the exact local SHA-256 and known dates/URL. Update the registry first. The three rebuild commands then validate raw bytes, processed provenance and index manifests. Unchanged validated PDFs skip extraction, and an index with exactly matching metadata and manifest skips re-embedding. If the PDF content changes, register a new version and rebuild; do not edit the hash to make an old version appear unchanged. The current PDF parser can be memory-intensive for the large textbook, and the chunker requires NLTK punkt data. `nltk.download` runs in the chunking script if the tokenizer data are absent.
 
 The one-time `embeddings.migrate_legacy_artifacts` command was used only for the committed pre-Phase-1 snapshot; use the normal rebuild path for later changes. A committed index manifest is checked at application startup, including when an old index is present. The ungoverned mixed index and its metadata were removed from the repository.
+
+## Recommendation-level clinical-rule evidence
+
+`data/rule_evidence_registry.json` is a second, related governance record. It binds a deterministic rule to a specifically verified official recommendation, rather than to the bytes of a locally indexed PDF. Each record carries a canonical NICE URL, publisher, guideline and recommendation IDs, jurisdiction, verification date/status, SHA-256 fingerprint of normalized recommendation content, and a short paraphrased purpose. The official page is fetched only by the explicit `python -m scripts.verify_rule_evidence` governance command; patient review remains offline. The verifier reports `MATCH`, `DRIFT`, `NOT_FOUND`, or `FETCH_FAILED`, and records `drift_detected` on a content mismatch or missing recommendation. A reviewer must check the official source and any surveillance before restoring `verified_current`; rule behavior changes require a new rule version.
+
+The NG19 2019 PDF is still superseded and cannot enter default current retrieval or serve as a current local-document rule source. NG19 recommendation 1.3.3 was separately verified on the current NICE page and can support the narrow annual foot-assessment rule through the recommendation registry. This assertion does not alter the PDF lifecycle. No new full NICE PDF or recommendation-page copy is committed. See [clinical rules](CLINICAL_RULES.md#recommendation-verification-procedure) for fingerprint details and rule activation policy.
 
 ## Limits
 

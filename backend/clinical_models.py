@@ -9,6 +9,7 @@ from typing import Literal
 from pydantic import BaseModel, ConfigDict, field_validator, model_validator
 
 from backend.patient_models import PatientContext
+from backend.rule_evidence import EvidenceBasis, VerificationStatus
 
 
 class ClinicalRecord(BaseModel):
@@ -38,14 +39,20 @@ class ActionType(StrEnum):
 
 
 class RuleEvidenceReference(ClinicalRecord):
+    evidence_id: str | None = None
+    evidence_basis: EvidenceBasis = EvidenceBasis.LOCAL_CURRENT_DOCUMENT
     document_id: str
-    version_id: str
+    version_id: str | None = None
     recommendation_id: str
     canonical_source_url: str
     source_verified_on: date
     publisher: str = "NICE"
     guideline_title: str
-    lifecycle_status: str = "current"
+    guideline_code: str | None = None
+    jurisdiction: str | None = None
+    lifecycle_status: str | None = None
+    verification_status: VerificationStatus | None = None
+    recommendation_sha256: str | None = None
 
 
 class RuleDefinition(ClinicalRecord):
@@ -59,10 +66,13 @@ class RuleDefinition(ClinicalRecord):
     description: str
     required_patient_data: tuple[str, ...]
     source_document_id: str
-    source_version_id: str
+    source_version_id: str | None
     recommendation_id: str
     source_verified_on: date
     rule_kind: str
+    evidence_basis: EvidenceBasis = EvidenceBasis.LOCAL_CURRENT_DOCUMENT
+    evidence_id: str | None = None
+    suppression_reason: str | None = None
 
 
 ResourceType = Literal["Encounter", "Procedure", "Condition", "Observation"]
@@ -129,6 +139,7 @@ class ClinicalFinding(ClinicalRecord):
     observed_values: dict[str, str | int | float | None]
     missing_data: tuple[str, ...]
     evidence_refs: tuple[RuleEvidenceReference, ...]
+    suppression_reason: str | None = None
     created_at: datetime
 
 

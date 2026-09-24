@@ -300,11 +300,18 @@ with review_tab:
                         for evidence in finding.evidence_refs:
                             with st.expander("Evidence"):
                                 st.write(
-                                    f"{evidence.publisher} · {evidence.guideline_title} · recommendation {evidence.recommendation_id}"
+                                    f"{evidence.publisher} {evidence.guideline_code or ''} · {evidence.guideline_title} · recommendation {evidence.recommendation_id}"
                                 )
-                                st.write(
-                                    f"Document version: {evidence.version_id} · Lifecycle: {evidence.lifecycle_status} · Verified: {evidence.source_verified_on}"
-                                )
+                                if evidence.evidence_basis.value == "authoritative_recommendation_snapshot":
+                                    st.write(
+                                        f"Authoritative recommendation snapshot · Evidence status: {evidence.verification_status.value if evidence.verification_status else 'unknown'} · Verified: {evidence.source_verified_on}"
+                                    )
+                                else:
+                                    st.write(
+                                        f"Local document version: {evidence.version_id} · Lifecycle: {evidence.lifecycle_status} · Verified: {evidence.source_verified_on}"
+                                    )
+                                    if evidence.verification_status:
+                                        st.caption(f"Recommendation status: {evidence.verification_status.value}")
                                 st.link_button("View official source", evidence.canonical_source_url)
                         action = st.selectbox(
                             "Clinician disposition",

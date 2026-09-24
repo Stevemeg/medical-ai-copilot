@@ -17,7 +17,6 @@ from backend.clinical_models import (
     EvaluationRequest,
     FindingStatus,
     RecordCoverage,
-    RuleEvaluationContext,
     RuleStatus,
 )
 from backend.clinical_review import ClinicalReviewEngine, EvaluationConflict
@@ -25,7 +24,7 @@ from backend.clinical_rules import AnnualEventRule, RuleEvidenceError, RuleRegis
 from backend.fhir_adapter import parse_bundle
 from backend.knowledge_models import IngestionStatus, Lifecycle, SourceType
 from backend.patient_api import get_repository
-from backend.patient_context import context_hash, latest_observation, observations_with_unknown_date
+from backend.patient_context import latest_observation, observations_with_unknown_date
 from backend.patient_store import ReviewCompleted, SQLitePatientRepository
 from backend.source_registry import SourceRegistry
 
@@ -53,32 +52,28 @@ def request(number: int, *, coverage: bool = True) -> EvaluationRequest:
     )
 
 
-def candidate_foot_result(bundle: dict, evaluation: EvaluationRequest):
-    """Exercise inactive Rule B logic without registering stale evidence as active."""
-    context = parse_bundle(bundle)[0]
-    rule = next(r for r in default_registry().current_rules() if r.definition.domain == "diabetes")
-    assert rule.definition.status is RuleStatus.DISABLED
-    return rule.evaluate(
-        RuleEvaluationContext(
-            patient_context=context,
-            patient_context_hash=context_hash(context),
-            as_of=evaluation.as_of,
-            record_coverage=evaluation.record_coverage,
-        )
+def foot_finding(bundle: dict, evaluation: EvaluationRequest, db_path: Path):
+    repo = SQLitePatientRepository(db_path)
+    patient_id = repo.import_context(parse_bundle(bundle)[0])[0]
+    review = repo.create_review(patient_id)
+    return next(
+        finding
+        for finding in ClinicalReviewEngine(repo).evaluate(review.review_id, evaluation)
+        if finding.domain == "diabetes"
     )
 
 
 @pytest.mark.parametrize(
     "number,rule_id,expected",
     [
-        (1, "DIABETES_ANNUAL_FOOT_ASSESSMENT", FindingStatus.SUPPRESSED),
+        (1, "DIABETES_ANNUAL_FOOT_ASSESSMENT", FindingStatus.SATISFIED),
         (2, "HTN_ANNUAL_CARE_REVIEW", FindingStatus.POTENTIAL_CARE_GAP),
         (3, "HTN_ANNUAL_CARE_REVIEW", FindingStatus.SATISFIED),
-        (3, "DIABETES_ANNUAL_FOOT_ASSESSMENT", FindingStatus.SUPPRESSED),
+        (3, "DIABETES_ANNUAL_FOOT_ASSESSMENT", FindingStatus.POTENTIAL_CARE_GAP),
         (4, "HTN_ANNUAL_CARE_REVIEW", FindingStatus.INSUFFICIENT_DATA),
-        (4, "DIABETES_ANNUAL_FOOT_ASSESSMENT", FindingStatus.SUPPRESSED),
+        (4, "DIABETES_ANNUAL_FOOT_ASSESSMENT", FindingStatus.INSUFFICIENT_DATA),
         (5, "HTN_ANNUAL_CARE_REVIEW", FindingStatus.NOT_APPLICABLE),
-        (5, "DIABETES_ANNUAL_FOOT_ASSESSMENT", FindingStatus.SUPPRESSED),
+        (5, "DIABETES_ANNUAL_FOOT_ASSESSMENT", FindingStatus.NOT_APPLICABLE),
     ],
 )
 def test_manifest_scenarios(tmp_path, number, rule_id, expected):
@@ -88,6 +83,9 @@ def test_manifest_scenarios(tmp_path, number, rule_id, expected):
     assert finding.status is expected
     assert finding.patient_context_hash == repo.get_review(review_id).patient_context_hash
     assert finding.rule_version == "1.0.0"
+    if finding.domain == "diabetes":
+        assert finding.evidence_refs[0].evidence_id == "nice-ng19-rec-1.3.3"
+        assert finding.evidence_refs[0].version_id is None
 
 
 @pytest.mark.parametrize(
@@ -99,8 +97,8 @@ def test_manifest_scenarios(tmp_path, number, rule_id, expected):
         (5, FindingStatus.NOT_APPLICABLE),
     ],
 )
-def test_inactive_foot_rule_logic_only(number, expected):
-    assert candidate_foot_result(raw(number), request(number)).status is expected
+def test_active_foot_rule_through_review_engine(tmp_path, number, expected):
+    assert foot_finding(raw(number), request(number), tmp_path / "foot.db").status is expected
 
 
 def test_unknown_and_partial_coverage_never_create_gap(tmp_path):
@@ -130,10 +128,10 @@ def test_unknown_and_partial_coverage_never_create_gap(tmp_path):
             start_date=date(2025, 9, 24), end_date=date(2026, 9, 24), complete_resource_types=("Encounter",)
         ),
     )
-    assert candidate_foot_result(raw(3), wrong_type).status is FindingStatus.INSUFFICIENT_DATA
+    assert foot_finding(raw(3), wrong_type, tmp_path / "wrong_type_foot.db").status is FindingStatus.INSUFFICIENT_DATA
     assert (
         next(f for f in ClinicalReviewEngine(repo3).evaluate(review3, wrong_type) if f.domain == "diabetes").status
-        is FindingStatus.SUPPRESSED
+        is FindingStatus.INSUFFICIENT_DATA
     )
 
 
@@ -272,7 +270,7 @@ def test_idempotent_snapshot_version_and_actions(tmp_path):
     assert first == engine.evaluate(review_id, request(3))
     with pytest.raises(EvaluationConflict):
         engine.evaluate(review_id, request(3, coverage=False))
-    finding = first[0]
+    finding = next(f for f in first if f.domain == "hypertension")
     for action_type in ActionType:
         repo.add_action(finding.finding_id, action_type)
     assert len({a.action_id for a in repo.list_actions(finding.finding_id)}) == 5
@@ -404,7 +402,7 @@ def test_diabetes_foot_edge_cases(tmp_path, kind):
         procedure["code"]["coding"][0]["code"] = "UNSUPPORTED"
     else:
         procedure["performedDateTime"] = "2025-09-24"
-    found = candidate_foot_result(bundle, request(1))
+    found = foot_finding(bundle, request(1), tmp_path / "edge.db")
     assert found.status is (FindingStatus.SATISFIED if kind == "boundary" else FindingStatus.INSUFFICIENT_DATA)
 
 
@@ -412,9 +410,24 @@ def test_unsupported_condition_code_does_not_guess(tmp_path):
     bundle = raw(1)
     condition = next(e["resource"] for e in bundle["entry"] if e["resource"]["resourceType"] == "Condition")
     condition["code"]["coding"][0]["code"] = "E11.8"
-    finding = candidate_foot_result(bundle, request(1))
+    finding = foot_finding(bundle, request(1), tmp_path / "condition.db")
     assert finding.status is FindingStatus.INSUFFICIENT_DATA
     assert "condition_coding" in finding.missing_data
+
+
+@pytest.mark.parametrize(
+    "birth_date,expected",
+    [(None, FindingStatus.INSUFFICIENT_DATA), ("2015-01-01", FindingStatus.NOT_APPLICABLE)],
+)
+def test_diabetes_rule_requires_adult_applicability(tmp_path, birth_date, expected):
+    bundle = raw(1)
+    patient = next(e["resource"] for e in bundle["entry"] if e["resource"]["resourceType"] == "Patient")
+    if birth_date is None:
+        patient.pop("birthDate")
+    else:
+        patient["birthDate"] = birth_date
+    finding = foot_finding(bundle, request(1), tmp_path / "age.db")
+    assert finding.status is expected
 
 
 def test_evaluation_runs_with_network_disabled(tmp_path, monkeypatch):

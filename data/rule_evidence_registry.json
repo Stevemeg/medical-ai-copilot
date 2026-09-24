@@ -1,0 +1,34 @@
+{
+  "schema_version": 1,
+  "recommendations": [
+    {
+      "evidence_id": "nice-ng136-rec-1.4.24",
+      "document_id": "nice-ng136",
+      "publisher": "NICE",
+      "guideline_code": "NG136",
+      "recommendation_id": "1.4.24",
+      "canonical_source_url": "https://www.nice.org.uk/guidance/ng136/chapter/recommendations",
+      "jurisdiction": "UK",
+      "verified_on": "2026-09-24",
+      "verification_status": "verified_current",
+      "recommendation_sha256": "fad4b4cc56f677ce07dfac23b1ae9c43fe4691bb35e3d918a48ffdc060cbc419",
+      "summary": "Annual care review for adults with hypertension.",
+      "verification_method": "official_nice_html_article_v1"
+    },
+    {
+      "evidence_id": "nice-ng19-rec-1.3.3",
+      "document_id": "nice-ng19",
+      "publisher": "NICE",
+      "guideline_code": "NG19",
+      "recommendation_id": "1.3.3",
+      "canonical_source_url": "https://www.nice.org.uk/guidance/ng19/chapter/recommendations",
+      "jurisdiction": "UK",
+      "verified_on": "2026-09-24",
+      "verification_status": "verified_current",
+      "recommendation_sha256": "90922c76b58e8a38f6154c2512c776ec5bf896fb33fbc472355c535460645726",
+      "summary": "Assess adults with diabetes for diabetic-foot risk at diagnosis and at least annually.",
+      "source_revision_note": "Current page includes later changes elsewhere; the 2019 local PDF remains superseded.",
+      "verification_method": "official_nice_html_article_v1"
+    }
+  ]
+}

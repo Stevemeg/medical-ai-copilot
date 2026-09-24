@@ -65,6 +65,7 @@ class ClinicalReviewEngine:
         for rule in self.registry.current_rules():
             definition = rule.definition
             evidence: tuple[RuleEvidenceReference, ...] = ()
+            suppression_reason: str | None = None
             if (
                 definition.status is not RuleStatus.ACTIVE
                 or request.as_of < definition.effective_from
@@ -76,6 +77,7 @@ class ClinicalReviewEngine:
                     observed_values={"evaluation_date": request.as_of.isoformat()},
                     missing_data=("rule_availability",),
                 )
+                suppression_reason = definition.suppression_reason or "rule_inactive"
             else:
                 try:
                     evidence = (self.registry.evidence(definition),)
@@ -87,6 +89,7 @@ class ClinicalReviewEngine:
                         observed_values={"evaluation_date": request.as_of.isoformat()},
                         missing_data=("rule_evidence",),
                     )
+                    suppression_reason = "rule_evidence_unavailable"
                 else:
                     result = rule.evaluate(context)
             findings.append(
@@ -107,6 +110,7 @@ class ClinicalReviewEngine:
                     observed_values=result.observed_values,
                     missing_data=result.missing_data,
                     evidence_refs=evidence,
+                    suppression_reason=suppression_reason,
                     created_at=datetime.now(timezone.utc),
                 )
             )

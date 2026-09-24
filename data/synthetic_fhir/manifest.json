@@ -1,10 +1,10 @@
 {
   "description": "Separate demo evaluation assertions; not part of FHIR resources",
   "fixtures": {
-    "syn_pat_001": {"evaluation_as_of": "2026-09-24", "record_coverage": {"start_date": "2025-09-24", "end_date": "2026-09-24", "complete_resource_types": ["Encounter", "Procedure"]}, "expected": {"DIABETES_ANNUAL_FOOT_ASSESSMENT": "suppressed"}},
+    "syn_pat_001": {"evaluation_as_of": "2026-09-24", "record_coverage": {"start_date": "2025-09-24", "end_date": "2026-09-24", "complete_resource_types": ["Encounter", "Procedure"]}, "expected": {"DIABETES_ANNUAL_FOOT_ASSESSMENT": "satisfied"}},
     "syn_pat_002": {"evaluation_as_of": "2026-09-24", "record_coverage": {"start_date": "2025-09-24", "end_date": "2026-09-24", "complete_resource_types": ["Encounter", "Procedure"]}, "expected": {"HTN_ANNUAL_CARE_REVIEW": "potential_care_gap"}},
-    "syn_pat_003": {"evaluation_as_of": "2026-09-24", "record_coverage": {"start_date": "2025-09-24", "end_date": "2026-09-24", "complete_resource_types": ["Encounter", "Procedure"]}, "expected": {"HTN_ANNUAL_CARE_REVIEW": "satisfied", "DIABETES_ANNUAL_FOOT_ASSESSMENT": "suppressed"}},
-    "syn_pat_004": {"evaluation_as_of": "2026-09-24", "record_coverage": null, "expected": {"HTN_ANNUAL_CARE_REVIEW": "insufficient_data", "DIABETES_ANNUAL_FOOT_ASSESSMENT": "suppressed"}},
-    "syn_pat_005": {"evaluation_as_of": "2026-09-24", "record_coverage": null, "expected": {"HTN_ANNUAL_CARE_REVIEW": "not_applicable", "DIABETES_ANNUAL_FOOT_ASSESSMENT": "suppressed"}}
+    "syn_pat_003": {"evaluation_as_of": "2026-09-24", "record_coverage": {"start_date": "2025-09-24", "end_date": "2026-09-24", "complete_resource_types": ["Encounter", "Procedure"]}, "expected": {"HTN_ANNUAL_CARE_REVIEW": "satisfied", "DIABETES_ANNUAL_FOOT_ASSESSMENT": "potential_care_gap"}},
+    "syn_pat_004": {"evaluation_as_of": "2026-09-24", "record_coverage": null, "expected": {"HTN_ANNUAL_CARE_REVIEW": "insufficient_data", "DIABETES_ANNUAL_FOOT_ASSESSMENT": "insufficient_data"}},
+    "syn_pat_005": {"evaluation_as_of": "2026-09-24", "record_coverage": null, "expected": {"HTN_ANNUAL_CARE_REVIEW": "not_applicable", "DIABETES_ANNUAL_FOOT_ASSESSMENT": "not_applicable"}}
   }
 }
