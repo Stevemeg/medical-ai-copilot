@@ -379,7 +379,11 @@ with evidence_tab:
                 if item:
                     with st.expander(f"{item['publisher']} · {item['canonical_title']} · {item['version_id']}"):
                         st.caption(
-                            f"{item['jurisdiction']} · {item['lifecycle_status']} · recommendation {item.get('recommendation_id') or 'none'} · pages {item.get('page_start')}-{item.get('page_end')}"
+                            f"{item['jurisdiction']} · {item['lifecycle_status']} · updated/published "
+                            f"{item.get('updated_at') or item.get('published_at') or 'unknown'} · "
+                            f"recommendation {item.get('recommendation_id') or 'none'} · "
+                            f"section {item.get('section') or 'unknown'} · "
+                            f"pages {item.get('page_start')}-{item.get('page_end')}"
                         )
                         st.write(claim.get("verification_passages", {}).get(ident, item.get("supporting_excerpt", "")))
                         if item.get("canonical_source_url"):

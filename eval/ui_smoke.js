@@ -26,7 +26,7 @@ vm.runInNewContext(script, context, { filename: 'frontend/index.html' });
 const evidence = {
   evidence_unit_id: 'unit-1', publisher: 'Publisher', canonical_title: 'Guideline',
   version_id: 'version-1', updated_at: '2026-01-01', jurisdiction: 'UK',
-  lifecycle_status: 'current', recommendation_id: '1.4.24', page_start: 2, page_end: 2,
+  lifecycle_status: 'current', recommendation_id: '1.4.24', section: '1.4', page_start: 2, page_end: 2,
   supporting_excerpt: '<script>untrusted</script>', canonical_source_url: 'https://example.org/source',
 };
 
@@ -47,6 +47,7 @@ async function ask(intent, result) {
   });
   assert.match(rendered, /Claim · supported/);
   assert.match(rendered, /version-1/);
+  assert.match(rendered, /Section 1\.4/);
   assert.match(rendered, /Exact checked passage/);
   assert.doesNotMatch(rendered, /untrusted/);
   evidenceResponse.claims[0].verification_passages['unit-1'] = '<script>untrusted</script>';
