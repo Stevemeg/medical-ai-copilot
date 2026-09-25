@@ -43,6 +43,7 @@ import os
 
 class SecretNotFoundError(Exception):
     """Raised when a required secret isn't available from any source."""
+
     pass
 
 
@@ -62,6 +63,7 @@ def get_secret(key: str, required: bool = True):
 
     try:
         import streamlit as st
+
         if key in st.secrets:
             return st.secrets[key]
     except Exception:

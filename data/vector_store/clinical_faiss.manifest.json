@@ -1,19 +1,21 @@
 {
-  "schema_version": 1,
-  "index_sha256": "e8ac15799513aaf546e9e6ed22fecb6885d09f5c78d934efebd2df5621c41450",
-  "metadata_sha256": "1e727086bd0179f152b350cc2e081cc82c64c674185d859fe2ee5b43e68c5ff3",
+  "schema_version": 2,
+  "index_sha256": "94c911d0a66fbd769412ae4028e4e44f5353cfbb44a97b6d52b756d829a7ef34",
+  "metadata_sha256": "ef8c97b2d8dc81dac6b508f682aea4759e7a4a06f2203bddf4fa60efb7aea67c",
   "registry_sha256": "0e52c0ecf47a6c7d1dfbfa859da23f56657bb3dd67ac37d8ac284999824ed331",
   "embedding_model": "all-MiniLM-L6-v2",
+  "embedding_dimension": 384,
+  "normalization": "l2_unit",
+  "similarity_metric": "cosine_inner_product",
+  "index_type": "IndexFlatIP",
+  "evidence_schema_version": 1,
+  "recommendation_extractor_version": "nice-numbered-action-v3",
+  "evidence_units_sha256": "2294f1cf823f59f530da731e3251b03103800f41388061fd4d24fbccecdb7759",
   "chunker_version": "sentence-token-page-v1:cl100k_base:600:100",
   "document_versions": [
     {
       "version_id": "cdc-multiple-chronic-conditions-2025-04-17",
       "source_sha256": "9d4f9a51fbabfac1e55b1754709407d0bf13a9888ebf9ec505cb1c40286ed96a",
-      "parser_version": "pdfplumber-page-v1"
-    },
-    {
-      "version_id": "moh-diabetes-257fdae09864",
-      "source_sha256": "257fdae09864354e9799f6fa2853398bd5fccdd0ac5f763f9f4f3401e1172222",
       "parser_version": "pdfplumber-page-v1"
     },
     {
@@ -47,5 +49,5 @@
       "parser_version": "pdfplumber-page-v1"
     }
   ],
-  "chunk_count": 1134
+  "chunk_count": 1360
 }

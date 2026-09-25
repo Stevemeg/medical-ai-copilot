@@ -1,209 +1,74 @@
-from embeddings.retrieve import retrieve
-from groq import Groq
+"""Legacy Ask Evidence adapter over the canonical verified evidence service."""
 
-from backend.config import get_groq_api_key
-from backend.audit_log import log_interaction
+from backend.evidence_models import QueryIntent, RetrievalRequest
+from backend.evidence_pipeline import EvidenceAnswerService, public_answer
 from backend.knowledge_models import RetrievalPolicy
 
-# -----------------------------------
-# Groq Client
-# -----------------------------------
+_service: EvidenceAnswerService | None = None
 
-def get_groq_client():
-    # get_groq_api_key() checks environment variables first (the real
-    # production path, matching how cloud secrets managers actually
-    # deliver secrets), falling back to .streamlit/secrets.toml for local
-    # development. See backend/config.py for the full explanation.
-    return Groq(
-        api_key=get_groq_api_key()
+
+def get_service() -> EvidenceAnswerService:
+    global _service
+    if _service is None:
+        from embeddings.retrieve import get_default_retriever
+
+        _service = EvidenceAnswerService(get_default_retriever())
+    return _service
+
+
+def answer_question(question: str, top_k: int = 5, policy: RetrievalPolicy = RetrievalPolicy.CURRENT_CLINICAL) -> dict:
+    intent = (
+        QueryIntent.REFERENCE_EXPLANATION
+        if policy is RetrievalPolicy.REFERENCE
+        else QueryIntent.HISTORICAL
+        if policy in (RetrievalPolicy.HISTORICAL_ALLOWED, RetrievalPolicy.HISTORICAL_ONLY)
+        else QueryIntent.CLINICAL_GUIDANCE
     )
-
-# -----------------------------------
-# System Prompt
-# -----------------------------------
-
-SYSTEM_PROMPT = """
-You are a medical knowledge assistant. Answer using ONLY the provided
-context -- never use outside knowledge.
-
-Before writing your answer, read ALL of the provided context chunks
-together as a whole, not one at a time. Medical context is often spread
-across multiple chunks that each describe a different piece of the SAME
-mechanism or recommendation -- combine these freely, even if no single
-chunk states the answer in full.
-
-Then commit to exactly ONE of these two modes -- never blend them. These
-mode labels are for your own internal decision-making only -- never write
-the words "MODE 1" or "MODE 2" in your actual answer.
-
-MODE 1 (sufficient context): Write a direct, clear, well-structured
-answer. State the answer plainly. Do not hedge, do not say the context
-"doesn't explicitly" cover something if the combined context still
-supports a confident answer, and do not mention what the context lacks.
-
-MODE 2 (insufficient context): If, after considering all chunks together,
-they genuinely do not support an answer, write exactly: "I don't know
-based on the provided medical documents." Do not add a partial answer
-before or after this sentence.
-
-Never do both -- never hedge through several paragraphs and then state a
-confident answer anyway, and never give a confident answer and then
-undercut it by saying you don't know. Pick one mode and commit to it.
-Begin your answer directly with the substantive content -- do not open
-with a label, a restatement of these instructions, or a meta-comment
-about which mode you chose.
-
-This applies to your closing sentence just as much as your opening one.
-If you've written a confident MODE 1 answer, end it there -- do not add a
-final caveat noting that the context "doesn't explicitly discuss" the
-topic "as a separate entity," doesn't mention something "directly," or
-similar. That closing-sentence hedge is the same error as opening with
-one; once you've committed to MODE 1, nothing later in the answer should
-walk it back.
-"""
-
-# -----------------------------------
-# Text Cleaning
-# -----------------------------------
-
-def sanitize_text(text: str) -> str:
-    return (
-        text
-        .replace("\uf0b7", "-")
-        .replace("", "-")
-        .replace("", "-")
-        .encode("utf-8", errors="ignore")
-        .decode("utf-8")
-    )
-
-
-def format_page_range(page_start, page_end) -> str:
-    """
-    Formats a chunk's page range for citation. Returns an empty string if
-    page info isn't available (e.g. older chunk data from before page
-    tracking was added), so citations degrade gracefully rather than
-    showing "page None".
-    """
-    if page_start is None or page_end is None:
-        return ""
-    if page_start == page_end:
-        return f", page {page_start}"
-    return f", pages {page_start}-{page_end}"
-
-# -----------------------------------
-# LLM Call
-# -----------------------------------
-
-def call_llm(prompt: str) -> str:
-
-    client = get_groq_client()
-
-    response = client.chat.completions.create(
-        model="llama-3.1-8b-instant",
-        messages=[
-            {
-                "role": "system",
-                "content": SYSTEM_PROMPT
-            },
-            {
-                "role": "user",
-                "content": prompt
-            }
-        ],
-        temperature=0.2,
-        max_tokens=1024,
-        # Defensive measure against repetition-loop degeneration -- found
-        # in testing: a complex prompt caused the model to repeat the same
-        # two sentences ~15 times until max_tokens cut the response off
-        # mid-sentence. frequency_penalty discourages exact-phrase
-        # repetition directly, independent of prompt wording. Groq's
-        # documentation on support for this parameter is inconsistent
-        # across sources -- verify this is actually being applied (e.g. by
-        # checking whether a repetition loop still occurs) rather than
-        # trusting it silently works.
-        frequency_penalty=0.3
-    )
-
-    return response.choices[0].message.content.strip()
-
-# -----------------------------------
-# Main RAG Pipeline
-# -----------------------------------
-
-def answer_question(question: str, top_k: int = 5, policy: RetrievalPolicy = RetrievalPolicy.CURRENT_CLINICAL):
-
-    retrieved_chunks = retrieve(question, top_k=top_k, policy=policy)
-
-    if not retrieved_chunks:
-        no_info_answer = "I don't have relevant information on this in the indexed medical documents."
-        log_interaction(question, no_info_answer, [])
-        return {
-            "answer": no_info_answer,
-            "sources": [], "citations": []
-        }
-
-    context = "\n\n".join(
-        f"Source: {c['publisher']} - {c['canonical_title']} ({c['version_id']}, {c['lifecycle_status']})"
-        f"{format_page_range(c.get('page_start'), c.get('page_end'))}\n"
-        f"{sanitize_text(c['text'])}"
-        for c in retrieved_chunks
-    )
-
-    full_prompt = f"""
-Context:
-{context}
-
-Question:
-{question}
-
-Answer:
-"""
-
-    answer = call_llm(full_prompt)
-
-    # Deduplicate by (source, page range) rather than just source, so two
-    # different page ranges from the same document show up as distinct,
-    # individually citable entries instead of collapsing into one vague
-    # filename-only reference.
-    seen = set()
+    answer = get_service().answer(RetrievalRequest(query=question, top_k=top_k, intent=intent, lifecycle_policy=policy))
+    public = public_answer(answer)
+    cited = {ident for claim in answer.claims for ident in claim.evidence_ids}
     sources = []
-    for c in retrieved_chunks:
-        page_range = format_page_range(c.get("page_start"), c.get("page_end"))
-        label = f"{c['source']}{page_range}"
-        if label not in seen:
-            seen.add(label)
-            sources.append(label)
-
-    citations = [{key: c.get(key) for key in (
-        "chunk_id", "document_id", "version_id", "canonical_title", "publisher",
-        "source_type", "jurisdiction", "lifecycle_status", "published_at", "updated_at",
-        "source_url", "page_start", "page_end", "section", "recommendation_id"
-    )} for c in retrieved_chunks]
-    log_interaction(question, answer, sources)
-
+    citations = []
+    for unit in answer.evidence:
+        if unit.evidence_unit_id not in cited:
+            continue
+        page = (
+            (
+                f", page {unit.page_start}"
+                if unit.page_start == unit.page_end
+                else f", pages {unit.page_start}-{unit.page_end}"
+            )
+            if unit.page_start
+            else ""
+        )
+        sources.append(f"{unit.canonical_title}{page}")
+        citations.append(
+            {
+                "evidence_unit_id": unit.evidence_unit_id,
+                "chunk_id": unit.chunk_id,
+                "document_id": unit.document_id,
+                "version_id": unit.version_id,
+                "canonical_title": unit.canonical_title,
+                "publisher": unit.publisher,
+                "source_type": unit.source_type.value,
+                "jurisdiction": unit.jurisdiction,
+                "lifecycle_status": unit.lifecycle_status.value,
+                "published_at": unit.published_at,
+                "updated_at": unit.updated_at,
+                "source_url": unit.canonical_source_url,
+                "page_start": unit.page_start,
+                "page_end": unit.page_end,
+                "section": unit.section,
+                "recommendation_id": unit.recommendation_id,
+            }
+        )
     return {
-        "answer": answer,
-        "sources": sources, "citations": citations
+        "answer": answer.answer_text,
+        "sources": sources,
+        "citations": citations,
+        "status": answer.status.value,
+        "claims": public["claims"],
+        "conflicts": public["conflicts"],
+        "evidence": public["evidence"],
+        "retrieval": public["retrieval"],
     }
-
-# -----------------------------------
-# CLI Testing
-# -----------------------------------
-
-if __name__ == "__main__":
-
-    while True:
-
-        q = input("\nAsk a medical question (or 'exit'): ")
-
-        if q.lower() == "exit":
-            break
-
-        result = answer_question(q)
-
-        print("\nAnswer:\n")
-        print(result["answer"])
-
-        print("\nSources:")
-        for s in result["sources"]:
-            print("-", s)

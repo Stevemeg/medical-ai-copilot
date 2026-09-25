@@ -1,16 +1,28 @@
 {
-  "schema_version": 1,
-  "index_sha256": "eca964646c815b885599a507938de69dabaffdf56b60bfd8b106555af9ed2d83",
-  "metadata_sha256": "e0e64ab70aeb4fa96b1e51cdb34a22333b422d7976ce5169d2ff89c8d8924528",
+  "schema_version": 2,
+  "index_sha256": "c134d1e3dd448c8cd5caf294daa6a2c953fa5d4e29a196c8d53362e1177a4c0f",
+  "metadata_sha256": "235afd436a07ebdb0d28856ae318a77e1d4dc257907f58504750b934ef652bc9",
   "registry_sha256": "0e52c0ecf47a6c7d1dfbfa859da23f56657bb3dd67ac37d8ac284999824ed331",
   "embedding_model": "all-MiniLM-L6-v2",
+  "embedding_dimension": 384,
+  "normalization": "l2_unit",
+  "similarity_metric": "cosine_inner_product",
+  "index_type": "IndexFlatIP",
+  "evidence_schema_version": 1,
+  "recommendation_extractor_version": "nice-numbered-action-v3",
+  "evidence_units_sha256": "2294f1cf823f59f530da731e3251b03103800f41388061fd4d24fbccecdb7759",
   "chunker_version": "sentence-token-page-v1:cl100k_base:600:100",
   "document_versions": [
+    {
+      "version_id": "moh-diabetes-257fdae09864",
+      "source_sha256": "257fdae09864354e9799f6fa2853398bd5fccdd0ac5f763f9f4f3401e1172222",
+      "parser_version": "pdfplumber-page-v1"
+    },
     {
       "version_id": "openstax-anatomy-physiology-4f353d6c8e05",
       "source_sha256": "4f353d6c8e050405bce3f8c4c50513f06b5d1f041b2c5bdbf4241a5a5c04fc66",
       "parser_version": "pdfplumber-page-v1"
     }
   ],
-  "chunk_count": 2043
+  "chunk_count": 2054
 }

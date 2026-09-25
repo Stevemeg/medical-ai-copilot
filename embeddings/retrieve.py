@@ -1,285 +1,233 @@
+"""Lifecycle-filtered cosine/BM25 retrieval and bounded rank fusion."""
+
 import json
 import re
-import numpy as np
-import faiss
-
 from pathlib import Path
-from sentence_transformers import SentenceTransformer
+from time import perf_counter
+from typing import Protocol
+
+import faiss
+import numpy as np
 from rank_bm25 import BM25Okapi
+
+from backend.evidence_models import (
+    EvidenceCandidate,
+    EvidenceUnit,
+    RankedEvidence,
+    RetrievalDiagnostics,
+    RetrievalRequest,
+    RetrievalResult,
+)
+from backend.index_provenance import validate_chunks_manifest, validate_manifest
 from backend.knowledge_models import RetrievalPolicy
 from backend.source_registry import SourceRegistry, StaleArtifact
-from backend.index_provenance import validate_chunks_manifest, validate_manifest
+from embeddings.reranker import CrossEncoderReranker, EvidenceReranker, RRFFallbackReranker
 
-# -----------------------------------
-# Project Paths
-# -----------------------------------
-
-BASE_DIR = Path(__file__).resolve().parent.parent
-
-VECTOR_DIR = BASE_DIR / "data" / "vector_store"
-
-CLINICAL_INDEX_FILE = VECTOR_DIR / "clinical_faiss.index"
-CLINICAL_META_FILE = VECTOR_DIR / "clinical_metadata.json"
-
-ANATOMY_INDEX_FILE = VECTOR_DIR / "anatomy_faiss.index"
-ANATOMY_META_FILE = VECTOR_DIR / "anatomy_metadata.json"
-
-# -----------------------------------
-# Validate Files Exist
-# -----------------------------------
-
-if not CLINICAL_INDEX_FILE.exists():
-    raise FileNotFoundError(
-        f"Clinical FAISS index not found: {CLINICAL_INDEX_FILE}. "
-        f"Run embeddings/build_faiss_index.py first."
-    )
-
-if not CLINICAL_META_FILE.exists():
-    raise FileNotFoundError(
-        f"Clinical metadata file not found: {CLINICAL_META_FILE}"
-    )
-
-# The reference index is optional when no reference sources are registered.
-ANATOMY_INDEX_AVAILABLE = ANATOMY_INDEX_FILE.exists() and ANATOMY_META_FILE.exists()
-
-# -----------------------------------
-# Load FAISS Indexes
-# -----------------------------------
-
-registry = SourceRegistry()
-validate_chunks_manifest(BASE_DIR / "data/chunks.json", registry)
-validate_manifest(CLINICAL_INDEX_FILE, CLINICAL_META_FILE, registry)
-clinical_index = faiss.read_index(str(CLINICAL_INDEX_FILE))
-
-with open(CLINICAL_META_FILE, "r", encoding="utf-8") as f:
-    clinical_metadata = json.load(f)
-
-if ANATOMY_INDEX_AVAILABLE:
-    validate_manifest(ANATOMY_INDEX_FILE, ANATOMY_META_FILE, registry)
-    anatomy_index = faiss.read_index(str(ANATOMY_INDEX_FILE))
-    with open(ANATOMY_META_FILE, "r", encoding="utf-8") as f:
-        anatomy_metadata = json.load(f)
-else:
-    anatomy_index = None
-    anatomy_metadata = []
-
-if clinical_index.ntotal != len(clinical_metadata) or (anatomy_index is not None and anatomy_index.ntotal != len(anatomy_metadata)):
-    raise StaleArtifact("FAISS vector count differs from evidence metadata")
+ROOT = Path(__file__).resolve().parent.parent
+VECTOR_DIR = ROOT / "data/vector_store"
+CANDIDATE_POOL_SIZE = 30
+RRF_K = 60
+RRF_DENSE_WEIGHT = 0.7
+RRF_BM25_WEIGHT = 1.0
+# Selected by the development split in eval/calibrate.py; held-out results
+# are reported separately. Cosine is a similarity, not a probability.
+MIN_COSINE = 0.40
 
 
-def _policy_index(policy: RetrievalPolicy):
-    """Build a compact view so blocked vectors cannot affect ranking or gating."""
-    source_pairs = [(clinical_index, clinical_metadata)]
-    if anatomy_index is not None:
-        source_pairs.append((anatomy_index, anatomy_metadata))
-    selected = [(index, offset, registry.enrich(chunk))
-                for index, metadata in source_pairs
-                for offset, chunk in enumerate(metadata)
-                if registry.eligible(chunk, policy)]
-    if not selected:
-        return None, [], None
-    filtered = faiss.IndexFlatL2(source_pairs[0][0].d)
-    vectors = np.stack([index.reconstruct(offset) for index, offset, _ in selected]).astype("float32")
-    filtered.add(vectors)
-    metadata = [chunk for _, _, chunk in selected]
-    return filtered, metadata, build_bm25_index(metadata)
+class Embedder(Protocol):
+    def encode(self, sentences: list[str], *, normalize_embeddings: bool) -> object: ...
 
-# -----------------------------------
-# Load Embedding Model
-# -----------------------------------
 
-model = SentenceTransformer("all-MiniLM-L6-v2")
+class DenseCandidateRetriever(Protocol):
+    def retrieve(
+        self, units: list[EvidenceUnit], vectors: np.ndarray, query_vector: np.ndarray, limit: int
+    ) -> list[EvidenceCandidate]: ...
 
-# -----------------------------------
-# Build BM25 Indexes
-# -----------------------------------
-# BM25 is a keyword/lexical search algorithm, complementing FAISS's semantic
-# (embedding-based) search. Added because vector search alone showed weaker
-# signal on exact-term queries during embedding-model testing (e.g. "ACEi
-# vs ARB for hypertension" scored notably lower than plain-English clinical
-# questions; "SINBAD classification" -- a real term from the diabetic foot
-# guideline -- was misclassified entirely by one embedding model). BM25
-# catches exact vocabulary matches like these regardless of how well they
-# embed semantically.
-#
-# Built once at module load time (like the FAISS indexes above), not
-# per-query -- confirmed via timing test this takes about 1 second to build
-# for a ~2000-chunk corpus, comparable to loading the embedding model.
+
+class BM25CandidateRetriever(Protocol):
+    def retrieve(self, units: list[EvidenceUnit], query: str, limit: int) -> list[EvidenceCandidate]: ...
+
+
+class CosineDenseRetriever:
+    def retrieve(
+        self, units: list[EvidenceUnit], vectors: np.ndarray, query_vector: np.ndarray, limit: int
+    ) -> list[EvidenceCandidate]:
+        similarities = vectors @ query_vector[0]
+        order = np.argsort(-similarities, kind="stable")[:limit]
+        return [
+            EvidenceCandidate(
+                evidence_unit_id=units[int(i)].evidence_unit_id,
+                retriever="dense",
+                rank=rank,
+                raw_score=float(similarities[i]),
+            )
+            for rank, i in enumerate(order, 1)
+        ]
+
+
+class BM25LexicalRetriever:
+    def retrieve(self, units: list[EvidenceUnit], query: str, limit: int) -> list[EvidenceCandidate]:
+        bm25_index = BM25Okapi([simple_tokenize(unit.text) for unit in units])
+        scores = bm25_index.get_scores(simple_tokenize(query))
+        order = np.argsort(-scores, kind="stable")[:limit]
+        return [
+            EvidenceCandidate(
+                evidence_unit_id=units[int(i)].evidence_unit_id,
+                retriever="bm25",
+                rank=rank,
+                raw_score=float(scores[i]),
+            )
+            for rank, i in enumerate(order, 1)
+            if scores[i] > 0
+        ]
 
 
 def simple_tokenize(text: str) -> list[str]:
-    """
-    Lowercase, alphanumeric-only tokenization. Deliberately simple (no
-    stemming, no stopword removal) -- BM25's own IDF weighting already
-    naturally downweights common words like "the", "is", "a" since they
-    appear in nearly every document, confirmed empirically: a fully
-    irrelevant query like "how do I bake a chocolate cake" scored exactly
-    0.0 against medical-text documents in testing, with no stopword-overlap
-    false positives observed.
-    """
     return re.findall(r"[a-z0-9]+", text.lower())
 
 
-def build_bm25_index(metadata: list[dict]):
-    if not metadata:
-        return None
-    tokenized_corpus = [simple_tokenize(chunk.get("text", "")) for chunk in metadata]
-    return BM25Okapi(tokenized_corpus)
+def rrf_fuse(dense: list[EvidenceCandidate], bm25: list[EvidenceCandidate]) -> dict[str, float]:
+    scores: dict[str, float] = {}
+    for candidates, weight in ((dense, RRF_DENSE_WEIGHT), (bm25, RRF_BM25_WEIGHT)):
+        for candidate in candidates:
+            ident = candidate.evidence_unit_id
+            scores[ident] = scores.get(ident, 0.0) + weight / (RRF_K + candidate.rank)
+    return scores
 
 
-# -----------------------------------
-# Relevance thresholds for policy-filtered views
-# -----------------------------------
-# Rechecked after excluding obsolete/non-guideline vectors: representative
-# eligible clinical queries measured 0.58-1.61; tested irrelevant queries
-# measured 1.91-1.95. Recalibrate whenever this small corpus changes.
-CLINICAL_RELEVANCE_THRESHOLD = 1.70
-ANATOMY_RELEVANCE_THRESHOLD = 1.38
+class EvidenceRetriever:
+    def __init__(
+        self,
+        *,
+        registry: SourceRegistry | None = None,
+        embedder: Embedder | None = None,
+        reranker: EvidenceReranker | None = None,
+        dense_retriever: DenseCandidateRetriever | None = None,
+        bm25_retriever: BM25CandidateRetriever | None = None,
+        use_reranker: bool = True,
+        units_and_vectors: tuple[list[EvidenceUnit], np.ndarray] | None = None,
+    ):
+        self.registry = registry or SourceRegistry()
+        self.embedder = embedder
+        self.reranker = reranker or (CrossEncoderReranker() if use_reranker else RRFFallbackReranker())
+        self.dense_retriever = dense_retriever or CosineDenseRetriever()
+        self.bm25_retriever = bm25_retriever or BM25LexicalRetriever()
+        if units_and_vectors is not None:
+            self.units, self.vectors = units_and_vectors
+        else:
+            validate_chunks_manifest(ROOT / "data/chunks.json", self.registry)
+            units: list[EvidenceUnit] = []
+            matrices = []
+            for label in ("clinical", "anatomy"):
+                index_path = VECTOR_DIR / f"{label}_faiss.index"
+                metadata_path = VECTOR_DIR / f"{label}_metadata.json"
+                validate_manifest(index_path, metadata_path, self.registry)
+                index = faiss.read_index(str(index_path))
+                if not isinstance(index, faiss.IndexFlatIP):
+                    raise StaleArtifact("Expected cosine inner-product index")
+                metadata = json.loads(metadata_path.read_text(encoding="utf-8"))
+                if index.ntotal != len(metadata):
+                    raise StaleArtifact("Vector count differs from evidence metadata")
+                units.extend(EvidenceUnit.model_validate(row) for row in metadata)
+                matrices.append(np.stack([index.reconstruct(i) for i in range(index.ntotal)]))
+            self.units = units
+            self.vectors = np.concatenate(matrices).astype("float32")
+        if len(self.units) != len(self.vectors):
+            raise ValueError("Evidence/vector count mismatch")
+        if len({unit.evidence_unit_id for unit in self.units}) != len(self.units):
+            raise ValueError("Duplicate evidence unit ID")
+        if not np.allclose(np.linalg.norm(self.vectors, axis=1), 1.0, atol=1e-3):
+            raise StaleArtifact("Indexed evidence vectors are not normalized")
 
-# RRF ranks FAISS and BM25 candidates within the eligible evidence view.
-RRF_K = 60
+    def _encode(self, query: str) -> np.ndarray:
+        if self.embedder is None:
+            from sentence_transformers import SentenceTransformer
 
-# Within RRF, weight BM25 contributions higher than FAISS contributions.
-# This directly reflects what testing showed: exact-term queries (drug
-# abbreviations, guideline codes) are where vector search is weakest, so
-# when BM25 and FAISS disagree, trust the exact match somewhat more.
-RRF_BM25_WEIGHT = 1.0
-RRF_FAISS_WEIGHT = 0.7
+            self.embedder = SentenceTransformer("all-MiniLM-L6-v2")
+        embedder = self.embedder
+        assert embedder is not None
+        vector = np.asarray(embedder.encode([query], normalize_embeddings=True), dtype="float32")
+        norm = np.linalg.norm(vector[0])
+        if norm <= 0:
+            raise ValueError("Empty query embedding")
+        return vector / norm
 
-# -----------------------------------
-# Reciprocal Rank Fusion
-# -----------------------------------
+    def _eligible(self, unit: EvidenceUnit, request: RetrievalRequest) -> bool:
+        if not self.registry.eligible(unit.model_dump(), request.policy):
+            return False
+        return not (
+            (request.jurisdiction and unit.jurisdiction != request.jurisdiction)
+            or (request.source_types and unit.source_type not in request.source_types)
+            or (request.document_ids and unit.document_id not in request.document_ids)
+            or (request.version_ids and unit.version_id not in request.version_ids)
+            or (request.recommendation_ids and unit.recommendation_id not in request.recommendation_ids)
+            or (request.unit_types and unit.unit_type not in request.unit_types)
+        )
 
-def _rrf_fuse(faiss_indices, bm25_ranking, top_k, weight_faiss=RRF_FAISS_WEIGHT, weight_bm25=RRF_BM25_WEIGHT):
-    """
-    Fuses a FAISS ranking (list of chunk indices, best first) and a BM25
-    ranking (list of chunk indices, best first) into one ranked list using
-    weighted Reciprocal Rank Fusion:
-
-        RRF(d) = weight_faiss / (RRF_K + rank_faiss(d))
-               + weight_bm25  / (RRF_K + rank_bm25(d))
-
-    where rank is the 1-indexed position in each list, or treated as
-    absent (contributing 0) if the chunk doesn't appear in that list at
-    all. This is the standard RRF formula (Cormack, Clarke & Buettcher,
-    SIGIR 2009), with the addition of per-method weights -- a common
-    variant when one retrieval method is known to be more trustworthy for
-    a given corpus. Weighting BM25 higher reflects what testing showed:
-    exact-term queries (drug abbreviations, guideline codes) are where
-    vector search is weakest on this corpus.
-
-    Operating purely on RANKS (not raw scores) sidesteps the scale-
-    incompatibility problem between FAISS's unbounded L2 distances and
-    BM25's unbounded keyword-overlap scores -- no normalization needed.
-
-    Returns ranked indices and the top fused score for diagnostics.
-    """
-    rrf_scores = {}
-
-    for rank, idx in enumerate(faiss_indices, start=1):
-        rrf_scores[idx] = rrf_scores.get(idx, 0.0) + weight_faiss / (RRF_K + rank)
-
-    for rank, idx in enumerate(bm25_ranking, start=1):
-        rrf_scores[idx] = rrf_scores.get(idx, 0.0) + weight_bm25 / (RRF_K + rank)
-
-    if not rrf_scores:
-        return [], -1.0
-
-    ranked = sorted(rrf_scores.keys(), key=lambda idx: rrf_scores[idx], reverse=True)
-    top_score = rrf_scores[ranked[0]]
-    return ranked[:top_k], top_score
-
-
-def _bm25_top_indices(bm25_index, query: str, n: int):
-    if bm25_index is None:
-        return []
-    scores = bm25_index.get_scores(simple_tokenize(query))
-    # argsort descending, take top n. A BM25 score of 0 means no keyword
-    # overlap at all -- exclude those rather than letting zero-relevance
-    # chunks pad out the ranking (confirmed empirically: fully irrelevant
-    # queries score exactly 0.0 against every chunk, so this cleanly
-    # excludes them from contributing to the fused ranking entirely).
-    ranked_idx = np.argsort(scores)[::-1]
-    return [int(i) for i in ranked_idx[:n] if scores[i] > 0]
-
-
-# -----------------------------------
-# Retrieval Function
-# -----------------------------------
-
-# Fetch a wider candidate pool than the final top_k from each retrieval
-# method before fusing, so BM25 has room to surface a chunk that FAISS's
-# narrower top-k alone would have missed entirely -- not just reorder
-# whatever FAISS already returned.
-CANDIDATE_POOL_SIZE = 20
+    def retrieve(self, request: RetrievalRequest) -> RetrievalResult:
+        began = perf_counter()
+        selected = [i for i, unit in enumerate(self.units) if self._eligible(unit, request)]
+        diagnostics = RetrievalDiagnostics()
+        if not selected:
+            diagnostics.acceptance_reason = "no_eligible_evidence"
+            return RetrievalResult(request=request, accepted=False, evidence=[], diagnostics=diagnostics)
+        units = [self.units[i] for i in selected]
+        vectors = self.vectors[selected]
+        started = perf_counter()
+        query_vector = self._encode(request.query)
+        dense = self.dense_retriever.retrieve(units, vectors, query_vector, CANDIDATE_POOL_SIZE)
+        diagnostics.latency_ms["dense"] = (perf_counter() - started) * 1000
+        started = perf_counter()
+        bm25 = self.bm25_retriever.retrieve(units, request.query, CANDIDATE_POOL_SIZE)
+        diagnostics.latency_ms["bm25"] = (perf_counter() - started) * 1000
+        diagnostics.dense_count, diagnostics.bm25_count = len(dense), len(bm25)
+        diagnostics.top_cosine_similarity = dense[0].raw_score if dense else None
+        fused = rrf_fuse(dense, bm25)
+        by_id = {unit.evidence_unit_id: unit for unit in units}
+        dense_map = {c.evidence_unit_id: c for c in dense}
+        bm25_map = {c.evidence_unit_id: c for c in bm25}
+        first_stage = [
+            RankedEvidence(
+                unit=by_id[ident],
+                dense_rank=dense_map[ident].rank if ident in dense_map else None,
+                bm25_rank=bm25_map[ident].rank if ident in bm25_map else None,
+                cosine_similarity=dense_map[ident].raw_score if ident in dense_map else None,
+                bm25_score=bm25_map[ident].raw_score if ident in bm25_map else None,
+                rrf_score=score,
+            )
+            for ident, score in sorted(fused.items(), key=lambda pair: (-pair[1], pair[0]))
+        ]
+        diagnostics.candidate_count = len(first_stage)
+        # BM25 cannot rescue a semantically unrelated query through a few shared words.
+        if not dense or dense[0].raw_score < MIN_COSINE:
+            diagnostics.acceptance_reason = "cosine_below_calibrated_floor"
+            diagnostics.latency_ms["full_retrieval"] = (perf_counter() - began) * 1000
+            return RetrievalResult(request=request, accepted=False, evidence=[], diagnostics=diagnostics)
+        started = perf_counter()
+        ranked, diagnostics.reranker_used = self.reranker.rerank(
+            request.query, first_stage[:CANDIDATE_POOL_SIZE], request.top_k
+        )
+        diagnostics.latency_ms["reranking"] = (perf_counter() - started) * 1000
+        diagnostics.latency_ms["full_retrieval"] = (perf_counter() - began) * 1000
+        diagnostics.acceptance_reason = "eligible_cosine_match" if ranked else "no_ranked_evidence"
+        return RetrievalResult(request=request, accepted=bool(ranked), evidence=ranked, diagnostics=diagnostics)
 
 
-def retrieve(query: str, top_k: int = 5, policy: RetrievalPolicy = RetrievalPolicy.CURRENT_CLINICAL):
-    """Hybrid retrieval within an explicit evidence and lifecycle policy."""
-    policy = RetrievalPolicy(policy)
-    index, metadata, bm25 = policy_indexes[policy]
-    if index is None or top_k <= 0:
-        return []
-    embedding = np.array(model.encode([query])).astype("float32")
-    distances, candidates = index.search(embedding, CANDIDATE_POOL_SIZE)
-    threshold = ANATOMY_RELEVANCE_THRESHOLD if policy is RetrievalPolicy.REFERENCE else CLINICAL_RELEVANCE_THRESHOLD
-    if distances[0][0] > threshold:
-        return []
-    results, _ = _hybrid_results(candidates[0], bm25, metadata, query, top_k)
-    return results
+_default_retriever: EvidenceRetriever | None = None
 
 
-policy_indexes = {policy: _policy_index(policy) for policy in RetrievalPolicy}
+def get_default_retriever() -> EvidenceRetriever:
+    global _default_retriever
+    if _default_retriever is None:
+        _default_retriever = EvidenceRetriever()
+    return _default_retriever
 
 
-def _hybrid_results(faiss_candidate_indices, bm25_index, metadata, query, top_k):
-    bm25_candidate_indices = _bm25_top_indices(bm25_index, query, CANDIDATE_POOL_SIZE)
-    # FAISS pads results with -1 when the requested top_k (CANDIDATE_POOL_SIZE
-    # here) exceeds the number of vectors actually in the index. Python
-    # silently treats -1 as a valid "last element" index rather than raising
-    # an error, which caused a real bug found in testing: a small index
-    # produced duplicate/wrong results because -1 resolved to the last
-    # chunk in metadata instead of being recognized as "no result."
-    valid_faiss_indices = [int(idx) for idx in faiss_candidate_indices if idx != -1]
-    fused_indices, top_rrf_score = _rrf_fuse(valid_faiss_indices, bm25_candidate_indices, top_k)
-    return _build_results(fused_indices, metadata), top_rrf_score
-
-
-def _build_results(indices, metadata):
-    results = []
-
-    for idx in indices:
-
-        # FAISS uses -1 as a "no result" sentinel when fewer matches exist
-        # than requested. idx < len(metadata) alone doesn't exclude this --
-        # Python's negative indexing makes metadata[-1] silently resolve to
-        # the LAST element rather than erroring, which caused a real
-        # duplicate-result bug found in testing. Explicitly require idx >= 0.
-        if 0 <= idx < len(metadata):
-
-            chunk = metadata[idx]
-
-            results.append(chunk)
-
-    return results
-
-# -----------------------------------
-# CLI Testing
-# -----------------------------------
-
-if __name__ == "__main__":
-
-    while True:
-
-        q = input("\nAsk a medical question (or 'exit'): ")
-
-        if q.lower() == "exit":
-            break
-
-        results = retrieve(q)
-
-        for i, res in enumerate(results, 1):
-
-            print(f"\n--- Result {i} ({res['source']}) ---")
-
-            print(res["text"][:800], "...")
+def retrieve(query: str, top_k: int = 5, policy: RetrievalPolicy = RetrievalPolicy.CURRENT_CLINICAL) -> list[dict]:
+    """Compatibility interface; canonical callers use RetrievalResult."""
+    result = get_default_retriever().retrieve(RetrievalRequest(query=query, lifecycle_policy=policy, top_k=top_k))
+    rows = [item.unit.model_dump(mode="json") for item in result.evidence] if result.accepted else []
+    for row in rows:
+        row["source_url"] = row["canonical_source_url"]
+        row["chunk_id"] = row["chunk_id"] or row["evidence_unit_id"]
+    return rows

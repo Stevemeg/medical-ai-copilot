@@ -22,6 +22,8 @@ from pydantic import BaseModel
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 from backend.knowledge_models import RetrievalPolicy
+from backend.evidence_models import EvidenceQueryRequest, EvidenceQueryResponse
+from backend.evidence_pipeline import public_answer
 from backend.source_registry import SourceRegistry
 from backend.patient_api import router as patient_router
 
@@ -117,6 +119,13 @@ class AskRequest(BaseModel):
     policy: RetrievalPolicy = RetrievalPolicy.CURRENT_CLINICAL
 
 
+@app.post("/v1/evidence/query", response_model=EvidenceQueryResponse)
+def evidence_query(req: EvidenceQueryRequest) -> dict:
+    from backend.rag_pipeline import get_service
+
+    return public_answer(get_service().answer(req.retrieval_request()))
+
+
 def answer_question(question: str, policy: RetrievalPolicy):
     # Load the retrieval model only for evidence requests, not patient API imports.
     from backend.rag_pipeline import answer_question as run
@@ -165,4 +174,9 @@ def ask(req: AskRequest):
         "answer": result["answer"],
         "sources": group_sources(result["sources"]),
         "citations": result["citations"],
+        "status": result.get("status", "abstained"),
+        "claims": result.get("claims", []),
+        "conflicts": result.get("conflicts", []),
+        "evidence": result.get("evidence", []),
+        "retrieval": result.get("retrieval", {}),
     }

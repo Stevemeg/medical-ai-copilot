@@ -355,19 +355,65 @@ with evidence_tab:
     )
     if "messages" not in st.session_state:
         st.session_state.messages = []
+    evidence_mode = st.selectbox(
+        "Evidence mode", ["Current clinical guidance", "Reference explanation", "Historical / superseded evidence"]
+    )
+    mode_policy = {
+        "Current clinical guidance": RetrievalPolicy.CURRENT_CLINICAL,
+        "Reference explanation": RetrievalPolicy.REFERENCE,
+        "Historical / superseded evidence": RetrievalPolicy.HISTORICAL_ONLY,
+    }[evidence_mode]
+    if mode_policy is RetrievalPolicy.HISTORICAL_ONLY:
+        st.warning("Historical / superseded evidence. Do not treat this as current guidance.")
+
+    def show_evidence(result):
+        if result.get("status") == "abstained":
+            st.info("The indexed evidence does not support a reliable answer.")
+        if result.get("status") == "conflict":
+            st.warning("Evidence differs. Review each source; no recommendation was selected.")
+        by_id = {item["evidence_unit_id"]: item for item in result.get("evidence", [])}
+        for claim in result.get("claims", []):
+            st.markdown(f"**{claim['text']}** · {claim['support_status']}")
+            for ident in claim["evidence_ids"]:
+                item = by_id.get(ident)
+                if item:
+                    with st.expander(f"{item['publisher']} · {item['canonical_title']} · {item['version_id']}"):
+                        st.caption(
+                            f"{item['jurisdiction']} · {item['lifecycle_status']} · recommendation {item.get('recommendation_id') or 'none'} · pages {item.get('page_start')}-{item.get('page_end')}"
+                        )
+                        st.write(claim.get("verification_passages", {}).get(ident, item.get("supporting_excerpt", "")))
+                        if item.get("canonical_source_url"):
+                            st.link_button("Open source", item["canonical_source_url"])
+        for conflict in result.get("conflicts", []):
+            st.error(conflict["description"])
+            for ident in conflict["evidence_ids"]:
+                item = by_id.get(ident)
+                if item:
+                    st.write(
+                        f"{item['publisher']} · {item['version_id']} · {item['jurisdiction']} · {item['lifecycle_status']}"
+                    )
+                    st.caption(item.get("supporting_excerpt", ""))
+
     for message in st.session_state.messages:
         with st.chat_message(message["role"]):
             st.markdown(message["content"])
-            render_citations(message.get("citations", []))
+            show_evidence(message)
     if question := st.chat_input("Ask a general evidence question"):
         st.session_state.messages.append({"role": "user", "content": question})
         with st.chat_message("assistant"):
-            with st.spinner("Searching current clinical guidelines"):
-                result = answer_question(question, policy=RetrievalPolicy.CURRENT_CLINICAL)
+            with st.spinner("Searching governed evidence"):
+                result = answer_question(question, policy=mode_policy)
             st.markdown(result["answer"])
-            render_citations(result.get("citations", []))
+            show_evidence(result)
         st.session_state.messages.append(
-            {"role": "assistant", "content": result["answer"], "citations": result.get("citations", [])}
+            {
+                "role": "assistant",
+                "content": result["answer"],
+                "status": result["status"],
+                "claims": result["claims"],
+                "conflicts": result["conflicts"],
+                "evidence": result["evidence"],
+            }
         )
 
 with sources_tab:

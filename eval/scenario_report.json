@@ -1,0 +1,124 @@
+{
+  "supported_current": {
+    "retrieval_accepted": true,
+    "reranker_used": true,
+    "top_evidence_ids": [
+      "nice-ng136-2026-02-26:rec:1.4.24",
+      "nice-ng136-2026-02-26:21",
+      "nice-ng136-2026-02-26:rec:1.4.43",
+      "nice-ng136-2026-02-26:20",
+      "nice-ng136-2026-02-26:2"
+    ],
+    "top_lifecycle": [
+      "current",
+      "current",
+      "current",
+      "current",
+      "current"
+    ],
+    "dense_count": 30,
+    "bm25_count": 30,
+    "answer_status": "grounded",
+    "claim_support": [
+      "supported"
+    ],
+    "full_pipeline_ms": 40477.18790000363
+  },
+  "out_of_domain": {
+    "retrieval_accepted": false,
+    "reranker_used": false,
+    "top_evidence_ids": [],
+    "top_lifecycle": [],
+    "dense_count": 30,
+    "bm25_count": 30,
+    "answer_status": "abstained",
+    "claim_support": [],
+    "full_pipeline_ms": 223.37010000046575
+  },
+  "stale_current": {
+    "retrieval_accepted": false,
+    "reranker_used": false,
+    "top_evidence_ids": [],
+    "top_lifecycle": [],
+    "dense_count": 0,
+    "bm25_count": 0,
+    "answer_status": null,
+    "claim_support": [],
+    "full_pipeline_ms": 33.79270000004908
+  },
+  "stale_historical": {
+    "retrieval_accepted": true,
+    "reranker_used": true,
+    "top_evidence_ids": [
+      "nice-ng19-2019-10-11:8",
+      "nice-ng19-2019-10-11:rec:1.5.2",
+      "nice-ng19-2019-10-11:26",
+      "nice-ng19-2019-10-11:5",
+      "nice-ng19-2019-10-11:21"
+    ],
+    "top_lifecycle": [
+      "superseded",
+      "superseded",
+      "superseded",
+      "superseded",
+      "superseded"
+    ],
+    "dense_count": 30,
+    "bm25_count": 30,
+    "answer_status": null,
+    "claim_support": [],
+    "full_pipeline_ms": 4587.633200004348
+  },
+  "exact_term": {
+    "retrieval_accepted": true,
+    "reranker_used": true,
+    "top_evidence_ids": [
+      "nice-ng238-2023-12-14:3",
+      "nice-ng238-2023-12-14:rec:1.6.7",
+      "nice-ng238-2023-12-14:rec:1.6.8",
+      "nice-ng238-2023-12-14:8",
+      "nice-ng238-2023-12-14:5"
+    ],
+    "top_lifecycle": [
+      "current",
+      "current",
+      "current",
+      "current",
+      "current"
+    ],
+    "dense_count": 30,
+    "bm25_count": 30,
+    "answer_status": null,
+    "claim_support": [],
+    "full_pipeline_ms": 5030.8313999994425
+  },
+  "reference": {
+    "retrieval_accepted": true,
+    "reranker_used": true,
+    "top_evidence_ids": [
+      "openstax-anatomy-physiology-4f353d6c8e05:603",
+      "openstax-anatomy-physiology-4f353d6c8e05:543",
+      "openstax-anatomy-physiology-4f353d6c8e05:596",
+      "openstax-anatomy-physiology-4f353d6c8e05:544",
+      "openstax-anatomy-physiology-4f353d6c8e05:541"
+    ],
+    "top_lifecycle": [
+      "unknown",
+      "unknown",
+      "unknown",
+      "unknown",
+      "unknown"
+    ],
+    "dense_count": 30,
+    "bm25_count": 30,
+    "answer_status": null,
+    "claim_support": [],
+    "full_pipeline_ms": 5124.776499993459
+  },
+  "pipeline_latency": {
+    "median_ms": 265.5799000058323,
+    "p95_ms": 319.1912900023453,
+    "samples": 7,
+    "last_status": "grounded"
+  }
+}

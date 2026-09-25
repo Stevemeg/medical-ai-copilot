@@ -1,5 +1,6 @@
 """
-Evaluation harness -- NOT part of the app. Runs a small set of real
+Legacy interactive generation smoke script, not the Phase 4 benchmark.
+Runs a small set of real
 questions through the full answer_question() pipeline and prints the raw
 output, so we can observe generation-quality behavior (does the model
 hedge, contradict itself, or answer cleanly?) both BEFORE and AFTER any

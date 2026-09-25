@@ -22,11 +22,14 @@ OVERLAP = 100
 
 tokenizer = tiktoken.get_encoding("cl100k_base")
 
+
 def tokenize(text):
     return tokenizer.encode(text)
 
+
 def detokenize(tokens):
     return tokenizer.decode(tokens)
+
 
 all_chunks = []
 registry = SourceRegistry()
@@ -47,7 +50,7 @@ registry = SourceRegistry()
 def split_oversized(tokens, max_size):
     """Yield successive max_size-token slices of an oversized token list."""
     for i in range(0, len(tokens), max_size):
-        yield tokens[i:i + max_size]
+        yield tokens[i : i + max_size]
 
 
 def make_chunk(tokens, source_name, chunk_id, pages_seen):
@@ -106,10 +109,12 @@ for json_file in DATA_DIR.glob("*.json"):
         provenance = json.loads(sidecar.read_text(encoding="utf-8"))
     except (OSError, ValueError) as exc:
         raise StaleArtifact("Processed source lacks valid provenance") from exc
-    if (provenance.get("version_id") != version.version_id or
-        provenance.get("source_sha256") != version.sha256 or
-        provenance.get("processed_sha256") != sha256_file(json_file) or
-        provenance.get("parser_version") != version.parser_version):
+    if (
+        provenance.get("version_id") != version.version_id
+        or provenance.get("source_sha256") != version.sha256
+        or provenance.get("processed_sha256") != sha256_file(json_file)
+        or provenance.get("parser_version") != version.parser_version
+    ):
         raise StaleArtifact("Processed source provenance is stale")
     with open(json_file, "r", encoding="utf-8") as f:
         pages = json.load(f)

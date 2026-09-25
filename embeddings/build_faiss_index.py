@@ -64,25 +64,29 @@ MODEL_TAG = ""
 registry = SourceRegistry()
 validate_chunks_manifest(CHUNKS_FILE, registry)
 
-# Load chunks
-with open(CHUNKS_FILE, "r", encoding="utf-8") as f:
+# Index evidence units, including structurally verified recommendation units.
+with open(BASE_DIR / "data/evidence_units.json", "r", encoding="utf-8") as f:
     chunks = json.load(f)
 
-clinical_chunks = [registry.enrich(c) for c in chunks if registry.resolve(c)[0].source_type not in (SourceType.TEXTBOOK, SourceType.PATIENT_EDUCATION)]
-anatomy_chunks = [registry.enrich(c) for c in chunks if registry.resolve(c)[0].source_type in (SourceType.TEXTBOOK, SourceType.PATIENT_EDUCATION)]
+clinical_chunks = [
+    registry.enrich(c)
+    for c in chunks
+    if registry.resolve(c)[0].source_type not in (SourceType.TEXTBOOK, SourceType.PATIENT_EDUCATION)
+]
+anatomy_chunks = [
+    registry.enrich(c)
+    for c in chunks
+    if registry.resolve(c)[0].source_type in (SourceType.TEXTBOOK, SourceType.PATIENT_EDUCATION)
+]
 
 print(f"Embedding model: {EMBEDDING_MODEL_NAME}")
 print(f"Clinical chunks: {len(clinical_chunks)}")
 print(f"Anatomy chunks: {len(anatomy_chunks)}")
 
 if not clinical_chunks:
-    raise ValueError(
-        "No non-reference chunks are available for indexing."
-    )
+    raise ValueError("No non-reference chunks are available for indexing.")
 if not anatomy_chunks:
-    print(
-        "Warning: no reference chunks are available; reference index will be empty."
-    )
+    print("Warning: no reference chunks are available; reference index will be empty.")
 
 # Load embedding model (shared across both indexes -- same embedding space,
 # just partitioned into two separate FAISS indexes)
@@ -114,11 +118,11 @@ def build_index(chunk_list, index_filename, meta_filename, label):
     texts = [c["text"] for c in chunk_list]
 
     print(f"Generating embeddings for {label} index ({len(texts)} chunks)...")
-    embeddings = model.encode(texts, show_progress_bar=True)
+    embeddings = model.encode(texts, show_progress_bar=True, normalize_embeddings=True)
     embeddings = np.array(embeddings).astype("float32")
 
     dimension = embeddings.shape[1]
-    index = faiss.IndexFlatL2(dimension)
+    index = faiss.IndexFlatIP(dimension)
     index.add(embeddings)
 
     faiss.write_index(index, str(index_file))

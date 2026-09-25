@@ -4,9 +4,15 @@ import json
 from pathlib import Path
 
 from backend.source_registry import StaleArtifact, SourceRegistry, sha256_file
+from embeddings.recommendation_extractor import EXTRACTOR_VERSION
 
 EMBEDDING_MODEL = "all-MiniLM-L6-v2"
 CHUNKER_VERSION = "sentence-token-page-v1:cl100k_base:600:100"
+NORMALIZATION = "l2_unit"
+SIMILARITY_METRIC = "cosine_inner_product"
+INDEX_TYPE = "IndexFlatIP"
+EMBEDDING_DIMENSION = 384
+EVIDENCE_SCHEMA_VERSION = 1
 
 
 def _processed_snapshot(registry: SourceRegistry) -> list[dict]:
@@ -68,11 +74,20 @@ def write_manifest(index_path: Path, metadata_path: Path, registry: SourceRegist
     chunks = json.loads(metadata_path.read_text(encoding="utf-8"))
     version_ids = sorted({registry.resolve(chunk)[1].version_id for chunk in chunks})
     manifest = {
-        "schema_version": 1,
+        "schema_version": 2,
         "index_sha256": sha256_file(index_path),
         "metadata_sha256": sha256_file(metadata_path),
         "registry_sha256": sha256_file(registry.path),
         "embedding_model": EMBEDDING_MODEL,
+        "embedding_dimension": EMBEDDING_DIMENSION,
+        "normalization": NORMALIZATION,
+        "similarity_metric": SIMILARITY_METRIC,
+        "index_type": INDEX_TYPE,
+        "evidence_schema_version": EVIDENCE_SCHEMA_VERSION,
+        "recommendation_extractor_version": EXTRACTOR_VERSION,
+        "evidence_units_sha256": sha256_file(registry.root / "data/evidence_units.json")
+        if (registry.root / "data/evidence_units.json").exists()
+        else None,
         "chunker_version": CHUNKER_VERSION,
         "document_versions": [
             {
@@ -97,6 +112,15 @@ def validate_manifest(index_path: Path, metadata_path: Path, registry: SourceReg
             "metadata_sha256": sha256_file(metadata_path),
             "registry_sha256": sha256_file(registry.path),
             "embedding_model": EMBEDDING_MODEL,
+            "embedding_dimension": EMBEDDING_DIMENSION,
+            "normalization": NORMALIZATION,
+            "similarity_metric": SIMILARITY_METRIC,
+            "index_type": INDEX_TYPE,
+            "evidence_schema_version": EVIDENCE_SCHEMA_VERSION,
+            "recommendation_extractor_version": EXTRACTOR_VERSION,
+            "evidence_units_sha256": sha256_file(registry.root / "data/evidence_units.json")
+            if (registry.root / "data/evidence_units.json").exists()
+            else None,
             "chunker_version": CHUNKER_VERSION,
             "chunk_count": len(chunks),
         }

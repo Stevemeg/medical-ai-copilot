@@ -1,0 +1,226 @@
+{
+  "schema_version": 1,
+  "split": "development",
+  "cases": [
+    {
+      "case_id": "d-htn",
+      "should_abstain": false,
+      "top_final_cosine": 0.6883774399757385,
+      "accepted": true,
+      "document_ids": [
+        "nice-ng136",
+        "nice-ng136",
+        "nice-ng136",
+        "nice-ng136",
+        "nice-ng136"
+      ]
+    },
+    {
+      "case_id": "d-lipid",
+      "should_abstain": false,
+      "top_final_cosine": 0.7691065073013306,
+      "accepted": true,
+      "document_ids": [
+        "nice-ng238",
+        "nice-ng238",
+        "nice-ng238",
+        "nice-ng238",
+        "nice-ng238"
+      ]
+    },
+    {
+      "case_id": "d-acei",
+      "should_abstain": false,
+      "top_final_cosine": 0.8253392577171326,
+      "accepted": true,
+      "document_ids": [
+        "nice-ng136",
+        "nice-ng136",
+        "nice-ng136",
+        "nice-ng136",
+        "nice-ng136"
+      ]
+    },
+    {
+      "case_id": "d-anatomy",
+      "should_abstain": false,
+      "top_final_cosine": 0.6058052778244019,
+      "accepted": true,
+      "document_ids": [
+        "openstax-anatomy-physiology",
+        "openstax-anatomy-physiology",
+        "openstax-anatomy-physiology",
+        "openstax-anatomy-physiology",
+        "openstax-anatomy-physiology"
+      ]
+    },
+    {
+      "case_id": "d-historical",
+      "should_abstain": false,
+      "top_final_cosine": 0.7564955949783325,
+      "accepted": true,
+      "document_ids": [
+        "who-world-malaria-report",
+        "who-world-malaria-report",
+        "who-world-malaria-report",
+        "who-world-malaria-report",
+        "who-world-malaria-report"
+      ]
+    },
+    {
+      "case_id": "d-motorcycle",
+      "should_abstain": true,
+      "top_final_cosine": 0.1541367620229721,
+      "accepted": true,
+      "document_ids": [
+        "nice-ng238",
+        "nice-ng238",
+        "nice-ng238",
+        "nice-ng136",
+        "nice-ng136"
+      ]
+    },
+    {
+      "case_id": "d-paint",
+      "should_abstain": true,
+      "top_final_cosine": 0.21038487553596497,
+      "accepted": true,
+      "document_ids": [
+        "nice-ng136",
+        "nice-ng136",
+        "nice-ng136",
+        "nice-ng238",
+        "nice-ng136"
+      ]
+    },
+    {
+      "case_id": "d-stale",
+      "should_abstain": true,
+      "top_final_cosine": -1,
+      "accepted": false,
+      "document_ids": []
+    }
+  ],
+  "candidate_thresholds": [
+    {
+      "threshold": 0.2,
+      "false_answers": 1,
+      "answerable_answered": 5
+    },
+    {
+      "threshold": 0.22,
+      "false_answers": 0,
+      "answerable_answered": 5
+    },
+    {
+      "threshold": 0.24,
+      "false_answers": 0,
+      "answerable_answered": 5
+    },
+    {
+      "threshold": 0.26,
+      "false_answers": 0,
+      "answerable_answered": 5
+    },
+    {
+      "threshold": 0.28,
+      "false_answers": 0,
+      "answerable_answered": 5
+    },
+    {
+      "threshold": 0.3,
+      "false_answers": 0,
+      "answerable_answered": 5
+    },
+    {
+      "threshold": 0.32,
+      "false_answers": 0,
+      "answerable_answered": 5
+    },
+    {
+      "threshold": 0.34,
+      "false_answers": 0,
+      "answerable_answered": 5
+    },
+    {
+      "threshold": 0.36,
+      "false_answers": 0,
+      "answerable_answered": 5
+    },
+    {
+      "threshold": 0.38,
+      "false_answers": 0,
+      "answerable_answered": 5
+    },
+    {
+      "threshold": 0.4,
+      "false_answers": 0,
+      "answerable_answered": 5
+    },
+    {
+      "threshold": 0.42,
+      "false_answers": 0,
+      "answerable_answered": 5
+    },
+    {
+      "threshold": 0.44,
+      "false_answers": 0,
+      "answerable_answered": 5
+    },
+    {
+      "threshold": 0.46,
+      "false_answers": 0,
+      "answerable_answered": 5
+    },
+    {
+      "threshold": 0.48,
+      "false_answers": 0,
+      "answerable_answered": 5
+    },
+    {
+      "threshold": 0.5,
+      "false_answers": 0,
+      "answerable_answered": 5
+    },
+    {
+      "threshold": 0.52,
+      "false_answers": 0,
+      "answerable_answered": 5
+    },
+    {
+      "threshold": 0.54,
+      "false_answers": 0,
+      "answerable_answered": 5
+    },
+    {
+      "threshold": 0.56,
+      "false_answers": 0,
+      "answerable_answered": 5
+    },
+    {
+      "threshold": 0.58,
+      "false_answers": 0,
+      "answerable_answered": 5
+    },
+    {
+      "threshold": 0.6,
+      "false_answers": 0,
+      "answerable_answered": 5
+    },
+    {
+      "threshold": 0.62,
+      "false_answers": 0,
+      "answerable_answered": 4
+    },
+    {
+      "threshold": 0.64,
+      "false_answers": 0,
+      "answerable_answered": 4
+    }
+  ],
+  "selected": {
+    "threshold": 0.4,
+    "false_answers": 0,
+    "answerable_answered": 5
+  }
+}

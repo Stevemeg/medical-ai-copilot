@@ -1,0 +1,932 @@
+{
+  "schema_version": 1,
+  "baseline_sha": "c35bdf82bfdcc1ace686b190cc577f3f9ddba5c7",
+  "environment": {
+    "os": "Windows-10-10.0.26200-SP0",
+    "processor": "Intel64 Family 6 Model 140 Stepping 2, GenuineIntel",
+    "logical_cpus": 8,
+    "python": "3.11.15",
+    "timing": "warm local CPU inference; held-out requests; no generation or verifier network time"
+  },
+  "calibration": {
+    "split": "development",
+    "cases": 8,
+    "results": [
+      {
+        "case_id": "d-htn",
+        "split": "development",
+        "query": "How is high blood pressure confirmed using ambulatory monitoring?",
+        "intent": "clinical_guidance",
+        "relevant_document_ids": [
+          "nice-ng136"
+        ],
+        "should_abstain": false,
+        "tags": [
+          "hypertension"
+        ],
+        "accepted": true,
+        "ranked_documents": [
+          "nice-ng136",
+          "nice-ng136",
+          "nice-ng136",
+          "nice-ng136",
+          "nice-ng136",
+          "nice-ng136",
+          "nice-ng136",
+          "nice-ng136",
+          "nice-ng136",
+          "nice-ng136"
+        ],
+        "ranked_ids": [
+          "nice-ng136-2026-02-26:rec:1.2.3",
+          "nice-ng136-2026-02-26:4",
+          "nice-ng136-2026-02-26:rec:1.2.7",
+          "nice-ng136-2026-02-26:5",
+          "nice-ng136-2026-02-26:rec:1.2.4",
+          "nice-ng136-2026-02-26:18",
+          "nice-ng136-2026-02-26:28",
+          "nice-ng136-2026-02-26:rec:1.5.1",
+          "nice-ng136-2026-02-26:16",
+          "nice-ng136-2026-02-26:30"
+        ],
+        "top_cosine": 0.6243335008621216,
+        "reranker_used": true
+      },
+      {
+        "case_id": "d-lipid",
+        "split": "development",
+        "query": "When should primary prevention statins be offered for cardiovascular risk?",
+        "intent": "clinical_guidance",
+        "relevant_document_ids": [
+          "nice-ng238"
+        ],
+        "should_abstain": false,
+        "tags": [
+          "lipid"
+        ],
+        "accepted": true,
+        "ranked_documents": [
+          "nice-ng238",
+          "nice-ng238",
+          "nice-ng238",
+          "nice-ng238",
+          "nice-ng238",
+          "nice-ng238",
+          "nice-ng238",
+          "nice-ng238",
+          "nice-ng238",
+          "nice-ng238"
+        ],
+        "ranked_ids": [
+          "nice-ng238-2023-12-14:rec:1.9.4",
+          "nice-ng238-2023-12-14:29",
+          "nice-ng238-2023-12-14:rec:1.6.8",
+          "nice-ng238-2023-12-14:rec:1.9.1",
+          "nice-ng238-2023-12-14:27",
+          "nice-ng238-2023-12-14:15",
+          "nice-ng238-2023-12-14:16",
+          "nice-ng238-2023-12-14:8",
+          "nice-ng238-2023-12-14:33",
+          "nice-ng238-2023-12-14:rec:1.10.3"
+        ],
+        "top_cosine": 0.7691065073013306,
+        "reranker_used": true
+      },
+      {
+        "case_id": "d-acei",
+        "split": "development",
+        "query": "ACEi ARB hypertension",
+        "intent": "clinical_guidance",
+        "relevant_document_ids": [
+          "nice-ng136"
+        ],
+        "should_abstain": false,
+        "tags": [
+          "exact_term"
+        ],
+        "accepted": true,
+        "ranked_documents": [
+          "nice-ng136",
+          "nice-ng136",
+          "nice-ng136",
+          "nice-ng136",
+          "nice-ng136",
+          "nice-ng136",
+          "nice-ng136",
+          "nice-ng136",
+          "nice-ng136",
+          "nice-ng136"
+        ],
+        "ranked_ids": [
+          "nice-ng136-2026-02-26:rec:1.4.41",
+          "nice-ng136-2026-02-26:rec:1.4.34",
+          "nice-ng136-2026-02-26:16",
+          "nice-ng136-2026-02-26:rec:1.4.43",
+          "nice-ng136-2026-02-26:rec:1.4.32",
+          "nice-ng136-2026-02-26:rec:1.4.33",
+          "nice-ng136-2026-02-26:15",
+          "nice-ng136-2026-02-26:rec:1.4.42",
+          "nice-ng136-2026-02-26:33",
+          "nice-ng136-2026-02-26:14"
+        ],
+        "top_cosine": 0.6866304874420166,
+        "reranker_used": true
+      },
+      {
+        "case_id": "d-anatomy",
+        "split": "development",
+        "query": "Explain the structure of the human heart chambers",
+        "intent": "reference_explanation",
+        "relevant_document_ids": [
+          "openstax-anatomy-physiology"
+        ],
+        "should_abstain": false,
+        "tags": [
+          "reference"
+        ],
+        "accepted": true,
+        "ranked_documents": [
+          "openstax-anatomy-physiology",
+          "openstax-anatomy-physiology",
+          "openstax-anatomy-physiology",
+          "openstax-anatomy-physiology",
+          "openstax-anatomy-physiology",
+          "openstax-anatomy-physiology",
+          "openstax-anatomy-physiology",
+          "openstax-anatomy-physiology",
+          "openstax-anatomy-physiology",
+          "openstax-anatomy-physiology"
+        ],
+        "ranked_ids": [
+          "openstax-anatomy-physiology-4f353d6c8e05:1153",
+          "openstax-anatomy-physiology-4f353d6c8e05:1143",
+          "openstax-anatomy-physiology-4f353d6c8e05:31",
+          "openstax-anatomy-physiology-4f353d6c8e05:1147",
+          "openstax-anatomy-physiology-4f353d6c8e05:1223",
+          "openstax-anatomy-physiology-4f353d6c8e05:1151",
+          "openstax-anatomy-physiology-4f353d6c8e05:1154",
+          "openstax-anatomy-physiology-4f353d6c8e05:140",
+          "openstax-anatomy-physiology-4f353d6c8e05:1218",
+          "openstax-anatomy-physiology-4f353d6c8e05:1231"
+        ],
+        "top_cosine": 0.6058052778244019,
+        "reranker_used": true
+      },
+      {
+        "case_id": "d-historical",
+        "split": "development",
+        "query": "What did the 2019 world malaria report discuss?",
+        "intent": "historical",
+        "relevant_document_ids": [
+          "who-world-malaria-report"
+        ],
+        "should_abstain": false,
+        "tags": [
+          "historical"
+        ],
+        "accepted": true,
+        "ranked_documents": [
+          "who-world-malaria-report",
+          "who-world-malaria-report",
+          "who-world-malaria-report",
+          "who-world-malaria-report",
+          "who-world-malaria-report",
+          "who-world-malaria-report",
+          "who-world-malaria-report",
+          "who-global-tb-report",
+          "who-world-malaria-report",
+          "who-world-malaria-report"
+        ],
+        "ranked_ids": [
+          "who-world-malaria-report-2019-12-04:11",
+          "who-world-malaria-report-2019-12-04:166",
+          "who-world-malaria-report-2019-12-04:167",
+          "who-world-malaria-report-2019-12-04:3",
+          "who-world-malaria-report-2019-12-04:0",
+          "who-world-malaria-report-2019-12-04:200",
+          "who-world-malaria-report-2019-12-04:160",
+          "who-global-tb-report-2020-10-15:252",
+          "who-world-malaria-report-2019-12-04:164",
+          "who-world-malaria-report-2019-12-04:163"
+        ],
+        "top_cosine": 0.7564955949783325,
+        "reranker_used": true
+      },
+      {
+        "case_id": "d-motorcycle",
+        "split": "development",
+        "query": "How do I repair a motorcycle engine?",
+        "intent": "clinical_guidance",
+        "relevant_document_ids": [],
+        "should_abstain": true,
+        "tags": [
+          "out_of_domain"
+        ],
+        "accepted": false,
+        "ranked_documents": [],
+        "ranked_ids": [],
+        "top_cosine": null,
+        "reranker_used": false
+      },
+      {
+        "case_id": "d-paint",
+        "split": "development",
+        "query": "What color should I paint my kitchen walls?",
+        "intent": "clinical_guidance",
+        "relevant_document_ids": [],
+        "should_abstain": true,
+        "tags": [
+          "out_of_domain"
+        ],
+        "accepted": false,
+        "ranked_documents": [],
+        "ranked_ids": [],
+        "top_cosine": null,
+        "reranker_used": false
+      },
+      {
+        "case_id": "d-stale",
+        "split": "development",
+        "query": "What does NG28 recommend about type 2 diabetes?",
+        "intent": "clinical_guidance",
+        "document_ids": [
+          "nice-ng28"
+        ],
+        "relevant_document_ids": [],
+        "should_abstain": true,
+        "tags": [
+          "stale_trap"
+        ],
+        "accepted": false,
+        "ranked_documents": [],
+        "ranked_ids": [],
+        "top_cosine": null,
+        "reranker_used": false
+      }
+    ]
+  },
+  "held_out": {
+    "cases": 11,
+    "previous": {
+      "recall_at_5": 0.8571428571428571,
+      "recall_at_10": 0.8571428571428571,
+      "mrr": 0.8571428571428571,
+      "ndcg_at_10": 0.8571428571428571,
+      "evidence_recall_at_5_labeled_subset": null,
+      "evidence_mrr_labeled_subset": null,
+      "answerable_answered": 6,
+      "answerable_total": 7,
+      "unanswerable_abstained": 3,
+      "unanswerable_total": 4,
+      "false_answer_rate": 0.25
+    },
+    "previous_results": [
+      {
+        "case_id": "h-review",
+        "split": "held_out",
+        "query": "What ongoing review is advised for adults who have hypertension?",
+        "intent": "clinical_guidance",
+        "relevant_document_ids": [
+          "nice-ng136"
+        ],
+        "relevant_evidence_ids": [
+          "nice-ng136-2026-02-26:rec:1.4.24"
+        ],
+        "should_abstain": false,
+        "tags": [
+          "hypertension"
+        ],
+        "accepted": true,
+        "ranked_documents": [
+          "nice-ng136",
+          "nice-ng136",
+          "nice-ng136",
+          "nice-ng136",
+          "nice-ng136",
+          "nice-ng136",
+          "nice-ng238",
+          "nice-ng136",
+          "nice-ng136",
+          "nice-ng136"
+        ]
+      },
+      {
+        "case_id": "h-bp",
+        "split": "held_out",
+        "query": "How should clinic and home blood pressure readings be used in diagnosis?",
+        "intent": "clinical_guidance",
+        "relevant_document_ids": [
+          "nice-ng136"
+        ],
+        "should_abstain": false,
+        "tags": [
+          "hypertension"
+        ],
+        "accepted": true,
+        "ranked_documents": [
+          "nice-ng136",
+          "nice-ng136",
+          "nice-ng136",
+          "nice-ng136",
+          "nice-ng136",
+          "nice-ng136",
+          "nice-ng136",
+          "nice-ng136",
+          "nice-ng136",
+          "nice-ng136"
+        ]
+      },
+      {
+        "case_id": "h-qrisk",
+        "split": "held_out",
+        "query": "What is the role of QRISK3 in cardiovascular prevention?",
+        "intent": "clinical_guidance",
+        "relevant_document_ids": [
+          "nice-ng238"
+        ],
+        "relevant_evidence_ids": [
+          "nice-ng238-2023-12-14:rec:1.6.7"
+        ],
+        "should_abstain": false,
+        "tags": [
+          "exact_term",
+          "lipid"
+        ],
+        "accepted": true,
+        "ranked_documents": [
+          "nice-ng238",
+          "nice-ng238",
+          "nice-ng238",
+          "nice-ng238",
+          "nice-ng238",
+          "nice-ng238",
+          "nice-ng238",
+          "nice-ng238",
+          "nice-ng238",
+          "nice-ng238"
+        ]
+      },
+      {
+        "case_id": "h-sinbad",
+        "split": "held_out",
+        "query": "What did the previous diabetic foot guidance say about SINBAD classification?",
+        "intent": "historical",
+        "relevant_document_ids": [
+          "nice-ng19"
+        ],
+        "should_abstain": false,
+        "tags": [
+          "exact_term",
+          "historical"
+        ],
+        "accepted": true,
+        "ranked_documents": [
+          "nice-ng19",
+          "nice-ng19",
+          "nice-ng19",
+          "nice-ng19",
+          "nice-ng19",
+          "nice-ng19",
+          "nice-ng19",
+          "nice-ng19",
+          "nice-ng19",
+          "nice-ng19"
+        ]
+      },
+      {
+        "case_id": "h-reference",
+        "split": "held_out",
+        "query": "Explain how skeletal muscles contract",
+        "intent": "reference_explanation",
+        "relevant_document_ids": [
+          "openstax-anatomy-physiology"
+        ],
+        "should_abstain": false,
+        "tags": [
+          "reference"
+        ],
+        "accepted": true,
+        "ranked_documents": [
+          "openstax-anatomy-physiology",
+          "openstax-anatomy-physiology",
+          "openstax-anatomy-physiology",
+          "openstax-anatomy-physiology",
+          "openstax-anatomy-physiology",
+          "openstax-anatomy-physiology",
+          "openstax-anatomy-physiology",
+          "openstax-anatomy-physiology",
+          "openstax-anatomy-physiology",
+          "openstax-anatomy-physiology"
+        ]
+      },
+      {
+        "case_id": "h-tb",
+        "split": "held_out",
+        "query": "What did the 2020 global tuberculosis report say?",
+        "intent": "historical",
+        "relevant_document_ids": [
+          "who-global-tb-report"
+        ],
+        "should_abstain": false,
+        "tags": [
+          "historical"
+        ],
+        "accepted": true,
+        "ranked_documents": [
+          "who-global-tb-report",
+          "who-world-malaria-report",
+          "who-global-tb-report",
+          "who-global-tb-report",
+          "who-global-tb-report",
+          "who-global-tb-report",
+          "who-global-tb-report",
+          "who-global-tb-report",
+          "who-global-tb-report",
+          "who-global-tb-report"
+        ]
+      },
+      {
+        "case_id": "h-stale-ng28",
+        "split": "held_out",
+        "query": "What does the old NG28 PDF recommend?",
+        "intent": "clinical_guidance",
+        "document_ids": [
+          "nice-ng28"
+        ],
+        "relevant_document_ids": [],
+        "should_abstain": true,
+        "tags": [
+          "stale_trap"
+        ],
+        "accepted": false,
+        "ranked_documents": []
+      },
+      {
+        "case_id": "h-stale-ng19",
+        "split": "held_out",
+        "query": "What does the old NG19 PDF recommend?",
+        "intent": "clinical_guidance",
+        "document_ids": [
+          "nice-ng19"
+        ],
+        "relevant_document_ids": [],
+        "should_abstain": true,
+        "tags": [
+          "stale_trap"
+        ],
+        "accepted": false,
+        "ranked_documents": []
+      },
+      {
+        "case_id": "h-motorcycle",
+        "split": "held_out",
+        "query": "How do I repair a motorcycle engine?",
+        "intent": "clinical_guidance",
+        "relevant_document_ids": [],
+        "should_abstain": true,
+        "tags": [
+          "out_of_domain"
+        ],
+        "accepted": false,
+        "ranked_documents": []
+      },
+      {
+        "case_id": "h-cooking",
+        "split": "held_out",
+        "query": "How long should I bake a chocolate cake?",
+        "intent": "clinical_guidance",
+        "relevant_document_ids": [],
+        "should_abstain": true,
+        "tags": [
+          "out_of_domain"
+        ],
+        "accepted": true,
+        "ranked_documents": [
+          "nice-ng136",
+          "nice-ng136",
+          "nice-ng136",
+          "nice-ng136",
+          "nice-ng238",
+          "nice-ng238",
+          "nice-ng136",
+          "nice-ng238",
+          "nice-ng238",
+          "nice-ng238"
+        ]
+      },
+      {
+        "case_id": "h-recommendation",
+        "split": "held_out",
+        "query": "What does recommendation 1.4.24 say about annual hypertension care review?",
+        "intent": "clinical_guidance",
+        "recommendation_ids": [
+          "1.4.24"
+        ],
+        "relevant_document_ids": [
+          "nice-ng136"
+        ],
+        "relevant_evidence_ids": [
+          "nice-ng136-2026-02-26:rec:1.4.24"
+        ],
+        "should_abstain": false,
+        "tags": [
+          "recommendation_id"
+        ],
+        "accepted": false,
+        "ranked_documents": []
+      }
+    ],
+    "rrf_only": {
+      "recall_at_5": 1.0,
+      "recall_at_10": 1.0,
+      "mrr": 1.0,
+      "ndcg_at_10": 1.0,
+      "evidence_recall_at_5_labeled_subset": 0.3333333333333333,
+      "evidence_mrr_labeled_subset": 0.3333333333333333,
+      "answerable_answered": 7,
+      "answerable_total": 7,
+      "unanswerable_abstained": 4,
+      "unanswerable_total": 4,
+      "false_answer_rate": 0.0
+    },
+    "phase4": {
+      "recall_at_5": 1.0,
+      "recall_at_10": 1.0,
+      "mrr": 1.0,
+      "ndcg_at_10": 1.0,
+      "evidence_recall_at_5_labeled_subset": 1.0,
+      "evidence_mrr_labeled_subset": 0.8333333333333334,
+      "answerable_answered": 7,
+      "answerable_total": 7,
+      "unanswerable_abstained": 4,
+      "unanswerable_total": 4,
+      "false_answer_rate": 0.0
+    },
+    "results": [
+      {
+        "case_id": "h-review",
+        "split": "held_out",
+        "query": "What ongoing review is advised for adults who have hypertension?",
+        "intent": "clinical_guidance",
+        "relevant_document_ids": [
+          "nice-ng136"
+        ],
+        "relevant_evidence_ids": [
+          "nice-ng136-2026-02-26:rec:1.4.24"
+        ],
+        "should_abstain": false,
+        "tags": [
+          "hypertension"
+        ],
+        "accepted": true,
+        "ranked_documents": [
+          "nice-ng136",
+          "nice-ng136",
+          "nice-ng136",
+          "nice-ng136",
+          "nice-ng136",
+          "nice-ng136",
+          "nice-ng136",
+          "nice-ng136",
+          "nice-ng136",
+          "nice-ng136"
+        ],
+        "ranked_ids": [
+          "nice-ng136-2026-02-26:rec:1.4.24",
+          "nice-ng136-2026-02-26:21",
+          "nice-ng136-2026-02-26:rec:1.4.43",
+          "nice-ng136-2026-02-26:20",
+          "nice-ng136-2026-02-26:2",
+          "nice-ng136-2026-02-26:16",
+          "nice-ng136-2026-02-26:24",
+          "nice-ng136-2026-02-26:rec:1.4.1",
+          "nice-ng136-2026-02-26:17",
+          "nice-ng136-2026-02-26:39"
+        ],
+        "top_cosine": 0.7853139638900757,
+        "reranker_used": true
+      },
+      {
+        "case_id": "h-bp",
+        "split": "held_out",
+        "query": "How should clinic and home blood pressure readings be used in diagnosis?",
+        "intent": "clinical_guidance",
+        "relevant_document_ids": [
+          "nice-ng136"
+        ],
+        "should_abstain": false,
+        "tags": [
+          "hypertension"
+        ],
+        "accepted": true,
+        "ranked_documents": [
+          "nice-ng136",
+          "nice-ng136",
+          "nice-ng136",
+          "nice-ng136",
+          "nice-ng136",
+          "nice-ng136",
+          "nice-ng136",
+          "nice-ng136",
+          "nice-ng136",
+          "nice-ng136"
+        ],
+        "ranked_ids": [
+          "nice-ng136-2026-02-26:11",
+          "nice-ng136-2026-02-26:23",
+          "nice-ng136-2026-02-26:rec:1.2.10",
+          "nice-ng136-2026-02-26:4",
+          "nice-ng136-2026-02-26:27",
+          "nice-ng136-2026-02-26:5",
+          "nice-ng136-2026-02-26:3",
+          "nice-ng136-2026-02-26:22",
+          "nice-ng136-2026-02-26:28",
+          "nice-ng136-2026-02-26:rec:1.4.18"
+        ],
+        "top_cosine": 0.6572238206863403,
+        "reranker_used": true
+      },
+      {
+        "case_id": "h-qrisk",
+        "split": "held_out",
+        "query": "What is the role of QRISK3 in cardiovascular prevention?",
+        "intent": "clinical_guidance",
+        "relevant_document_ids": [
+          "nice-ng238"
+        ],
+        "relevant_evidence_ids": [
+          "nice-ng238-2023-12-14:rec:1.6.7"
+        ],
+        "should_abstain": false,
+        "tags": [
+          "exact_term",
+          "lipid"
+        ],
+        "accepted": true,
+        "ranked_documents": [
+          "nice-ng238",
+          "nice-ng238",
+          "nice-ng238",
+          "nice-ng238",
+          "nice-ng238",
+          "nice-ng238",
+          "nice-ng238",
+          "nice-ng238",
+          "nice-ng238",
+          "nice-ng238"
+        ],
+        "ranked_ids": [
+          "nice-ng238-2023-12-14:3",
+          "nice-ng238-2023-12-14:rec:1.6.7",
+          "nice-ng238-2023-12-14:rec:1.6.8",
+          "nice-ng238-2023-12-14:8",
+          "nice-ng238-2023-12-14:5",
+          "nice-ng238-2023-12-14:6",
+          "nice-ng238-2023-12-14:18",
+          "nice-ng238-2023-12-14:4",
+          "nice-ng238-2023-12-14:17",
+          "nice-ng238-2023-12-14:rec:1.1.16"
+        ],
+        "top_cosine": 0.6451437473297119,
+        "reranker_used": true
+      },
+      {
+        "case_id": "h-sinbad",
+        "split": "held_out",
+        "query": "What did the previous diabetic foot guidance say about SINBAD classification?",
+        "intent": "historical",
+        "relevant_document_ids": [
+          "nice-ng19"
+        ],
+        "should_abstain": false,
+        "tags": [
+          "exact_term",
+          "historical"
+        ],
+        "accepted": true,
+        "ranked_documents": [
+          "nice-ng19",
+          "nice-ng19",
+          "nice-ng19",
+          "nice-ng19",
+          "nice-ng19",
+          "nice-ng19",
+          "nice-ng19",
+          "nice-ng19",
+          "nice-ng19",
+          "nice-ng28"
+        ],
+        "ranked_ids": [
+          "nice-ng19-2019-10-11:8",
+          "nice-ng19-2019-10-11:rec:1.5.2",
+          "nice-ng19-2019-10-11:26",
+          "nice-ng19-2019-10-11:5",
+          "nice-ng19-2019-10-11:21",
+          "nice-ng19-2019-10-11:rec:1.3.6",
+          "nice-ng19-2019-10-11:30",
+          "nice-ng19-2019-10-11:7",
+          "nice-ng19-2019-10-11:23",
+          "nice-ng28-2022-06-29:rec:1.8.15"
+        ],
+        "top_cosine": 0.5915213823318481,
+        "reranker_used": true
+      },
+      {
+        "case_id": "h-reference",
+        "split": "held_out",
+        "query": "Explain how skeletal muscles contract",
+        "intent": "reference_explanation",
+        "relevant_document_ids": [
+          "openstax-anatomy-physiology"
+        ],
+        "should_abstain": false,
+        "tags": [
+          "reference"
+        ],
+        "accepted": true,
+        "ranked_documents": [
+          "openstax-anatomy-physiology",
+          "openstax-anatomy-physiology",
+          "openstax-anatomy-physiology",
+          "openstax-anatomy-physiology",
+          "openstax-anatomy-physiology",
+          "openstax-anatomy-physiology",
+          "openstax-anatomy-physiology",
+          "openstax-anatomy-physiology",
+          "openstax-anatomy-physiology",
+          "openstax-anatomy-physiology"
+        ],
+        "ranked_ids": [
+          "openstax-anatomy-physiology-4f353d6c8e05:603",
+          "openstax-anatomy-physiology-4f353d6c8e05:543",
+          "openstax-anatomy-physiology-4f353d6c8e05:596",
+          "openstax-anatomy-physiology-4f353d6c8e05:544",
+          "openstax-anatomy-physiology-4f353d6c8e05:541",
+          "openstax-anatomy-physiology-4f353d6c8e05:597",
+          "openstax-anatomy-physiology-4f353d6c8e05:549",
+          "openstax-anatomy-physiology-4f353d6c8e05:545",
+          "openstax-anatomy-physiology-4f353d6c8e05:568",
+          "openstax-anatomy-physiology-4f353d6c8e05:585"
+        ],
+        "top_cosine": 0.5422420501708984,
+        "reranker_used": true
+      },
+      {
+        "case_id": "h-tb",
+        "split": "held_out",
+        "query": "What did the 2020 global tuberculosis report say?",
+        "intent": "historical",
+        "relevant_document_ids": [
+          "who-global-tb-report"
+        ],
+        "should_abstain": false,
+        "tags": [
+          "historical"
+        ],
+        "accepted": true,
+        "ranked_documents": [
+          "who-global-tb-report",
+          "who-global-tb-report",
+          "who-global-tb-report",
+          "who-global-tb-report",
+          "who-global-tb-report",
+          "who-global-tb-report",
+          "who-global-tb-report",
+          "who-global-tb-report",
+          "who-global-tb-report",
+          "who-global-tb-report"
+        ],
+        "ranked_ids": [
+          "who-global-tb-report-2020-10-15:71",
+          "who-global-tb-report-2020-10-15:239",
+          "who-global-tb-report-2020-10-15:262",
+          "who-global-tb-report-2020-10-15:325",
+          "who-global-tb-report-2020-10-15:392",
+          "who-global-tb-report-2020-10-15:333",
+          "who-global-tb-report-2020-10-15:233",
+          "who-global-tb-report-2020-10-15:59",
+          "who-global-tb-report-2020-10-15:62",
+          "who-global-tb-report-2020-10-15:225"
+        ],
+        "top_cosine": 0.7538983821868896,
+        "reranker_used": true
+      },
+      {
+        "case_id": "h-stale-ng28",
+        "split": "held_out",
+        "query": "What does the old NG28 PDF recommend?",
+        "intent": "clinical_guidance",
+        "document_ids": [
+          "nice-ng28"
+        ],
+        "relevant_document_ids": [],
+        "should_abstain": true,
+        "tags": [
+          "stale_trap"
+        ],
+        "accepted": false,
+        "ranked_documents": [],
+        "ranked_ids": [],
+        "top_cosine": null,
+        "reranker_used": false
+      },
+      {
+        "case_id": "h-stale-ng19",
+        "split": "held_out",
+        "query": "What does the old NG19 PDF recommend?",
+        "intent": "clinical_guidance",
+        "document_ids": [
+          "nice-ng19"
+        ],
+        "relevant_document_ids": [],
+        "should_abstain": true,
+        "tags": [
+          "stale_trap"
+        ],
+        "accepted": false,
+        "ranked_documents": [],
+        "ranked_ids": [],
+        "top_cosine": null,
+        "reranker_used": false
+      },
+      {
+        "case_id": "h-motorcycle",
+        "split": "held_out",
+        "query": "How do I repair a motorcycle engine?",
+        "intent": "clinical_guidance",
+        "relevant_document_ids": [],
+        "should_abstain": true,
+        "tags": [
+          "out_of_domain"
+        ],
+        "accepted": false,
+        "ranked_documents": [],
+        "ranked_ids": [],
+        "top_cosine": null,
+        "reranker_used": false
+      },
+      {
+        "case_id": "h-cooking",
+        "split": "held_out",
+        "query": "How long should I bake a chocolate cake?",
+        "intent": "clinical_guidance",
+        "relevant_document_ids": [],
+        "should_abstain": true,
+        "tags": [
+          "out_of_domain"
+        ],
+        "accepted": false,
+        "ranked_documents": [],
+        "ranked_ids": [],
+        "top_cosine": null,
+        "reranker_used": false
+      },
+      {
+        "case_id": "h-recommendation",
+        "split": "held_out",
+        "query": "What does recommendation 1.4.24 say about annual hypertension care review?",
+        "intent": "clinical_guidance",
+        "recommendation_ids": [
+          "1.4.24"
+        ],
+        "relevant_document_ids": [
+          "nice-ng136"
+        ],
+        "relevant_evidence_ids": [
+          "nice-ng136-2026-02-26:rec:1.4.24"
+        ],
+        "should_abstain": false,
+        "tags": [
+          "recommendation_id"
+        ],
+        "accepted": true,
+        "ranked_documents": [
+          "nice-ng136"
+        ],
+        "ranked_ids": [
+          "nice-ng136-2026-02-26:rec:1.4.24"
+        ],
+        "top_cosine": 0.735008955001831,
+        "reranker_used": true
+      }
+    ],
+    "latency": {
+      "dense": {
+        "median_ms": 74.65719999891007,
+        "p95_ms": 354.69402000016987
+      },
+      "bm25": {
+        "median_ms": 81.2547999958042,
+        "p95_ms": 2149.837000000115
+      },
+      "reranking": {
+        "median_ms": 6057.811500002572,
+        "p95_ms": 14242.108739997639
+      },
+      "full_retrieval": {
+        "median_ms": 6142.2732999999425,
+        "p95_ms": 16672.268639996764
+      }
+    }
+  }
+}

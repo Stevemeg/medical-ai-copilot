@@ -1,0 +1,178 @@
+{
+  "schema_version": 1,
+  "development": {
+    "metrics": {
+      "supported_claim_precision": null,
+      "unsupported_claim_detection_rate": 1.0,
+      "false_supported_rate": 0.0,
+      "citation_precision": null,
+      "citation_recall": 0.0,
+      "verification_median_ms": 78.82119999703718,
+      "verification_p95_ms": 17160.248964997656,
+      "support_cases": 1,
+      "nonsupport_cases": 3,
+      "predicted_supported": 0
+    },
+    "results": [
+      {
+        "case_id": "g1",
+        "split": "development",
+        "evidence": {
+          "a": "The protocol recommends measuring blood pressure once every 12 months."
+        },
+        "claim": "The protocol recommends annual blood pressure measurement.",
+        "cited_ids": [
+          "a"
+        ],
+        "relevant_ids": [
+          "a"
+        ],
+        "expected": "supported",
+        "actual": "uncertain",
+        "latency_ms": 20173.83549999795
+      },
+      {
+        "case_id": "g2",
+        "split": "development",
+        "evidence": {
+          "a": "The protocol recommends measuring blood pressure once every 12 months."
+        },
+        "claim": "Aspirin is always safe for every patient.",
+        "cited_ids": [
+          "a"
+        ],
+        "relevant_ids": [],
+        "expected": "unsupported",
+        "actual": "uncertain",
+        "latency_ms": 74.38379999803146
+      },
+      {
+        "case_id": "g3",
+        "split": "development",
+        "evidence": {
+          "a": "Do not perform routine annual testing."
+        },
+        "claim": "Perform routine annual testing.",
+        "cited_ids": [
+          "a"
+        ],
+        "relevant_ids": [],
+        "expected": "contradicted",
+        "actual": "unsupported",
+        "latency_ms": 69.27269999869168
+      },
+      {
+        "case_id": "g4",
+        "split": "development",
+        "evidence": {
+          "a": "Record blood pressure at the visit."
+        },
+        "claim": "Repeat blood pressure measurement every month.",
+        "cited_ids": [
+          "a"
+        ],
+        "relevant_ids": [],
+        "expected": "insufficient",
+        "actual": "uncertain",
+        "latency_ms": 83.2585999960429
+      }
+    ]
+  },
+  "held_out": {
+    "metrics": {
+      "supported_claim_precision": 1.0,
+      "unsupported_claim_detection_rate": 1.0,
+      "false_supported_rate": 0.0,
+      "citation_precision": 1.0,
+      "citation_recall": 1.0,
+      "verification_median_ms": 72.22360000014305,
+      "verification_p95_ms": 78.83640000072774,
+      "support_cases": 1,
+      "nonsupport_cases": 4,
+      "predicted_supported": 1
+    },
+    "results": [
+      {
+        "case_id": "g5",
+        "split": "held_out",
+        "evidence": {
+          "a": "The protocol advises annual assessment of foot sensation."
+        },
+        "claim": "Foot sensation should be assessed annually.",
+        "cited_ids": [
+          "a"
+        ],
+        "relevant_ids": [
+          "a"
+        ],
+        "expected": "supported",
+        "actual": "supported",
+        "latency_ms": 79.01770000171382
+      },
+      {
+        "case_id": "g6",
+        "split": "held_out",
+        "evidence": {
+          "a": "The protocol advises annual assessment of foot sensation."
+        },
+        "claim": "The protocol advises monthly foot imaging.",
+        "cited_ids": [
+          "a"
+        ],
+        "relevant_ids": [],
+        "expected": "unsupported",
+        "actual": "unsupported",
+        "latency_ms": 72.22360000014305
+      },
+      {
+        "case_id": "g7",
+        "split": "held_out",
+        "evidence": {
+          "a": "Do not perform routine annual imaging."
+        },
+        "claim": "Routine annual imaging is recommended.",
+        "cited_ids": [
+          "a"
+        ],
+        "relevant_ids": [],
+        "expected": "contradicted",
+        "actual": "unsupported",
+        "latency_ms": 59.779499999422114
+      },
+      {
+        "case_id": "g8",
+        "split": "held_out",
+        "evidence": {
+          "a": "Discuss diet at the review."
+        },
+        "claim": "The review must occur every six weeks.",
+        "cited_ids": [
+          "a"
+        ],
+        "relevant_ids": [],
+        "expected": "insufficient",
+        "actual": "uncertain",
+        "latency_ms": 66.35390000155894
+      },
+      {
+        "case_id": "g9",
+        "split": "held_out",
+        "evidence": {
+          "a": "The protocol recommends annual foot assessment.",
+          "b": "Record blood pressure at each visit."
+        },
+        "claim": "Annual foot assessment is recommended.",
+        "cited_ids": [
+          "a",
+          "b"
+        ],
+        "relevant_ids": [
+          "a"
+        ],
+        "expected": "unsupported",
+        "actual": "uncertain",
+        "latency_ms": 78.1111999967834
+      }
+    ]
+  }
+}

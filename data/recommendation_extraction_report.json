@@ -1,0 +1,36 @@
+{
+  "extractor_version": "nice-numbered-action-v3",
+  "documents_processed": 4,
+  "recommendations_extracted": 237,
+  "ambiguous_candidates_rejected": 40,
+  "documents": [
+    {
+      "document_id": "nice-ng28",
+      "version_id": "nice-ng28-2022-06-29",
+      "extraction_status": "verified_structure",
+      "verified_count": 80,
+      "ambiguous_candidates_rejected": 7
+    },
+    {
+      "document_id": "nice-ng19",
+      "version_id": "nice-ng19-2019-10-11",
+      "extraction_status": "verified_structure",
+      "verified_count": 39,
+      "ambiguous_candidates_rejected": 6
+    },
+    {
+      "document_id": "nice-ng136",
+      "version_id": "nice-ng136-2026-02-26",
+      "extraction_status": "verified_structure",
+      "verified_count": 61,
+      "ambiguous_candidates_rejected": 11
+    },
+    {
+      "document_id": "nice-ng238",
+      "version_id": "nice-ng238-2023-12-14",
+      "extraction_status": "verified_structure",
+      "verified_count": 57,
+      "ambiguous_candidates_rejected": 16
+    }
+  ]
+}

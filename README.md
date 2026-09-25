@@ -55,16 +55,17 @@ The primary workspace loads fictional FHIR R4-compatible patient Bundles, normal
 
 Ask Evidence remains available as a separate general question workflow. Patient records are not automatically provided to it.
 
-A RAG pipeline that traces retrieved context to a registered source version and page:
+A governed evidence pipeline links surviving claims to exact source versions and pages:
 
 ```
-Question -> registry policy filter -> hybrid retrieval (FAISS + BM25/RRF) -> relevance gate -> generation -> context citations + audit entry
+Question -> lifecycle and metadata filter -> cosine + BM25 -> RRF -> cross-encoder rerank -> calibrated acceptance -> conflict screening -> structured claims -> independent NLI verification -> claim citations
 ```
 
 - Default retrieval uses only registered, ingested current clinical guidelines; historical and reference evidence require explicit policies
-- The generation prompt instructs the model to use retrieved context; individual generated claims are not independently checked
-- Returns page-level citations for retrieved context; individual generated claims are not independently verified
-- Refuses cleanly, **with no LLM call at all**, when nothing relevant is indexed
+- Recommendation units are extracted conservatively from local NICE PDFs; surrounding passages remain context units
+- Structured claims must name exact evidence IDs; unsupported or unverifiable claims are removed before display
+- A local NLI verifier fails closed when unavailable; conflicting evidence is shown without choosing a winner
+- Refuses cleanly, **with no LLM call at all**, when retrieval abstains
 - Logs every interaction to a **hash-chained, tamper-evident** audit trail
 
 ## Features
@@ -78,11 +79,11 @@ Question -> registry policy filter -> hybrid retrieval (FAISS + BM25/RRF) -> rel
 **Retrieval**
 - **Policy-aware dual-index retrieval**: only eligible source versions enter the selected FAISS/BM25 view; historical and reference modes are explicit.
 - **Hybrid search within the selected index** — FAISS semantic + BM25 keyword, fused via **Reciprocal Rank Fusion**
-- **Relevance gate** — genuinely out-of-scope questions return a clean "I don't have relevant information" response with **zero LLM calls** (no cost, no hallucination surface)
+- **Cosine acceptance gate** calibrated on a separate development set; out-of-scope questions can abstain before generation
 
 **Grounding & Citation**
-- Page-level citations grouped per document with combined ranges — e.g. `NICE NG19 — Diabetic Foot Problems · pp.6-7, 13-15`
-- Generation prompt explicitly engineered to prevent **self-contradiction** (answering confidently, then hedging or reversing) — a real failure mode found, reproduced, and fixed with a before/after eval set
+- Claim-level evidence cards show publisher, version, jurisdiction, lifecycle, recommendation ID, page, and the passage used for verification
+- Structured JSON generation, independent provenance and NLI checks, and deterministic final rendering block unsupported draft claims
 
 **Auditability**
 - **Hash-chained SQLite audit log** — every interaction links to the previous entry's hash, so modifying or deleting any past record breaks the chain detectably
@@ -95,7 +96,7 @@ Question -> registry policy filter -> hybrid retrieval (FAISS + BM25/RRF) -> rel
 ## Design Principles
 
 1. **Grounding over completeness.** The system answers from eligible indexed context or says it can't. Filling gaps with unrestricted LLM knowledge would defeat the entire purpose.
-2. **Context is traceable.** Retrieved chunks have page and source-version provenance; generated claims are not yet checked individually.
+2. **Context is traceable.** Evidence units preserve page and source-version provenance; surviving claims cite exact verified units.
 3. **Refuse cheaply.** The relevance gate short-circuits before the LLM, not after — out-of-scope questions cost nothing and can't hallucinate.
 4. **Auditability is tested, not asserted.** The tamper-evidence property was verified adversarially.
 5. **Debug by reproduction.** Every retrieval fix in this repo came from reproducing a real failure and measuring it — the `debug_*.py` scripts are kept in-tree as evidence.
@@ -122,17 +123,21 @@ flowchart LR
     RECREG --> RULES
     REG --> PARSE[Page extraction and chunking]
     REG --> RULES
-    PARSE --> IDX[FAISS indexes and provenance manifests]
+    PARSE --> UNITS[Context and verified recommendation units]
+    UNITS --> IDX[Normalized cosine FAISS indexes and provenance manifests]
     IDX --> POLICY[Lifecycle and source-type filter]
-    POLICY --> SEARCH[FAISS and BM25 with RRF]
-    SEARCH --> GATE[Relevance gate]
-    GATE --> GEN[Context-bounded generation]
-    GEN --> CITE[Answer and source-version citations]
+    POLICY --> SEARCH[Cosine and BM25 with RRF]
+    SEARCH --> RERANK[Cross-encoder reranking]
+    RERANK --> GATE[Calibrated acceptance]
+    GATE --> CONFLICT[Conflict screening]
+    CONFLICT --> GEN[Structured JSON claims]
+    GEN --> VERIFYCLAIM[Claim support verifier]
+    VERIFYCLAIM --> CITE[Verified claim evidence cards]
     CITE --> AUDIT[Hash-chained audit log]
     CITE --> ASK[Ask Evidence]
 ```
 
-The original two-index storage keeps the large anatomy textbook separate from the other sources. At query time, policy filtering selects eligible vectors before semantic or lexical ranking. This prevents historical reports and the superseded NG28 snapshot from influencing the default clinical search.
+The two-index storage keeps reference material separate. At query time, metadata filtering selects eligible units before semantic or lexical ranking. This prevents the superseded NG28 and old local NG19 PDFs from influencing current clinical search. The current NG19 recommendation snapshot used by deterministic rules remains in its separate registry. See [Phase 4 evidence architecture](EVIDENCE_PHASE4.md) for the retrieval and verification contract, evaluation, and limitations.
 
 ## Why Hybrid Retrieval
 
@@ -149,7 +154,7 @@ Neither method is sufficient alone. Fusing both via RRF was a real fix for a rea
 
 ## User Interface
 
-The Streamlit workspace opens on **Patients**, where a bundled synthetic patient or supported JSON Bundle can be imported. **Clinical Review** creates a snapshot, accepts an explicit evaluation date and record-coverage assertion, and displays deterministic findings, evidence cards, and action history. **Ask Evidence** retains the governed general Q&A path, and **Knowledge Sources** shows registered lifecycle states. The versioned API exposes the Phase 3 workflow; the alternative HTML client has not yet been updated with the new finding controls.
+The Streamlit workspace opens on **Patients**, where a bundled synthetic patient or supported JSON Bundle can be imported. **Clinical Review** creates a snapshot, accepts an explicit evaluation date and record-coverage assertion, and displays deterministic findings, evidence cards, and action history. **Ask Evidence** is a separate general Q&A path with current, reference, and historical modes and claim-level evidence cards. The HTML client shows the same evidence modes and claim cards through the versioned API.
 
 Older screenshots in `assets/screenshots/` depict the earlier evidence-only interface and should not be read as pictures of the current patient workspace.
 
@@ -182,18 +187,21 @@ Or set `GROQ_API_KEY` as a real environment variable — `backend/config.py` che
 streamlit run app.py
 ```
 
-**Rebuilding the indexes** (required after a registered source or parser/chunker change; see [knowledge governance](KNOWLEDGE_GOVERNANCE.md)):
+**Rebuilding the indexes** (required after a registered source, parser, chunker, or recommendation extractor change; see [knowledge governance](KNOWLEDGE_GOVERNANCE.md)):
 
 ```bash
 python -m embeddings.extract_text        # PDFs → page-tracked JSON
 python -m embeddings.chunk_text          # JSON → token-bounded chunks
+python -m embeddings.recommendation_extractor # Chunks and guideline text → evidence units
 python -m embeddings.build_faiss_index   # Build dual FAISS indexes
 ```
 
 **Retrieval diagnostics** — the debug scripts used to find and fix real retrieval bugs are kept in-tree:
 
 ```bash
-python -m embeddings.calibrate_threshold      # Relevance-gate threshold calibration
+python -m eval.calibrate                      # Development-set cosine calibration
+python -m eval.benchmark                      # Baseline and held-out retrieval benchmark
+python -m eval.grounding_benchmark            # Synthetic claim/citation benchmark
 python -m embeddings.compare_embeddings       # Embedding model comparison
 python -m embeddings.eval_generation_quality  # Before/after generation eval set
 python -m embeddings.debug_bm25_gap           # BM25 vs FAISS coverage gaps
@@ -315,14 +323,14 @@ These are stated plainly rather than buried — each is a real constraint of the
 
 - **Corpus-bounded answers.** Responses are limited to indexed documents. This is a deliberate design choice (grounding over completeness), not a gap to be filled with unrestricted LLM knowledge.
 - **Not for clinical use.** Not intended for diagnosis or treatment decisions — see `COMPLIANCE_CONSIDERATIONS.md` for an honest (non-legal) analysis of what real clinical deployment would require.
-- **Cross-guideline reconciliation (open issue).** Certain queries retrieve a chunk from a topically adjacent guideline, which the model sometimes tries to incorrectly cross-reference rather than ignore. This remains an open limitation; page-level context citations do not verify every generated claim.
+- **Verifier and conflict limits.** The local NLI model can reject valid paraphrases, and conflict detection is conservative. The small synthetic benchmark is not clinical validation. Manual evidence governance remains necessary.
 - **Ephemeral audit storage on free tier.** The hash-chaining is real and tested, but Streamlit Community Cloud's filesystem resets on redeploy. The code is correct; this hosting tier doesn't give it persistent storage.
 - **Local synthetic patient storage.** SQLite persists between local requests, but hosted filesystems may reset and there is no authentication. Do not import real patient records.
 - **Cold-start latency** on free-tier deployment.
 
 ## Roadmap
 
-Phase 1 established governed source versions and lifecycle-aware retrieval. Phase 2 added synthetic patient context and review snapshots. Phase 3 adds two narrow deterministic annual follow-up checks, structured findings, a separate authoritative recommendation verification registry, and unauthenticated demo dispositions. Current NG19 full-document ingestion, real patient integration, and production security remain outside this build.
+Phase 1 established governed source versions and lifecycle-aware retrieval. Phase 2 added synthetic patient context and review snapshots. Phase 3 added two narrow deterministic annual follow-up checks and a separate authoritative recommendation registry. Phase 4 added typed evidence units, cosine hybrid retrieval, reranking, structured claims, independent support verification, and conflict display. Current NG19 full-document ingestion, real patient integration, and production security remain outside this build.
 
 ## Disclaimer
 
