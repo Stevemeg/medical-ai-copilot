@@ -115,6 +115,7 @@ def summarize(cases, retriever):
         request = RetrievalRequest(
             query=case["query"],
             intent=case["intent"],
+            jurisdiction=case.get("jurisdiction"),
             document_ids=case.get("document_ids", []),
             recommendation_ids=case.get("recommendation_ids", []),
             top_k=10,
@@ -210,6 +211,7 @@ def main():
         request = RetrievalRequest(
             query=case["query"],
             intent=case["intent"],
+            jurisdiction=case.get("jurisdiction"),
             document_ids=case.get("document_ids", []),
             recommendation_ids=case.get("recommendation_ids", []),
             top_k=10,

@@ -22,7 +22,11 @@ def main():
     for case in cases:
         result = retriever.retrieve(
             RetrievalRequest(
-                query=case["query"], intent=case["intent"], document_ids=case.get("document_ids", []), top_k=5
+                query=case["query"],
+                intent=case["intent"],
+                jurisdiction=case.get("jurisdiction"),
+                document_ids=case.get("document_ids", []),
+                top_k=5,
             )
         )
         # Highest eligible dense similarity is tracked even when BM25/RRF puts

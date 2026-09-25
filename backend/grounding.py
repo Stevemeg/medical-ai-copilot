@@ -100,6 +100,13 @@ def verify_claim(
                     document.document_id != unit.document_id
                     or version.version_id != unit.version_id
                     or version.status != unit.lifecycle_status
+                    or document.source_type != unit.source_type
+                    or document.jurisdiction != unit.jurisdiction
+                    or document.publisher != unit.publisher
+                    or document.canonical_title != unit.canonical_title
+                    or document.canonical_source_url != unit.canonical_source_url
+                    or version.published_at != unit.published_at
+                    or version.updated_at != unit.updated_at
                     or not registry.eligible(unit.model_dump(), retrieval.request.policy)
                 ):
                     return claim.model_copy(update={"support_status": SupportStatus.UNSUPPORTED})

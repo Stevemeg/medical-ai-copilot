@@ -10,7 +10,7 @@
   },
   "calibration": {
     "split": "development",
-    "cases": 8,
+    "cases": 9,
     "results": [
       {
         "case_id": "d-htn",
@@ -262,11 +262,27 @@
         "ranked_ids": [],
         "top_cosine": null,
         "reranker_used": false
+      },
+      {
+        "case_id": "d-ambiguous",
+        "split": "development",
+        "query": "What should I do about this?",
+        "intent": "clinical_guidance",
+        "relevant_document_ids": [],
+        "should_abstain": true,
+        "tags": [
+          "ambiguous"
+        ],
+        "accepted": false,
+        "ranked_documents": [],
+        "ranked_ids": [],
+        "top_cosine": null,
+        "reranker_used": false
       }
     ]
   },
   "held_out": {
-    "cases": 11,
+    "cases": 12,
     "previous": {
       "recall_at_5": 0.8571428571428571,
       "recall_at_10": 0.8571428571428571,
@@ -277,8 +293,8 @@
       "answerable_answered": 6,
       "answerable_total": 7,
       "unanswerable_abstained": 3,
-      "unanswerable_total": 4,
-      "false_answer_rate": 0.25
+      "unanswerable_total": 5,
+      "false_answer_rate": 0.4
     },
     "previous_results": [
       {
@@ -534,6 +550,31 @@
         ],
         "accepted": false,
         "ranked_documents": []
+      },
+      {
+        "case_id": "h-jurisdiction",
+        "split": "held_out",
+        "query": "What ongoing review is advised for adults with hypertension?",
+        "intent": "clinical_guidance",
+        "jurisdiction": "IN",
+        "relevant_document_ids": [],
+        "should_abstain": true,
+        "tags": [
+          "jurisdiction_sensitive"
+        ],
+        "accepted": true,
+        "ranked_documents": [
+          "nice-ng136",
+          "nice-ng136",
+          "nice-ng136",
+          "nice-ng136",
+          "nice-ng136",
+          "nice-ng238",
+          "nice-ng136",
+          "nice-ng238",
+          "nice-ng136",
+          "nice-ng238"
+        ]
       }
     ],
     "rrf_only": {
@@ -545,8 +586,8 @@
       "evidence_mrr_labeled_subset": 0.3333333333333333,
       "answerable_answered": 7,
       "answerable_total": 7,
-      "unanswerable_abstained": 4,
-      "unanswerable_total": 4,
+      "unanswerable_abstained": 5,
+      "unanswerable_total": 5,
       "false_answer_rate": 0.0
     },
     "phase4": {
@@ -558,8 +599,8 @@
       "evidence_mrr_labeled_subset": 0.8333333333333334,
       "answerable_answered": 7,
       "answerable_total": 7,
-      "unanswerable_abstained": 4,
-      "unanswerable_total": 4,
+      "unanswerable_abstained": 5,
+      "unanswerable_total": 5,
       "false_answer_rate": 0.0
     },
     "results": [
@@ -908,24 +949,41 @@
         ],
         "top_cosine": 0.735008955001831,
         "reranker_used": true
+      },
+      {
+        "case_id": "h-jurisdiction",
+        "split": "held_out",
+        "query": "What ongoing review is advised for adults with hypertension?",
+        "intent": "clinical_guidance",
+        "jurisdiction": "IN",
+        "relevant_document_ids": [],
+        "should_abstain": true,
+        "tags": [
+          "jurisdiction_sensitive"
+        ],
+        "accepted": false,
+        "ranked_documents": [],
+        "ranked_ids": [],
+        "top_cosine": null,
+        "reranker_used": false
       }
     ],
     "latency": {
       "dense": {
-        "median_ms": 74.65719999891007,
-        "p95_ms": 354.69402000016987
+        "median_ms": 43.682700001227204,
+        "p95_ms": 76.8779399979394
       },
       "bm25": {
-        "median_ms": 81.2547999958042,
-        "p95_ms": 2149.837000000115
+        "median_ms": 92.89879999414552,
+        "p95_ms": 1023.419560001639
       },
       "reranking": {
-        "median_ms": 6057.811500002572,
-        "p95_ms": 14242.108739997639
+        "median_ms": 5892.075700001442,
+        "p95_ms": 6081.573300003947
       },
       "full_retrieval": {
-        "median_ms": 6142.2732999999425,
-        "p95_ms": 16672.268639996764
+        "median_ms": 6130.21899999876,
+        "p95_ms": 7191.5257000000565
       }
     }
   }

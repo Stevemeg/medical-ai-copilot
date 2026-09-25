@@ -99,6 +99,19 @@
       "top_final_cosine": -1,
       "accepted": false,
       "document_ids": []
+    },
+    {
+      "case_id": "d-ambiguous",
+      "should_abstain": true,
+      "top_final_cosine": 0.10337568074464798,
+      "accepted": true,
+      "document_ids": [
+        "nice-ng136",
+        "nice-ng136",
+        "nice-ng238",
+        "nice-ng238",
+        "nice-ng136"
+      ]
     }
   ],
   "candidate_thresholds": [

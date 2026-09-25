@@ -192,6 +192,7 @@ def test_metadata_filter_before_scoring_and_normalized_query():
     )
     result = retriever.retrieve(RetrievalRequest(query="hypertension annual review"))
     assert not result.accepted  # the strong stale vector cannot alter acceptance
+    assert not retriever.retrieve(RetrievalRequest(query="hypertension annual review", jurisdiction="IN")).accepted
     historical = retriever.retrieve(RetrievalRequest(query="hypertension annual review", intent="historical"))
     assert historical.accepted and historical.evidence[0].unit.evidence_unit_id == "stale"
     with pytest.raises(StaleArtifact):
@@ -357,6 +358,29 @@ def test_stale_and_unknown_citation_never_supported():
     assert verify_claim(claim, retrieval, FakeVerifier()).support_status is SupportStatus.UNSUPPORTED
     unknown = AnswerClaim(claim_id="c2", text="supported claim", evidence_ids=["missing"])
     assert verify_claim(unknown, retrieval, FakeVerifier()).support_status is SupportStatus.UNSUPPORTED
+
+
+def test_citation_metadata_cannot_override_registry_jurisdiction():
+    registry = SourceRegistry()
+    document = registry.documents["nice-ng136"]
+    version = registry.versions["nice-ng136-2026-02-26"]
+    source = unit(jurisdiction="IN").model_copy(
+        update={
+            "publisher": document.publisher,
+            "canonical_title": document.canonical_title,
+            "canonical_source_url": document.canonical_source_url,
+            "published_at": version.published_at,
+            "updated_at": version.updated_at,
+        }
+    )
+    retrieval = RetrievalResult(
+        request=RetrievalRequest(query="What does this guideline say?"),
+        accepted=True,
+        evidence=[RankedEvidence(unit=source, rrf_score=0.1)],
+        diagnostics=RetrievalDiagnostics(),
+    )
+    claim = AnswerClaim(claim_id="c1", text="supported claim", evidence_ids=["a"])
+    assert verify_claim(claim, retrieval, FakeVerifier(), registry).support_status is SupportStatus.UNSUPPORTED
 
 
 def test_injected_evidence_cannot_make_public_answer_reveal_secret(monkeypatch):

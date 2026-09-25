@@ -22,7 +22,7 @@
     "claim_support": [
       "supported"
     ],
-    "full_pipeline_ms": 40477.18790000363
+    "full_pipeline_ms": 43732.374100000015
   },
   "out_of_domain": {
     "retrieval_accepted": false,
@@ -33,7 +33,7 @@
     "bm25_count": 30,
     "answer_status": "abstained",
     "claim_support": [],
-    "full_pipeline_ms": 223.37010000046575
+    "full_pipeline_ms": 432.06089999875985
   },
   "stale_current": {
     "retrieval_accepted": false,
@@ -44,7 +44,7 @@
     "bm25_count": 0,
     "answer_status": null,
     "claim_support": [],
-    "full_pipeline_ms": 33.79270000004908
+    "full_pipeline_ms": 69.18330000189599
   },
   "stale_historical": {
     "retrieval_accepted": true,
@@ -67,7 +67,7 @@
     "bm25_count": 30,
     "answer_status": null,
     "claim_support": [],
-    "full_pipeline_ms": 4587.633200004348
+    "full_pipeline_ms": 6813.927199997124
   },
   "exact_term": {
     "retrieval_accepted": true,
@@ -90,7 +90,7 @@
     "bm25_count": 30,
     "answer_status": null,
     "claim_support": [],
-    "full_pipeline_ms": 5030.8313999994425
+    "full_pipeline_ms": 6866.8705000018235
   },
   "reference": {
     "retrieval_accepted": true,
@@ -113,11 +113,11 @@
     "bm25_count": 30,
     "answer_status": null,
     "claim_support": [],
-    "full_pipeline_ms": 5124.776499993459
+    "full_pipeline_ms": 7812.911499997426
   },
   "pipeline_latency": {
-    "median_ms": 265.5799000058323,
-    "p95_ms": 319.1912900023453,
+    "median_ms": 351.88900000503054,
+    "p95_ms": 434.9939499981701,
     "samples": 7,
     "last_status": "grounded"
   }
