@@ -1,0 +1,171 @@
+{
+  "development": {
+    "30": {
+      "quality": {
+        "recall_at_5": 1.0,
+        "recall_at_10": 1.0,
+        "mrr": 1.0,
+        "ndcg_at_10": 1.0,
+        "evidence_recall_at_5_labeled_subset": null,
+        "evidence_mrr_labeled_subset": null,
+        "answerable_answered": 5,
+        "answerable_total": 5,
+        "unanswerable_abstained": 4,
+        "unanswerable_total": 4,
+        "false_answer_rate": 0.0
+      },
+      "latency": {
+        "dense": {
+          "median_ms": 13.696349997189827,
+          "p95_ms": 13530.704109997885
+        },
+        "bm25": {
+          "median_ms": 2.177100002882071,
+          "p95_ms": 444.1692399988823
+        },
+        "reranking": {
+          "median_ms": 1114.2483000003267,
+          "p95_ms": 3899.9189800000745
+        },
+        "full_retrieval": {
+          "median_ms": 1192.504349994124,
+          "p95_ms": 17119.25910499702
+        }
+      }
+    },
+    "20": {
+      "quality": {
+        "recall_at_5": 1.0,
+        "recall_at_10": 1.0,
+        "mrr": 1.0,
+        "ndcg_at_10": 1.0,
+        "evidence_recall_at_5_labeled_subset": null,
+        "evidence_mrr_labeled_subset": null,
+        "answerable_answered": 5,
+        "answerable_total": 5,
+        "unanswerable_abstained": 4,
+        "unanswerable_total": 4,
+        "false_answer_rate": 0.0
+      },
+      "latency": {
+        "dense": {
+          "median_ms": 13.91439999861177,
+          "p95_ms": 23.720185005367963
+        },
+        "bm25": {
+          "median_ms": 1.6036000015446916,
+          "p95_ms": 18.364494996785645
+        },
+        "reranking": {
+          "median_ms": 783.2166999869514,
+          "p95_ms": 891.3680600002408
+        },
+        "full_retrieval": {
+          "median_ms": 807.7593999987585,
+          "p95_ms": 949.1489600026397
+        }
+      }
+    },
+    "15": {
+      "quality": {
+        "recall_at_5": 1.0,
+        "recall_at_10": 1.0,
+        "mrr": 1.0,
+        "ndcg_at_10": 1.0,
+        "evidence_recall_at_5_labeled_subset": null,
+        "evidence_mrr_labeled_subset": null,
+        "answerable_answered": 5,
+        "answerable_total": 5,
+        "unanswerable_abstained": 4,
+        "unanswerable_total": 4,
+        "false_answer_rate": 0.0
+      },
+      "latency": {
+        "dense": {
+          "median_ms": 13.708049998967908,
+          "p95_ms": 20.148854997387385
+        },
+        "bm25": {
+          "median_ms": 1.8750000017462298,
+          "p95_ms": 15.431569997599578
+        },
+        "reranking": {
+          "median_ms": 582.1743999986211,
+          "p95_ms": 622.815919999266
+        },
+        "full_retrieval": {
+          "median_ms": 611.0750999941956,
+          "p95_ms": 668.5280650082859
+        }
+      }
+    },
+    "10": {
+      "quality": {
+        "recall_at_5": 1.0,
+        "recall_at_10": 1.0,
+        "mrr": 1.0,
+        "ndcg_at_10": 1.0,
+        "evidence_recall_at_5_labeled_subset": null,
+        "evidence_mrr_labeled_subset": null,
+        "answerable_answered": 5,
+        "answerable_total": 5,
+        "unanswerable_abstained": 4,
+        "unanswerable_total": 4,
+        "false_answer_rate": 0.0
+      },
+      "latency": {
+        "dense": {
+          "median_ms": 14.148449998174328,
+          "p95_ms": 19.5769600024505
+        },
+        "bm25": {
+          "median_ms": 2.4811500043142587,
+          "p95_ms": 16.330114997253983
+        },
+        "reranking": {
+          "median_ms": 405.71690000069793,
+          "p95_ms": 415.8365200011758
+        },
+        "full_retrieval": {
+          "median_ms": 437.6981000023079,
+          "p95_ms": 472.1427349963051
+        }
+      }
+    }
+  },
+  "held_out": {
+    "quality": {
+      "recall_at_5": 1.0,
+      "recall_at_10": 1.0,
+      "mrr": 1.0,
+      "ndcg_at_10": 1.0,
+      "evidence_recall_at_5_labeled_subset": 1.0,
+      "evidence_mrr_labeled_subset": 0.8333333333333334,
+      "answerable_answered": 7,
+      "answerable_total": 7,
+      "unanswerable_abstained": 5,
+      "unanswerable_total": 5,
+      "false_answer_rate": 0.0
+    },
+    "latency": {
+      "dense": {
+        "median_ms": 15.15839999774471,
+        "p95_ms": 18.607180000981316
+      },
+      "bm25": {
+        "median_ms": 2.222799987066537,
+        "p95_ms": 15.005999995628368
+      },
+      "reranking": {
+        "median_ms": 1177.159799990477,
+        "p95_ms": 1399.9450599963893
+      },
+      "full_retrieval": {
+        "median_ms": 1213.8368000014452,
+        "p95_ms": 1437.5629799935268
+      }
+    }
+  },
+  "selection_reason": "Retained 30 candidates after smaller pools degraded held-out evidence-unit recall.",
+  "selected_pool": 30
+}

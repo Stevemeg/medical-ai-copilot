@@ -43,7 +43,7 @@
   <section id="sources" class="hidden"><div class="card"><h2>Knowledge Sources</h2><p class="muted">Lifecycle and source type determine which evidence is eligible for current guideline retrieval.</p><div id="source-list"></div></div></section>
 </main>
 <script>
-const API = 'http://localhost:8000';
+const API = 'http://localhost:18000';
 let selectedPatient = null;
 const $ = id => document.getElementById(id);
 const escapeHtml = value => String(value ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));

@@ -1,7 +1,10 @@
 """Lifecycle-filtered cosine/BM25 retrieval and bounded rank fusion."""
 
 import json
+import hashlib
 import re
+from collections import OrderedDict
+from threading import Lock
 from pathlib import Path
 from time import perf_counter
 from typing import Protocol
@@ -9,6 +12,8 @@ from typing import Protocol
 import faiss
 import numpy as np
 from rank_bm25 import BM25Okapi
+from prometheus_client import Histogram
+from opentelemetry import trace
 
 from backend.evidence_models import (
     EvidenceCandidate,
@@ -20,18 +25,21 @@ from backend.evidence_models import (
 )
 from backend.index_provenance import validate_chunks_manifest, validate_manifest
 from backend.knowledge_models import RetrievalPolicy
-from backend.source_registry import SourceRegistry, StaleArtifact
+from backend.source_registry import SourceRegistry, StaleArtifact, sha256_file
 from embeddings.reranker import CrossEncoderReranker, EvidenceReranker, RRFFallbackReranker
 
 ROOT = Path(__file__).resolve().parent.parent
 VECTOR_DIR = ROOT / "data/vector_store"
 CANDIDATE_POOL_SIZE = 30
+RERANK_POOL_SIZE = 30
 RRF_K = 60
 RRF_DENSE_WEIGHT = 0.7
 RRF_BM25_WEIGHT = 1.0
 # Selected by the development split in eval/calibrate.py; held-out results
 # are reported separately. Cosine is a similarity, not a probability.
 MIN_COSINE = 0.40
+RETRIEVAL_LATENCY = Histogram("medical_retrieval_latency_seconds", "Retrieval latency", ["stage"])
+TRACER = trace.get_tracer(__name__)
 
 
 class Embedder(Protocol):
@@ -66,8 +74,28 @@ class CosineDenseRetriever:
 
 
 class BM25LexicalRetriever:
+    def __init__(self, max_partitions: int = 16):
+        self.max_partitions = max_partitions
+        self._cache: OrderedDict[str, BM25Okapi] = OrderedDict()
+        self._lock = Lock()
+
     def retrieve(self, units: list[EvidenceUnit], query: str, limit: int) -> list[EvidenceCandidate]:
-        bm25_index = BM25Okapi([simple_tokenize(unit.text) for unit in units])
+        # A partition contains only evidence that passed lifecycle and metadata filters.
+        # Text digests invalidate this cache when a governed artifact changes in place.
+        fingerprint = hashlib.sha256()
+        for unit in units:
+            fingerprint.update(unit.evidence_unit_id.encode())
+            fingerprint.update(hashlib.sha256(unit.text.encode()).digest())
+        key = fingerprint.hexdigest()
+        with self._lock:
+            bm25_index = self._cache.get(key)
+            if bm25_index is None:
+                bm25_index = BM25Okapi([simple_tokenize(unit.text) for unit in units])
+                self._cache[key] = bm25_index
+                if len(self._cache) > self.max_partitions:
+                    self._cache.popitem(last=False)
+            else:
+                self._cache.move_to_end(key)
         scores = bm25_index.get_scores(simple_tokenize(query))
         order = np.argsort(-scores, kind="stable")[:limit]
         return [
@@ -104,14 +132,18 @@ class EvidenceRetriever:
         reranker: EvidenceReranker | None = None,
         dense_retriever: DenseCandidateRetriever | None = None,
         bm25_retriever: BM25CandidateRetriever | None = None,
+        rerank_pool_size: int = RERANK_POOL_SIZE,
         use_reranker: bool = True,
         units_and_vectors: tuple[list[EvidenceUnit], np.ndarray] | None = None,
     ):
         self.registry = registry or SourceRegistry()
         self.embedder = embedder
+        self._embedder_lock = Lock()
         self.reranker = reranker or (CrossEncoderReranker() if use_reranker else RRFFallbackReranker())
         self.dense_retriever = dense_retriever or CosineDenseRetriever()
         self.bm25_retriever = bm25_retriever or BM25LexicalRetriever()
+        self.rerank_pool_size = rerank_pool_size
+        self._artifact_signature: tuple[str, ...] | None = None
         if units_and_vectors is not None:
             self.units, self.vectors = units_and_vectors
         else:
@@ -132,6 +164,7 @@ class EvidenceRetriever:
                 matrices.append(np.stack([index.reconstruct(i) for i in range(index.ntotal)]))
             self.units = units
             self.vectors = np.concatenate(matrices).astype("float32")
+            self._artifact_signature = self._current_artifact_signature()
         if len(self.units) != len(self.vectors):
             raise ValueError("Evidence/vector count mismatch")
         if len({unit.evidence_unit_id for unit in self.units}) != len(self.units):
@@ -139,14 +172,26 @@ class EvidenceRetriever:
         if not np.allclose(np.linalg.norm(self.vectors, axis=1), 1.0, atol=1e-3):
             raise StaleArtifact("Indexed evidence vectors are not normalized")
 
-    def _encode(self, query: str) -> np.ndarray:
-        if self.embedder is None:
-            from sentence_transformers import SentenceTransformer
+    def _current_artifact_signature(self) -> tuple[str, ...]:
+        files = [
+            self.registry.path,
+            ROOT / "data/chunks.manifest.json",
+            VECTOR_DIR / "clinical_faiss.manifest.json",
+            VECTOR_DIR / "anatomy_faiss.manifest.json",
+        ]
+        return tuple(sha256_file(path) for path in files)
 
-            self.embedder = SentenceTransformer("all-MiniLM-L6-v2")
-        embedder = self.embedder
-        assert embedder is not None
-        vector = np.asarray(embedder.encode([query], normalize_embeddings=True), dtype="float32")
+    def _encode(self, query: str) -> np.ndarray:
+        with self._embedder_lock:
+            if self.embedder is None:
+                from sentence_transformers import SentenceTransformer
+
+                from backend.settings import get_settings
+
+                self.embedder = SentenceTransformer(get_settings().embedding_model)
+            embedder = self.embedder
+            assert embedder is not None
+            vector = np.asarray(embedder.encode([query], normalize_embeddings=True), dtype="float32")
         norm = np.linalg.norm(vector[0])
         if norm <= 0:
             raise ValueError("Empty query embedding")
@@ -165,6 +210,12 @@ class EvidenceRetriever:
         )
 
     def retrieve(self, request: RetrievalRequest) -> RetrievalResult:
+        with TRACER.start_as_current_span("evidence.retrieval"):
+            return self._retrieve(request)
+
+    def _retrieve(self, request: RetrievalRequest) -> RetrievalResult:
+        if self._artifact_signature is not None and self._current_artifact_signature() != self._artifact_signature:
+            raise StaleArtifact("Governed evidence provenance changed; recreate retriever")
         began = perf_counter()
         selected = [i for i, unit in enumerate(self.units) if self._eligible(unit, request)]
         diagnostics = RetrievalDiagnostics()
@@ -204,22 +255,29 @@ class EvidenceRetriever:
             diagnostics.latency_ms["full_retrieval"] = (perf_counter() - began) * 1000
             return RetrievalResult(request=request, accepted=False, evidence=[], diagnostics=diagnostics)
         started = perf_counter()
-        ranked, diagnostics.reranker_used = self.reranker.rerank(
-            request.query, first_stage[:CANDIDATE_POOL_SIZE], request.top_k
-        )
+        with TRACER.start_as_current_span("evidence.reranking") as span:
+            span.set_attribute("candidate_count", min(len(first_stage), self.rerank_pool_size))
+            ranked, diagnostics.reranker_used = self.reranker.rerank(
+                request.query, first_stage[: self.rerank_pool_size], request.top_k
+            )
         diagnostics.latency_ms["reranking"] = (perf_counter() - started) * 1000
         diagnostics.latency_ms["full_retrieval"] = (perf_counter() - began) * 1000
+        for stage, milliseconds in diagnostics.latency_ms.items():
+            RETRIEVAL_LATENCY.labels(stage).observe(milliseconds / 1000)
         diagnostics.acceptance_reason = "eligible_cosine_match" if ranked else "no_ranked_evidence"
         return RetrievalResult(request=request, accepted=bool(ranked), evidence=ranked, diagnostics=diagnostics)
 
 
 _default_retriever: EvidenceRetriever | None = None
+_default_retriever_lock = Lock()
 
 
 def get_default_retriever() -> EvidenceRetriever:
     global _default_retriever
     if _default_retriever is None:
-        _default_retriever = EvidenceRetriever()
+        with _default_retriever_lock:
+            if _default_retriever is None:
+                _default_retriever = EvidenceRetriever()
     return _default_retriever
 
 

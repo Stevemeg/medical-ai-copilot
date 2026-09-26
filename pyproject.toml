@@ -2,6 +2,7 @@
 testpaths = ["tests"]
 pythonpath = ["."]
 addopts = "-ra"
+markers = ["postgres: requires a migrated PostgreSQL test database"]
 
 [tool.ruff]
 target-version = "py311"

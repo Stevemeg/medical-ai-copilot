@@ -2,8 +2,9 @@
 
 from time import perf_counter
 from typing import Protocol, cast
+from prometheus_client import Counter, Histogram
+from opentelemetry import trace
 
-from backend.audit_log import log_interaction
 from backend.conflicts import SemanticContradiction, detect_conflicts
 from backend.evidence_models import (
     AnswerClaim,
@@ -17,6 +18,13 @@ from backend.generator import AnswerGenerator, GroqAnswerGenerator, SYSTEM_PROMP
 from backend.grounding import ClaimSupportVerifier, NLIClaimVerifier, supporting_passage, verify_claim
 
 ABSTENTION = "The indexed evidence does not support a reliable answer."
+EVIDENCE_ANSWERS = Counter("medical_evidence_answers_total", "Evidence answer status", ["status"])
+VERIFICATION_LATENCY = Histogram("medical_verification_latency_seconds", "Claim verification latency")
+TRACER = trace.get_tracer(__name__)
+
+
+def log_interaction(*_args):
+    """Legacy test seam; audit is owned by the authenticated API/UI boundary."""
 
 
 class Retriever(Protocol):
@@ -35,26 +43,8 @@ class EvidenceAnswerService:
         self.verifier = verifier or NLIClaimVerifier()
 
     def _record(self, request: RetrievalRequest, answer: EvidenceAnswer) -> EvidenceAnswer:
-        log_interaction(
-            request.query,
-            answer.answer_text,
-            [
-                {
-                    "status": answer.status.value,
-                    "failure_reason": answer.failure_reason,
-                    "evidence_ids": [unit.evidence_unit_id for unit in answer.evidence],
-                    "claims": [
-                        {
-                            "claim_id": claim.claim_id,
-                            "support_status": claim.support_status.value,
-                            "evidence_ids": claim.evidence_ids,
-                        }
-                        for claim in answer.claims + answer.rejected_claims
-                    ],
-                    "conflict_ids": [item.conflict_id for item in answer.conflicts],
-                }
-            ],
-        )
+        # API and UI boundaries attribute and persist minimized audit events.
+        EVIDENCE_ANSWERS.labels(answer.status.value).inc()
         return answer
 
     def answer(self, request: RetrievalRequest) -> EvidenceAnswer:
@@ -136,10 +126,13 @@ class EvidenceAnswerService:
             )
         started = perf_counter()
         claims: list[AnswerClaim] = []
-        for raw in draft.claims:
-            claim = AnswerClaim(claim_id=raw.claim_id, text=raw.text, evidence_ids=raw.evidence_ids)
-            claims.append(verify_claim(claim, retrieval, self.verifier, getattr(self.retriever, "registry", None)))
+        with TRACER.start_as_current_span("evidence.verification") as span:
+            span.set_attribute("claim_count", len(draft.claims))
+            for raw in draft.claims:
+                claim = AnswerClaim(claim_id=raw.claim_id, text=raw.text, evidence_ids=raw.evidence_ids)
+                claims.append(verify_claim(claim, retrieval, self.verifier, getattr(self.retriever, "registry", None)))
         retrieval.diagnostics.latency_ms["verification"] = (perf_counter() - started) * 1000
+        VERIFICATION_LATENCY.observe((perf_counter() - started))
         supported = [claim for claim in claims if claim.support_status is SupportStatus.SUPPORTED]
         rejected = [claim for claim in claims if claim.support_status is not SupportStatus.SUPPORTED]
         if not supported:

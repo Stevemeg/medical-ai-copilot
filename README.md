@@ -1,347 +1,84 @@
-<div align="center">
+# Medical AI Copilot
 
-# Medical AI Copilot — Synthetic Patient Review and Governed Evidence
+A production-oriented clinical review and governed evidence prototype with PostgreSQL state, authenticated role-based APIs, tamper-evident audit, deterministic clinical rules, grounded evidence queries, and observable deployment infrastructure.
 
-**A medical AI copilot prototype combining governed evidence retrieval with structured synthetic patient-context review.**
+The bundled patients are synthetic. Findings support clinician review; the application does not diagnose, prescribe, or select medication. It is not clinically validated or certified for regulated use.
 
-[![Python](https://img.shields.io/badge/python-3.11%2B-blue.svg)](https://www.python.org/)
-[![Streamlit](https://img.shields.io/badge/UI-Streamlit-FF4B4B.svg)](https://streamlit.io/)
-[![FAISS](https://img.shields.io/badge/vector-FAISS%20dual--index-009688.svg)](https://faiss.ai/)
-[![BM25](https://img.shields.io/badge/keyword-BM25%20%2B%20RRF-orange.svg)](https://pypi.org/project/rank-bm25/)
-[![Groq](https://img.shields.io/badge/LLM-Groq%20Llama%203.1-black.svg)](https://groq.com/)
-[![Live Demo](https://img.shields.io/badge/demo-live-brightgreen.svg)](https://medical-ai-copilot-usov2kkptkqwcbpgzappudd.streamlit.app/)
+## What it does
 
-[**Live Demo**](https://medical-ai-copilot-usov2kkptkqwcbpgzappudd.streamlit.app/) · [Architecture](#-architecture) · [User Interface](#-user-interface) · [Installation](#-installation) · [Limitations](#-known-limitations)
-
-> ⚕️ *For educational and research purposes only. Not a substitute for professional medical advice.*
-
-</div>
-
----
-
-## Table of Contents
-
-- [The Problem](#-the-problem)
-- [The Solution](#-the-solution)
-- [Features](#-features)
-- [Design Principles](#-design-principles)
-- [Architecture](#-architecture)
-- [Why Hybrid Retrieval](#-why-hybrid-retrieval)
-- [User Interface](#-user-interface)
-- [Installation](#-installation)
-- [Running the Project](#-running-the-project)
-- [Example Output](#-example-output)
-- [Engineering Highlights](#-engineering-highlights)
-- [Indexed Sources](#-indexed-sources)
-- [Deployment](#-deployment)
-- [Project Structure](#-project-structure)
-- [Technologies](#-technologies)
-- [Known Limitations](#-known-limitations)
-- [Roadmap](#-roadmap)
-- [Disclaimer](#-disclaimer)
-- [Contact](#-contact)
-
----
-
-## The Problem
-
-Large Language Models hallucinate. When they generate medical information from parametric memory alone, they produce fluent, confident, and occasionally wrong clinical guidance — with no way for the reader to check where any of it came from.
-
-In healthcare, factual reliability and **traceability** are not nice-to-haves. An answer you cannot source is an answer you cannot use.
-
-## The Solution
-
-The primary workspace loads fictional FHIR R4-compatible patient Bundles, normalizes them into typed patient context, and creates reproducible review snapshots. It shows supplied records, a deterministic timeline, and **evidence-bound deterministic hypertension annual-review and diabetic-foot-assessment checks**. Findings distinguish potential care gaps from insufficient data and require human review. [Patient context documentation](PATIENT_CONTEXT.md) describes the supported FHIR subset; [clinical rule documentation](CLINICAL_RULES.md) describes rule scope and limitations. Diagnosis and treatment recommendations are not implemented.
-
-Ask Evidence remains available as a separate general question workflow. Patient records are not automatically provided to it.
-
-A governed evidence pipeline links surviving claims to exact source versions and pages:
-
-```
-Question -> lifecycle and metadata filter -> cosine + BM25 -> RRF -> cross-encoder rerank -> calibrated acceptance -> conflict screening -> structured claims -> independent NLI verification -> claim citations
-```
-
-- Default retrieval uses only registered, ingested current clinical guidelines; historical and reference evidence require explicit policies
-- Recommendation units are extracted conservatively from local NICE PDFs; surrounding passages remain context units
-- Structured claims must name exact evidence IDs; unsupported or unverifiable claims are removed before display
-- A local NLI verifier fails closed when unavailable; conflicting evidence is shown without choosing a winner
-- Refuses cleanly, **with no LLM call at all**, when retrieval abstains
-- Logs every interaction to a **hash-chained, tamper-evident** audit trail
-
-## Features
-
-**Synthetic patient review**
-- Five bundled fictional patients can be selected; supported synthetic collection Bundles can also be imported.
-- Normalized patient context, stable content hash, local SQLite persistence, deterministic timeline, and immutable review snapshots.
-- Two offline, versioned annual follow-up rules use governed NICE evidence and explicit record coverage. Hypertension review links a current local NG136 document and verified recommendation; diabetic-foot assessment links a verified current NG19 recommendation snapshot while its old local PDF remains superseded. Finding dispositions are append-only demo actions.
-- Streamlit and the alternative HTML client place patient review first, with Ask Evidence and source visibility in separate tabs.
-
-**Retrieval**
-- **Policy-aware dual-index retrieval**: only eligible source versions enter the selected FAISS/BM25 view; historical and reference modes are explicit.
-- **Hybrid search within the selected index** — FAISS semantic + BM25 keyword, fused via **Reciprocal Rank Fusion**
-- **Cosine acceptance gate** calibrated on a separate development set; out-of-scope questions can abstain before generation
-
-**Grounding & Citation**
-- Claim-level evidence cards show publisher, version, jurisdiction, lifecycle, recommendation ID, page, and the passage used for verification
-- Structured JSON generation, independent provenance and NLI checks, and deterministic final rendering block unsupported draft claims
-
-**Auditability**
-- **Hash-chained SQLite audit log** — every interaction links to the previous entry's hash, so modifying or deleting any past record breaks the chain detectably
-- Tamper-detection property **verified by deliberately corrupting the log** and confirming the break was caught — not assumed to work
-
-**Deployment Engineering**
-- **Environment-variable-first secrets resolution**, matching how AWS/Azure/GCP secrets managers actually deliver credentials, with `st.secrets` fallback — the same code path runs unchanged locally and in the cloud
-- Custom Streamlit theming (no default component styling)
-
-## Design Principles
-
-1. **Grounding over completeness.** The system answers from eligible indexed context or says it can't. Filling gaps with unrestricted LLM knowledge would defeat the entire purpose.
-2. **Context is traceable.** Evidence units preserve page and source-version provenance; surviving claims cite exact verified units.
-3. **Refuse cheaply.** The relevance gate short-circuits before the LLM, not after — out-of-scope questions cost nothing and can't hallucinate.
-4. **Auditability is tested, not asserted.** The tamper-evidence property was verified adversarially.
-5. **Debug by reproduction.** Every retrieval fix in this repo came from reproducing a real failure and measuring it — the `debug_*.py` scripts are kept in-tree as evidence.
+- Ingests a scoped FHIR R4-compatible synthetic Bundle into normalized patient context.
+- Stores immutable context snapshots and binds each clinical review to one snapshot.
+- Evaluates deterministic, evidence-bound rules without an LLM and records immutable findings.
+- Records clinician dispositions as separate append-only actions.
+- Retrieves governed evidence with lifecycle filtering before cosine and BM25 ranking, then reranks candidates and verifies generated claims. Unsupported claims are excluded.
+- Exposes `/v1/` APIs with JWT/OIDC verification, server-side roles, request IDs, bounded inputs, PostgreSQL rate limiting, and keyed audit integrity.
 
 ## Architecture
 
-The [knowledge governance guide](KNOWLEDGE_GOVERNANCE.md) contains the corpus audit, lifecycle policy, and rebuild procedure. The [patient context guide](PATIENT_CONTEXT.md) describes the supported FHIR subset and review snapshots. The [clinical rule guide](CLINICAL_RULES.md) contains the rule catalogue, evidence check, coverage semantics, and human-review limits.
+```text
+Client / clinician UI
+         │
+         ▼
+  FastAPI service ── authentication ── RBAC ── request context
+         │
+         ▼
+  Application services
+   ├─ patient and review repositories ── PostgreSQL ── durable audit
+   ├─ deterministic clinical rules
+   └─ governed evidence service
+       └─ policy filter → FAISS cosine + cached BM25 → RRF
+          → bounded reranker → generator → independent verifier
 
-```mermaid
-flowchart LR
-    FHIR[Synthetic FHIR collection Bundle] --> ADAPT[Validation and FHIR adapter]
-    ADAPT --> CTX[Normalized PatientContext]
-    CTX --> HASH[Context hash and SQLite snapshot]
-    HASH --> REVIEW[ClinicalReview snapshot]
-    REVIEW --> EVAL[Explicit as-of and record coverage]
-    EVAL --> RULES[Rule registry and evidence binding]
-    RULES --> ENGINE[Deterministic rule engine]
-    ENGINE --> FINDING[Structured immutable findings]
-    FINDING --> ACTION[Clinician action history]
-    FINDING --> UI[Clinical Review workspace]
-    PDF[Registered source PDF] --> REG[Registry and SHA-256 validation]
-    NICE[Official NICE recommendation] --> VERIFY[Explicit governance verification]
-    VERIFY --> RECREG[Recommendation fingerprint registry]
-    RECREG --> RULES
-    REG --> PARSE[Page extraction and chunking]
-    REG --> RULES
-    PARSE --> UNITS[Context and verified recommendation units]
-    UNITS --> IDX[Normalized cosine FAISS indexes and provenance manifests]
-    IDX --> POLICY[Lifecycle and source-type filter]
-    POLICY --> SEARCH[Cosine and BM25 with RRF]
-    SEARCH --> RERANK[Cross-encoder reranking]
-    RERANK --> GATE[Calibrated acceptance]
-    GATE --> CONFLICT[Conflict screening]
-    CONFLICT --> GEN[Structured JSON claims]
-    GEN --> VERIFYCLAIM[Claim support verifier]
-    VERIFYCLAIM --> CITE[Verified claim evidence cards]
-    CITE --> AUDIT[Hash-chained audit log]
-    CITE --> ASK[Ask Evidence]
+  Structured logs / Prometheus metrics / OpenTelemetry-compatible spans
 ```
 
-The two-index storage keeps reference material separate. At query time, metadata filtering selects eligible units before semantic or lexical ranking. This prevents the superseded NG28 and old local NG19 PDFs from influencing current clinical search. The current NG19 recommendation snapshot used by deterministic rules remains in its separate registry. See [Phase 4 evidence architecture](EVIDENCE_PHASE4.md) for the retrieval and verification contract, evaluation, and limitations.
+Version-controlled source and rule evidence registries, processed artifacts, and FAISS manifests remain authoritative for evidence governance. PostgreSQL holds mutable application state. See [production architecture](PRODUCTION_ARCHITECTURE.md) for schema, security, operations, and limitations.
 
-## Why Hybrid Retrieval
+## Local deployment
 
-Pure semantic search fails on precisely the vocabulary that clinical questions depend on:
-
-| Query type | Example | FAISS alone | BM25 alone |
-|---|---|---|---|
-| Drug abbreviations | `ACEi`, `ARB` | ❌ weak in embedding space | ✅ exact match |
-| Guideline codes | `NG19`, `NG136` | ❌ near-meaningless as vectors | ✅ exact match |
-| Named classifications | `SINBAD` | ❌ unseen token | ✅ exact match |
-| Mechanism questions | *"explain insulin resistance"* | ✅ conceptual match | ❌ no keyword overlap |
-
-Neither method is sufficient alone. Fusing both via RRF was a real fix for a real, reproducible failure found during testing — not a default architecture choice.
-
-## User Interface
-
-The Streamlit workspace opens on **Patients**, where a bundled synthetic patient or supported JSON Bundle can be imported. **Clinical Review** creates a snapshot, accepts an explicit evaluation date and record-coverage assertion, and displays deterministic findings, evidence cards, and action history. **Ask Evidence** is a separate general Q&A path with current, reference, and historical modes and claim-level evidence cards. The HTML client shows the same evidence modes and claim cards through the versioned API.
-
-Older screenshots in `assets/screenshots/` depict the earlier evidence-only interface and should not be read as pictures of the current patient workspace.
-
-## Installation
-
-**Requirements:** Python 3.11+. A [Groq](https://groq.com/) API key is needed only for generated Ask Evidence answers; patient review and deterministic tests do not use it.
+Requires Docker Compose. The Compose file uses a PostgreSQL 16 container and an explicit migration service. Its default credentials are development-only examples.
 
 ```bash
-git clone https://github.com/Stevemeg/medical-ai-copilot.git
-cd medical-ai-copilot
-
-python -m venv venv
-# Windows: .\venv\Scripts\Activate.ps1  |  Linux/macOS: source venv/bin/activate
-pip install -r requirements.txt
+cp .env.example .env
+# Replace the development JWT and audit keys in .env.
+docker compose up -d --build
+docker compose ps
+docker compose exec api python -m scripts.docker_smoke
+docker compose exec api python -m scripts.verify_audit_chain
 ```
 
-For development checks, use `pip install -r requirements-dev.txt` and run `pytest`. The retrieval registry and committed index provenance can be checked without an LLM key using `python -m backend.source_registry` and `python -m backend.index_provenance`. The separate, explicit online rule-evidence governance check is `python -m scripts.verify_rule_evidence`; it reports NICE recommendation fingerprint matches or drift and is not part of patient evaluation or the normal offline test suite.
+The PostgreSQL host port is `55432`; the API is at `http://localhost:18000`. `/health/live` checks process liveness; `/health/ready` checks PostgreSQL and governed evidence provenance. `/metrics` serves Prometheus text. The explicit migration service completes before the API starts; do not run migrations independently in every worker.
 
-**For generated Ask Evidence answers**, create `.streamlit/secrets.toml`:
+For local Python development, set `APP_ENV`, `DATABASE_URL`, `AUTH_MODE`, and `AUDIT_HMAC_KEY` as shown in `.env.example`, then run `alembic upgrade head` and `uvicorn api_server:app`. Production requires `AUTH_MODE=oidc` with issuer, audience, and JWKS URL. It rejects missing critical configuration and wildcard CORS.
 
-```toml
-GROQ_API_KEY = "your_api_key"
-```
+The old SQLite files are local demo state and are **not** automatically migrated to PostgreSQL. The initial Alembic migration creates a clean production schema; historical clinical data is never silently erased by downgrade.
 
-Or set `GROQ_API_KEY` as a real environment variable — `backend/config.py` checks `os.environ` first.
+## API and authentication
 
-## Running the Project
+The stable API prefix is `/v1`. Clinical routes require `clinician` or `clinical_admin`. Evidence query also accepts `guideline_editor`. Audit read requires `auditor` or `clinical_admin`. The compatibility `/api/ask` route uses the same governed evidence engine. In explicit development mode, a local anonymous clinician identity is available for the demo; signed short-lived development JWTs are also supported. Production only accepts verified OIDC JWTs.
+
+Write routes accept `Idempotency-Key`. PostgreSQL stores the actor, operation, request fingerprint, and logical response in the same transaction as the write. Reuse with a different request returns a conflict. List routes have bounded limits. Audit events contain identifiers, hashes, counts, statuses, and correlation IDs, not raw FHIR Bundles or medical narrative.
+
+## Verification
 
 ```bash
-streamlit run app.py
+python -m pytest -q
+PHASE5_TEST_DATABASE_URL=postgresql+psycopg://medical:development_only_change_me@localhost:55432/medical_test python -m pytest -q tests/test_phase5_postgres.py
+python -m eval.final_phase5_benchmark
+ruff check .
+ruff format --check .
+mypy backend/settings.py backend/db.py backend/security.py backend/durable_audit.py backend/postgres_store.py backend/operations.py
 ```
 
-**Rebuilding the indexes** (required after a registered source, parser, chunker, or recommendation extractor change; see [knowledge governance](KNOWLEDGE_GOVERNANCE.md)):
+The benchmark requires locally available embedding and reranker models but no Groq request. Unit tests use fakes; PostgreSQL integration tests require a separately migrated test database. The Docker smoke uses a deterministic fake generator and verifier while exercising the real API, retrieval filters, PostgreSQL workflows, and audit chain.
 
-```bash
-python -m embeddings.extract_text        # PDFs → page-tracked JSON
-python -m embeddings.chunk_text          # JSON → token-bounded chunks
-python -m embeddings.recommendation_extractor # Chunks and guideline text → evidence units
-python -m embeddings.build_faiss_index   # Build dual FAISS indexes
-```
+## Further reading
 
-**Retrieval diagnostics** — the debug scripts used to find and fix real retrieval bugs are kept in-tree:
+- [Knowledge governance](KNOWLEDGE_GOVERNANCE.md)
+- [Patient context](PATIENT_CONTEXT.md)
+- [Clinical rules](CLINICAL_RULES.md)
+- [Phase 4 evidence design](EVIDENCE_PHASE4.md)
+- [Production architecture and operations](PRODUCTION_ARCHITECTURE.md)
+- [Compliance considerations](COMPLIANCE_CONSIDERATIONS.md)
 
-```bash
-python -m eval.calibrate                      # Development-set cosine calibration
-python -m eval.benchmark                      # Baseline and held-out retrieval benchmark
-python -m eval.grounding_benchmark            # Synthetic claim/citation benchmark
-python -m embeddings.compare_embeddings       # Embedding model comparison
-python -m embeddings.eval_generation_quality  # Before/after generation eval set
-python -m embeddings.debug_bm25_gap           # BM25 vs FAISS coverage gaps
-```
-
-## Example Output
-
-Illustrative output from an earlier historical-evidence demo run; NG19 is now excluded from default current-clinical retrieval. Generated wording and cited pages may vary.
-
-```
-Q: What is the SINBAD classification?
-
-ANSWER
-SINBAD is a classification system for diabetic foot ulcers, scoring six
-elements — Site, Ischaemia, Neuropathy, Bacterial infection, Area, and
-Depth — each contributing to a total severity score used to guide
-management decisions.
-
-SOURCES
-  NICE NG19 — Diabetic Foot Problems · pp.13-15
-
-─────────────────────────────────────────────────────────────
-Q: What is the capital of France?
-
-ANSWER
-I don't have relevant information in the indexed clinical guidelines to
-answer this question.
-
-[relevance gate triggered — 0 LLM calls made]
-```
-
-## Engineering Highlights
-
-- **RAG with genuine hybrid retrieval**, not vector search alone — with a documented reason for each half
-- **Real multi-stage pipeline debugging**: diagnosed and fixed a corpus-imbalance bug, a relevance-threshold miscalibration, and a Reciprocal-Rank-Fusion design flaw — each found through actual reproduction and measurement
-- **Prompt engineering against a measured failure mode** — self-contradicting answers, fixed and verified with a before/after eval set
-- **Tamper-evident audit logging** with the tamper-detection property adversarially tested
-- **Cloud-realistic secrets management** with a documented migration path per provider
-- **Honest compliance analysis** (HIPAA / FDA CDS) in `COMPLIANCE_CONSIDERATIONS.md`, including catching and correcting an outdated regulatory reference during writing
-- Public demo deployment on Streamlit Community Cloud
-
-## Indexed Sources
-
-Default clinical retrieval includes the registered current NICE NG136 and NG238 snapshots. The bundled NG19 and NG28 PDFs are superseded and available only through explicit historical access. WHO reports, the CDC article, India MoHFW FAQ, and OpenStax textbook retain their governed historical or reference policies. See the [source inventory and lifecycle](KNOWLEDGE_GOVERNANCE.md#corpus-audit-verified-24-september-2026).
-
-## Deployment
-
-Deployed on **Streamlit Community Cloud**. The FAISS indexes are committed to the repository rather than rebuilt at deploy time — a deliberate choice: rebuilding on every cold start would require the raw source PDFs to be present and would add real startup latency, while startup validates source hashes and index manifests. Rebuild whenever the registered corpus changes.
-
-**Secrets:** `GROQ_API_KEY` is set via Streamlit Cloud's Secrets management. `backend/config.py` checks `os.environ` first — which is how Streamlit Cloud actually exposes root-level secrets — before falling back to `st.secrets`, so the same code path works unchanged in both environments.
-
-## Project Structure
-
-```
-medical-ai-copilot/
-│
-├── app.py                          # Streamlit UI (primary interface)
-├── api_server.py                   # Standalone API server (alternative frontend path)
-├── requirements.txt
-├── COMPLIANCE_CONSIDERATIONS.md    # HIPAA/FDA CDS analysis (educational, not legal advice)
-├── FRONTEND_SETUP.md               # Custom HTML/CSS/JS frontend setup notes
-│
-├── .streamlit/
-│   └── config.toml                 # Custom theme (secrets.toml is gitignored)
-│
-├── backend/
-│   ├── rag_pipeline.py             # Prompting, generation, answer assembly
-│   ├── fhir_adapter.py              # Supported FHIR R4 subset validation and normalization
-│   ├── patient_models.py            # Typed patient and review domain records
-│   ├── patient_context.py           # Context hash, queries, timeline, availability
-│   ├── patient_store.py             # Local SQLite patient and review snapshots
-│   ├── patient_api.py               # Versioned synthetic patient API
-│   ├── config.py                   # Secrets resolution (env var → secrets.toml)
-│   └── audit_log.py                # Tamper-evident hash-chained audit log
-│
-├── embeddings/
-│   ├── extract_text.py             # PDF → page-tracked JSON
-│   ├── chunk_text.py               # JSON → token-bounded chunks with page ranges
-│   ├── build_faiss_index.py        # Builds dual (clinical/anatomy) FAISS indexes
-│   ├── retrieve.py                 # Hybrid BM25 + FAISS retrieval, RRF fusion
-│   ├── calibrate_threshold.py      # Relevance-gate threshold calibration
-│   ├── compare_embeddings.py       # Embedding model comparison
-│   ├── eval_generation_quality.py  # Before/after generation-quality eval
-│   └── debug_*.py                  # Reproduction scripts for real retrieval bugs
-│
-├── frontend/
-│   └── index.html                  # Alternative patient review frontend served with the API
-│
-├── assets/
-│   ├── architecture.png
-│   └── screenshots/
-│
-└── data/
-    ├── raw_docs/                   # Source PDFs
-    ├── processed/                  # Page-tracked extracted text
-    ├── synthetic_fhir/             # Five fictional demo Bundles
-    └── vector_store/
-        ├── clinical_faiss.index / clinical_metadata.json
-        └── anatomy_faiss.index / anatomy_metadata.json
-```
-
-## Technologies
-
-| Component | Technology |
-|---|---|
-| Language | Python |
-| Frontend | Streamlit (custom theme, no default component styling) |
-| Embeddings | SentenceTransformers (MiniLM) |
-| Vector Store | FAISS — dual index (clinical + anatomy) |
-| Keyword Search | BM25 (`rank_bm25`), fused via Reciprocal Rank Fusion |
-| LLM Inference | Groq API — Llama 3.1 8B |
-| Audit Logging | SQLite, hash-chained for tamper-evidence |
-| Secrets | Environment-variable-first, `.streamlit/secrets.toml` fallback |
-| Deployment | Streamlit Community Cloud |
-
-## Known Limitations
-
-These are stated plainly rather than buried — each is a real constraint of the current build.
-
-- **Corpus-bounded answers.** Responses are limited to indexed documents. This is a deliberate design choice (grounding over completeness), not a gap to be filled with unrestricted LLM knowledge.
-- **Not for clinical use.** Not intended for diagnosis or treatment decisions — see `COMPLIANCE_CONSIDERATIONS.md` for an honest (non-legal) analysis of what real clinical deployment would require.
-- **Verifier and conflict limits.** The local NLI model can reject valid paraphrases, and conflict detection is conservative. The small synthetic benchmark is not clinical validation. Manual evidence governance remains necessary.
-- **Ephemeral audit storage on free tier.** The hash-chaining is real and tested, but Streamlit Community Cloud's filesystem resets on redeploy. The code is correct; this hosting tier doesn't give it persistent storage.
-- **Local synthetic patient storage.** SQLite persists between local requests, but hosted filesystems may reset and there is no authentication. Do not import real patient records.
-- **Cold-start latency** on free-tier deployment.
-
-## Roadmap
-
-Phase 1 established governed source versions and lifecycle-aware retrieval. Phase 2 added synthetic patient context and review snapshots. Phase 3 added two narrow deterministic annual follow-up checks and a separate authoritative recommendation registry. Phase 4 added typed evidence units, cosine hybrid retrieval, reranking, structured claims, independent support verification, and conflict display. Current NG19 full-document ingestion, real patient integration, and production security remain outside this build.
-
-## Disclaimer
-
-This project provides informational responses based on indexed medical documents and is intended for **educational and research purposes only**. It does not provide patient-specific diagnosis, treatment decisions, or professional healthcare advice. Always consult a qualified healthcare professional.
-
-## Contact
-
-**Kona Bharath Vamshidhar Reddy**
-B.E. Artificial Intelligence & Machine Learning · Acharya Institute of Technology
-[konabharath2004@gmail.com](mailto:konabharath2004@gmail.com) · [LinkedIn](https://www.linkedin.com/in/kona-bharath-vamshidhar-reddy/) · [GitHub](https://github.com/Stevemeg)
-
----
-
-<div align="center"><sub>An answer you can't source is an answer you can't use.</sub></div>
+No real patient information is included. Manual source lifecycle governance remains required. Models and endpoints need independent clinical, privacy, and deployment review before any clinical use.

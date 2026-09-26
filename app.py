@@ -1,9 +1,8 @@
 """Synthetic patient review workspace with governed Ask Evidence access."""
 
 import json
-import os
+from uuid import uuid4
 from datetime import date
-from pathlib import Path
 
 import streamlit as st
 
@@ -18,7 +17,10 @@ from backend.patient_context import (
     known_allergies,
     timeline,
 )
-from backend.patient_store import SQLitePatientRepository
+from backend.postgres_store import PostgresPatientRepository
+from backend.operations import audit_operation
+from backend.security import ActorContext
+from backend.settings import get_settings
 from backend.rag_pipeline import answer_question
 from backend.source_registry import SourceRegistry
 from backend.clinical_models import ActionType, EvaluationRequest, FindingStatus, RecordCoverage
@@ -45,9 +47,9 @@ st.info(
     "Prototype for clinician review. Deterministic findings identify possible follow-up items in synthetic records; clinician review is required."
 )
 
-repository = SQLitePatientRepository(
-    os.environ.get("PATIENT_DB_PATH", str(Path(__file__).resolve().parent / "data" / "patient_context.db"))
-)
+if get_settings().app_env == "production":
+    raise RuntimeError("The local Streamlit demo is disabled in production; use the authenticated API")
+repository = PostgresPatientRepository(actor_subject="streamlit-development", actor_roles=["clinician"])
 registry = SourceRegistry()
 rule_engine = ClinicalReviewEngine(repository)
 DEMO_MANIFEST = json.loads((FIXTURES / "manifest.json").read_text(encoding="utf-8"))["fixtures"]
@@ -407,6 +409,14 @@ with evidence_tab:
         with st.chat_message("assistant"):
             with st.spinner("Searching governed evidence"):
                 result = answer_question(question, policy=mode_policy)
+                audit_operation(
+                    "evidence_query_executed",
+                    ActorContext("streamlit-development", frozenset({"clinician"}), "local-development", False),
+                    str(uuid4()),
+                    "evidence_query",
+                    "streamlit",
+                    {"status": result.get("status", "abstained")},
+                )
             st.markdown(result["answer"])
             show_evidence(result)
         st.session_state.messages.append(

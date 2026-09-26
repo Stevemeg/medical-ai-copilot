@@ -1,6 +1,7 @@
 """Independent claim verification with deterministic provenance checks first."""
 
 import re
+from threading import Lock
 from typing import TYPE_CHECKING, Protocol
 
 if TYPE_CHECKING:
@@ -33,19 +34,21 @@ class NLIClaimVerifier:
     def __init__(self, model_name: str = NLI_MODEL):
         self.model_name = model_name
         self._model: CrossEncoder | None = None
+        self._lock = Lock()
 
     def verify(self, claim: AnswerClaim, evidence: list[EvidenceUnit]) -> SupportStatus:
         if not evidence:
             return SupportStatus.UNSUPPORTED
         try:
-            if self._model is None:
-                from sentence_transformers import CrossEncoder
+            with self._lock:
+                if self._model is None:
+                    from sentence_transformers import CrossEncoder
 
-                self._model = CrossEncoder(self.model_name, max_length=512)
-            pairs = [(supporting_passage(unit.text, claim.text), claim.text) for unit in evidence]
-            model = self._model
-            scores = np.asarray(model.predict(pairs, apply_softmax=True))
-            labels = {str(name).lower(): int(index) for index, name in model.model.config.id2label.items()}
+                    self._model = CrossEncoder(self.model_name, max_length=512)
+                pairs = [(supporting_passage(unit.text, claim.text), claim.text) for unit in evidence]
+                model = self._model
+                scores = np.asarray(model.predict(pairs, apply_softmax=True))
+                labels = {str(name).lower(): int(index) for index, name in model.model.config.id2label.items()}
             entailment = next(index for name, index in labels.items() if "entail" in name)
             contradiction = next(index for name, index in labels.items() if "contrad" in name)
         except Exception:
@@ -59,13 +62,14 @@ class NLIClaimVerifier:
 
     def contradicts(self, first: str, second: str) -> bool:
         try:
-            if self._model is None:
-                from sentence_transformers import CrossEncoder
+            with self._lock:
+                if self._model is None:
+                    from sentence_transformers import CrossEncoder
 
-                self._model = CrossEncoder(self.model_name, max_length=512)
-            model = self._model
-            scores = np.asarray(model.predict([(first, second), (second, first)], apply_softmax=True))
-            labels = {str(name).lower(): int(index) for index, name in model.model.config.id2label.items()}
+                    self._model = CrossEncoder(self.model_name, max_length=512)
+                model = self._model
+                scores = np.asarray(model.predict([(first, second), (second, first)], apply_softmax=True))
+                labels = {str(name).lower(): int(index) for index, name in model.model.config.id2label.items()}
             contradiction = next(index for name, index in labels.items() if "contrad" in name)
             return bool(np.all(scores[:, contradiction] >= 0.85))
         except Exception:

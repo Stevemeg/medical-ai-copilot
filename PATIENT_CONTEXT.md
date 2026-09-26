@@ -5,7 +5,7 @@ This phase adds a **FHIR R4-compatible supported subset** for fictional demo pat
 ```text
 Synthetic collection Bundle -> structural validation -> FHIR adapter
   -> immutable normalized PatientContext -> SHA-256 context hash
-  -> SQLite patient snapshot -> deterministic timeline and data availability
+  -> PostgreSQL patient snapshot -> deterministic timeline and data availability
   -> persisted ClinicalReview snapshot -> clinician workspace
 
 Governed source registry -> lifecycle-aware evidence retrieval -> Ask Evidence
@@ -27,7 +27,7 @@ The scoped structure follows the [HL7 FHIR R4 Bundle definition](https://hl7.org
 
 Raw FHIR is accepted only at the import boundary. `PatientContext` is a typed internal model containing the patient, conditions, observations, medications, allergies, encounters, procedures, and source metadata. Resource arrays and coding arrays are sorted deterministically. SHA-256 is computed over canonical JSON of normalized content, so Bundle entry order and unused transport fields do not affect it. A meaningful normalized content change creates a new hash.
 
-SQLite stores normalized context JSON, its hash, an independent UUID patient ID, and review JSON. Raw Bundles are not persisted. Reimporting unchanged content is idempotent. Reimporting changed content with the same synthetic source patient ID updates that patient row and keeps its UUID; existing reviews retain their copied context and original hash. Every explicit review creation makes a new review UUID. Phase 3 findings and clinician actions use separate SQLite tables. A review can be marked completed; completed reviews cannot be evaluated. Local `data/patient_context.db` is ignored by Git. SQLite provides local persistence between requests but is not a shared production storage or security system.
+PostgreSQL stores normalized context JSONB in immutable snapshots, its hash, an independent UUID patient ID, and reviews bound to a snapshot. Raw Bundles are not persisted. Reimporting unchanged content reuses the snapshot. Reimporting changed content with the same source patient ID updates the patient's current snapshot pointer and keeps its UUID; existing reviews retain their original snapshot and hash. Findings and actions use separate relational tables with restrictive foreign keys and append-only historical records. A review can be marked completed; completed reviews cannot be evaluated. The former local `data/patient_context.db` is development/demo data and is not automatically migrated.
 
 ## Context queries and timeline
 
@@ -41,7 +41,7 @@ The versioned API provides `POST /v1/fhir/validate`, `POST /v1/patients/import`,
 
 The Streamlit workspace shows patient selection/import, summary, timeline, data availability, review snapshots, deterministic Phase 3 findings, Ask Evidence, and knowledge sources. The alternative HTML client has not yet been updated with Phase 3 finding controls. All bundled records in `data/synthetic_fhir/` are fictional. Potential care gaps require clinician review; the interface does not diagnose, prescribe, or issue autonomous treatment recommendations.
 
-Normal application logs contain operation identifiers, counts, and hashes; they do not include raw Bundles or normalized patient payloads. The current local prototype has no authentication and must not be used with real patient data.
+Normal application logs contain operation identifiers, counts, and hashes; they do not include raw Bundles or normalized patient payloads. The FastAPI service enforces role checks and OIDC JWT verification in production mode. The Streamlit workspace is a development-only demo. Do not import real patient data into this prototype.
 
 ## Run and test
 

@@ -124,7 +124,7 @@ class SQLitePatientRepository:
             raise ValueError("Stored patient context hash mismatch")
         return context, row[1]
 
-    def list_patients(self) -> list[tuple[str, PatientContext, str]]:
+    def list_patients(self, limit: int = 50, cursor: str | None = None) -> list[tuple[str, PatientContext, str]]:
         with self._connect() as db:
             rows = db.execute(
                 "SELECT patient_id, context_json, context_hash FROM patients ORDER BY source_patient_id"
@@ -132,7 +132,7 @@ class SQLitePatientRepository:
         patients = [(row[0], PatientContext.model_validate_json(row[1]), row[2]) for row in rows]
         if any(context_hash(context) != digest for _, context, digest in patients):
             raise ValueError("Stored patient context hash mismatch")
-        return patients
+        return [row for row in patients if cursor is None or row[1].patient.source_patient_id > cursor][:limit]
 
     def create_review(self, patient_id: str) -> ClinicalReview:
         context, digest = self.get_patient(patient_id)
@@ -164,14 +164,14 @@ class SQLitePatientRepository:
             raise ValueError("Stored review snapshot hash mismatch")
         return review
 
-    def list_reviews(self, patient_id: str) -> list[ClinicalReview]:
+    def list_reviews(self, patient_id: str, limit: int = 50) -> list[ClinicalReview]:
         self.get_patient(patient_id)
         with self._connect() as db:
             rows = db.execute(
                 "SELECT review_id FROM reviews WHERE patient_id=? ORDER BY created_at DESC, review_id",
                 (patient_id,),
             ).fetchall()
-        return [self.get_review(row[0]) for row in rows]
+        return [self.get_review(row[0]) for row in rows[:limit]]
 
     def complete_review(self, review_id: str) -> ClinicalReview:
         review = self.get_review(review_id)
@@ -225,7 +225,7 @@ class SQLitePatientRepository:
                 )
         return self.list_findings(review_id)
 
-    def list_findings(self, review_id: str) -> tuple[ClinicalFinding, ...]:
+    def list_findings(self, review_id: str, limit: int = 100) -> tuple[ClinicalFinding, ...]:
         review = self.get_review(review_id)
         with self._connect() as db:
             rows = db.execute(
@@ -246,7 +246,7 @@ class SQLitePatientRepository:
             "suppressed": 3,
             "not_applicable": 4,
         }
-        return tuple(sorted(findings, key=lambda f: (priority[f.status.value], f.rule_id)))
+        return tuple(sorted(findings, key=lambda f: (priority[f.status.value], f.rule_id)))[:limit]
 
     def get_finding(self, finding_id: str) -> ClinicalFinding:
         with self._connect() as db:
@@ -293,11 +293,11 @@ class SQLitePatientRepository:
         )
         return action
 
-    def list_actions(self, finding_id: str) -> tuple[FindingAction, ...]:
+    def list_actions(self, finding_id: str, limit: int = 100) -> tuple[FindingAction, ...]:
         self.get_finding(finding_id)
         with self._connect() as db:
             rows = db.execute(
                 "SELECT action_json FROM finding_actions WHERE finding_id=? ORDER BY created_at, action_id",
                 (finding_id,),
             ).fetchall()
-        return tuple(FindingAction.model_validate_json(row[0]) for row in rows)
+        return tuple(FindingAction.model_validate_json(row[0]) for row in rows[:limit])

@@ -1,18 +1,23 @@
 """Legacy Ask Evidence adapter over the canonical verified evidence service."""
 
+from threading import Lock
+
 from backend.evidence_models import QueryIntent, RetrievalRequest
 from backend.evidence_pipeline import EvidenceAnswerService, public_answer
 from backend.knowledge_models import RetrievalPolicy
 
 _service: EvidenceAnswerService | None = None
+_service_lock = Lock()
 
 
 def get_service() -> EvidenceAnswerService:
     global _service
     if _service is None:
-        from embeddings.retrieve import get_default_retriever
+        with _service_lock:
+            if _service is None:
+                from embeddings.retrieve import get_default_retriever
 
-        _service = EvidenceAnswerService(get_default_retriever())
+                _service = EvidenceAnswerService(get_default_retriever())
     return _service
 
 

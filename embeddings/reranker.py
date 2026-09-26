@@ -1,6 +1,7 @@
 """Optional local second-stage cross-encoder, with explicit fallback."""
 
 from typing import TYPE_CHECKING, Protocol
+from threading import Lock
 
 if TYPE_CHECKING:
     from sentence_transformers import CrossEncoder
@@ -22,20 +23,28 @@ class RRFFallbackReranker:
 
 
 class CrossEncoderReranker:
-    def __init__(self, model_name: str = RERANKER_MODEL):
-        self.model_name = model_name
+    def __init__(self, model_name: str | None = None):
+        from backend.settings import get_settings
+
+        self.model_name = model_name or get_settings().reranker_model
         self._model: CrossEncoder | None = None
+        self._lock = Lock()
 
     def rerank(self, query: str, candidates: list[RankedEvidence], top_k: int) -> tuple[list[RankedEvidence], bool]:
         if not candidates or top_k <= 0:
             return [], False
         try:
-            if self._model is None:
-                from sentence_transformers import CrossEncoder
+            with self._lock:
+                if self._model is None:
+                    from sentence_transformers import CrossEncoder
 
-                self._model = CrossEncoder(self.model_name, max_length=512)
-            model = self._model
-            scores = model.predict([(query, c.unit.text[:2200]) for c in candidates])
+                    self._model = CrossEncoder(self.model_name, max_length=256)
+                model = self._model
+                pairs = [(query, c.unit.text[:1200]) for c in candidates]
+                try:
+                    scores = model.predict(pairs, batch_size=32)
+                except TypeError:
+                    scores = model.predict(pairs)
         except Exception:
             return RRFFallbackReranker().rerank(query, candidates, top_k)
         ranked = [

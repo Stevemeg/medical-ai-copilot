@@ -4,18 +4,19 @@ from __future__ import annotations
 
 import json
 import logging
-import os
 import sqlite3
 from pathlib import Path
 from typing import Any
 
-from fastapi import APIRouter, Body, Depends, HTTPException
+from fastapi import APIRouter, Body, Depends, HTTPException, Request, Query, Header
+from sqlalchemy.exc import SQLAlchemyError
 from pydantic import BaseModel, RootModel
 
 from backend.fhir_adapter import FHIRInputError, parse_bundle
 from backend.patient_context import data_availability, timeline
 from backend.patient_models import ClinicalReview, DataAvailability, PatientContext, TimelineEvent
-from backend.patient_store import PatientNotFound, ReviewNotFound, SQLitePatientRepository
+from backend.patient_store import PatientNotFound, ReviewNotFound
+from backend.postgres_store import PostgresPatientRepository, IdempotencyConflict
 from backend.patient_store import FindingNotFound, ReviewCompleted
 from backend.clinical_models import ActionRequest, ClinicalFinding, EvaluationRequest, FindingAction
 from backend.clinical_review import ClinicalReviewEngine, EvaluationConflict
@@ -32,9 +33,13 @@ DEMO_LABELS = {
 }
 
 
-def get_repository() -> SQLitePatientRepository:
-    default_path = Path(__file__).resolve().parents[1] / "data" / "patient_context.db"
-    return SQLitePatientRepository(os.environ.get("PATIENT_DB_PATH", str(default_path)))
+def get_repository(request: Request) -> PostgresPatientRepository:
+    actor = getattr(request.state, "actor", None)
+    return PostgresPatientRepository(
+        actor_subject=actor.subject if actor else "system",
+        actor_roles=sorted(actor.roles) if actor else [],
+        request_id=getattr(request.state, "request_id", "system"),
+    )
 
 
 class ValidationResponse(BaseModel):
@@ -84,14 +89,19 @@ def _storage_error(exc: Exception) -> HTTPException:
     return _api_error(503, "storage_error", "Patient storage is unavailable")
 
 
-def _import(raw: Any, repository: SQLitePatientRepository) -> ImportResponse:
+def _import(raw: Any, repository: PostgresPatientRepository, idempotency_key: str | None = None) -> ImportResponse:
     try:
         context, counts = parse_bundle(raw)
     except FHIRInputError as exc:
         raise _api_error(422, exc.code, exc.message, exc.path) from exc
     try:
-        patient_id, digest, changed = repository.import_context(context)
-    except (sqlite3.Error, ValueError) as exc:
+        if idempotency_key and isinstance(repository, PostgresPatientRepository):
+            patient_id, digest, changed = repository.import_context(context, idempotency_key=idempotency_key)
+        else:
+            patient_id, digest, changed = repository.import_context(context)
+    except IdempotencyConflict as exc:
+        raise _api_error(409, "idempotency_conflict", str(exc)) from exc
+    except (sqlite3.Error, SQLAlchemyError, ValueError) as exc:
         raise _storage_error(exc) from exc
     log.info(
         "patient_import patient_id=%s resource_count=%d context_hash=%s changed=%s",
@@ -121,9 +131,11 @@ def validate_fhir(raw: FHIRBundleInput = Body(...)) -> ValidationResponse:
 
 @router.post("/patients/import", response_model=ImportResponse)
 def import_patient(
-    raw: FHIRBundleInput = Body(...), repository: SQLitePatientRepository = Depends(get_repository)
+    raw: FHIRBundleInput = Body(...),
+    repository: PostgresPatientRepository = Depends(get_repository),
+    idempotency_key: str | None = Header(None, alias="Idempotency-Key"),
 ) -> ImportResponse:
-    return _import(raw.root, repository)
+    return _import(raw.root, repository, idempotency_key)
 
 
 @router.get("/demo-patients")
@@ -132,7 +144,7 @@ def demo_patients() -> list[dict[str, str]]:
 
 
 @router.post("/demo-patients/{key}/load", response_model=ImportResponse)
-def load_demo(key: str, repository: SQLitePatientRepository = Depends(get_repository)) -> ImportResponse:
+def load_demo(key: str, repository: PostgresPatientRepository = Depends(get_repository)) -> ImportResponse:
     if key not in DEMO_LABELS:
         raise _api_error(404, "demo_not_found", "Demo patient not found")
     raw = json.loads((FIXTURES / f"{key}.json").read_text(encoding="utf-8"))
@@ -140,7 +152,11 @@ def load_demo(key: str, repository: SQLitePatientRepository = Depends(get_reposi
 
 
 @router.get("/patients", response_model=list[PatientListItem])
-def list_patients(repository: SQLitePatientRepository = Depends(get_repository)) -> list[PatientListItem]:
+def list_patients(
+    repository: PostgresPatientRepository = Depends(get_repository),
+    limit: int = Query(50, ge=1, le=100),
+    cursor: str | None = None,
+) -> list[PatientListItem]:
     try:
         return [
             PatientListItem(
@@ -149,19 +165,19 @@ def list_patients(repository: SQLitePatientRepository = Depends(get_repository))
                 synthetic_label=context.patient.synthetic_label,
                 context_hash=digest,
             )
-            for pid, context, digest in repository.list_patients()
+            for pid, context, digest in repository.list_patients(limit=limit, cursor=cursor)
         ]
-    except (sqlite3.Error, ValueError) as exc:
+    except (sqlite3.Error, SQLAlchemyError, ValueError) as exc:
         raise _storage_error(exc) from exc
 
 
 @router.get("/patients/{patient_id}", response_model=PatientResponse)
-def get_patient(patient_id: str, repository: SQLitePatientRepository = Depends(get_repository)) -> PatientResponse:
+def get_patient(patient_id: str, repository: PostgresPatientRepository = Depends(get_repository)) -> PatientResponse:
     try:
         context, digest = repository.get_patient(patient_id)
     except PatientNotFound as exc:
         raise _api_error(404, "patient_not_found", "Patient not found") from exc
-    except (sqlite3.Error, ValueError) as exc:
+    except (sqlite3.Error, SQLAlchemyError, ValueError) as exc:
         raise _storage_error(exc) from exc
     return PatientResponse(
         patient_id=patient_id,
@@ -173,12 +189,21 @@ def get_patient(patient_id: str, repository: SQLitePatientRepository = Depends(g
 
 
 @router.post("/patients/{patient_id}/reviews", response_model=ClinicalReview, status_code=201)
-def create_review(patient_id: str, repository: SQLitePatientRepository = Depends(get_repository)) -> ClinicalReview:
+def create_review(
+    patient_id: str,
+    repository: PostgresPatientRepository = Depends(get_repository),
+    idempotency_key: str | None = Header(None, alias="Idempotency-Key"),
+) -> ClinicalReview:
     try:
-        review = repository.create_review(patient_id)
+        if idempotency_key and isinstance(repository, PostgresPatientRepository):
+            review = repository.create_review(patient_id, idempotency_key=idempotency_key)
+        else:
+            review = repository.create_review(patient_id)
+    except IdempotencyConflict as exc:
+        raise _api_error(409, "idempotency_conflict", str(exc)) from exc
     except PatientNotFound as exc:
         raise _api_error(404, "patient_not_found", "Patient not found") from exc
-    except (sqlite3.Error, ValueError) as exc:
+    except (sqlite3.Error, SQLAlchemyError, ValueError) as exc:
         raise _storage_error(exc) from exc
     log.info(
         "review_created review_id=%s patient_id=%s context_hash=%s",
@@ -191,93 +216,111 @@ def create_review(patient_id: str, repository: SQLitePatientRepository = Depends
 
 @router.get("/patients/{patient_id}/reviews", response_model=list[ClinicalReview])
 def list_reviews(
-    patient_id: str, repository: SQLitePatientRepository = Depends(get_repository)
+    patient_id: str,
+    repository: PostgresPatientRepository = Depends(get_repository),
+    limit: int = Query(50, ge=1, le=100),
 ) -> list[ClinicalReview]:
     try:
-        return repository.list_reviews(patient_id)
+        return repository.list_reviews(patient_id, limit=limit)
     except PatientNotFound as exc:
         raise _api_error(404, "patient_not_found", "Patient not found") from exc
-    except (sqlite3.Error, ValueError) as exc:
+    except (sqlite3.Error, SQLAlchemyError, ValueError) as exc:
         raise _storage_error(exc) from exc
 
 
 @router.get("/reviews/{review_id}", response_model=ClinicalReview)
-def get_review(review_id: str, repository: SQLitePatientRepository = Depends(get_repository)) -> ClinicalReview:
+def get_review(review_id: str, repository: PostgresPatientRepository = Depends(get_repository)) -> ClinicalReview:
     try:
         return repository.get_review(review_id)
     except ReviewNotFound as exc:
         raise _api_error(404, "review_not_found", "Review not found") from exc
-    except (sqlite3.Error, ValueError) as exc:
+    except (sqlite3.Error, SQLAlchemyError, ValueError) as exc:
         raise _storage_error(exc) from exc
 
 
 @router.post("/reviews/{review_id}/complete", response_model=ClinicalReview)
-def complete_review(review_id: str, repository: SQLitePatientRepository = Depends(get_repository)) -> ClinicalReview:
+def complete_review(review_id: str, repository: PostgresPatientRepository = Depends(get_repository)) -> ClinicalReview:
     try:
         return repository.complete_review(review_id)
     except ReviewNotFound as exc:
         raise _api_error(404, "review_not_found", "Review not found") from exc
-    except (sqlite3.Error, ValueError) as exc:
+    except (sqlite3.Error, SQLAlchemyError, ValueError) as exc:
         raise _storage_error(exc) from exc
 
 
 @router.post("/reviews/{review_id}/evaluate", response_model=tuple[ClinicalFinding, ...])
 def evaluate_review(
-    review_id: str, request: EvaluationRequest, repository: SQLitePatientRepository = Depends(get_repository)
+    review_id: str,
+    request: EvaluationRequest,
+    repository: PostgresPatientRepository = Depends(get_repository),
+    idempotency_key: str | None = Header(None, alias="Idempotency-Key"),
 ) -> tuple[ClinicalFinding, ...]:
     try:
-        return ClinicalReviewEngine(repository).evaluate(review_id, request)
+        return ClinicalReviewEngine(repository).evaluate(review_id, request, idempotency_key=idempotency_key)
+    except IdempotencyConflict as exc:
+        raise _api_error(409, "idempotency_conflict", str(exc)) from exc
     except ReviewNotFound as exc:
         raise _api_error(404, "review_not_found", "Review not found") from exc
     except ReviewCompleted as exc:
         raise _api_error(409, "review_completed", "Completed review cannot be evaluated") from exc
     except EvaluationConflict as exc:
         raise _api_error(409, "evaluation_conflict", str(exc)) from exc
-    except (sqlite3.Error, ValueError) as exc:
+    except (sqlite3.Error, SQLAlchemyError, ValueError) as exc:
         raise _storage_error(exc) from exc
 
 
 @router.get("/reviews/{review_id}/findings", response_model=tuple[ClinicalFinding, ...])
 def list_findings(
-    review_id: str, repository: SQLitePatientRepository = Depends(get_repository)
+    review_id: str,
+    repository: PostgresPatientRepository = Depends(get_repository),
+    limit: int = Query(100, ge=1, le=100),
 ) -> tuple[ClinicalFinding, ...]:
     try:
-        return repository.list_findings(review_id)
+        return repository.list_findings(review_id, limit=limit)
     except ReviewNotFound as exc:
         raise _api_error(404, "review_not_found", "Review not found") from exc
-    except (sqlite3.Error, ValueError) as exc:
+    except (sqlite3.Error, SQLAlchemyError, ValueError) as exc:
         raise _storage_error(exc) from exc
 
 
 @router.get("/findings/{finding_id}", response_model=ClinicalFinding)
-def get_finding(finding_id: str, repository: SQLitePatientRepository = Depends(get_repository)) -> ClinicalFinding:
+def get_finding(finding_id: str, repository: PostgresPatientRepository = Depends(get_repository)) -> ClinicalFinding:
     try:
         return repository.get_finding(finding_id)
     except FindingNotFound as exc:
         raise _api_error(404, "finding_not_found", "Finding not found") from exc
-    except (sqlite3.Error, ValueError) as exc:
+    except (sqlite3.Error, SQLAlchemyError, ValueError) as exc:
         raise _storage_error(exc) from exc
 
 
 @router.post("/findings/{finding_id}/actions", response_model=FindingAction, status_code=201)
 def add_finding_action(
-    finding_id: str, request: ActionRequest, repository: SQLitePatientRepository = Depends(get_repository)
+    finding_id: str,
+    request: ActionRequest,
+    repository: PostgresPatientRepository = Depends(get_repository),
+    idempotency_key: str | None = Header(None, alias="Idempotency-Key"),
 ) -> FindingAction:
     try:
+        if idempotency_key and isinstance(repository, PostgresPatientRepository):
+            return repository.add_action(finding_id, request.action_type, request.note, idempotency_key=idempotency_key)
         return repository.add_action(finding_id, request.action_type, request.note)
+    except IdempotencyConflict as exc:
+        raise _api_error(409, "idempotency_conflict", str(exc)) from exc
     except FindingNotFound as exc:
         raise _api_error(404, "finding_not_found", "Finding not found") from exc
-    except (sqlite3.Error, ValueError) as exc:
+    except (sqlite3.Error, SQLAlchemyError, ValueError) as exc:
         raise _storage_error(exc) from exc
 
 
 @router.get("/findings/{finding_id}/actions", response_model=tuple[FindingAction, ...])
 def list_finding_actions(
-    finding_id: str, repository: SQLitePatientRepository = Depends(get_repository)
+    finding_id: str,
+    repository: PostgresPatientRepository = Depends(get_repository),
+    limit: int = Query(100, ge=1, le=100),
 ) -> tuple[FindingAction, ...]:
     try:
-        return repository.list_actions(finding_id)
+        return repository.list_actions(finding_id, limit=limit)
     except FindingNotFound as exc:
         raise _api_error(404, "finding_not_found", "Finding not found") from exc
-    except (sqlite3.Error, ValueError) as exc:
+    except (sqlite3.Error, SQLAlchemyError, ValueError) as exc:
         raise _storage_error(exc) from exc

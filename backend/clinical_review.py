@@ -5,7 +5,10 @@ from __future__ import annotations
 import hashlib
 import json
 import logging
+from prometheus_client import Counter
+from opentelemetry import trace
 from datetime import datetime, timezone
+from typing import Protocol
 
 from backend.clinical_models import (
     ClinicalFinding,
@@ -17,14 +20,24 @@ from backend.clinical_models import (
     RuleStatus,
 )
 from backend.clinical_rules import RuleEvidenceError, RuleRegistry, default_registry
-from backend.patient_models import ReviewStatus
-from backend.patient_store import ReviewCompleted, SQLitePatientRepository
+from backend.patient_models import ClinicalReview, ReviewStatus
+from backend.patient_store import ReviewCompleted
+from backend.postgres_store import PostgresPatientRepository
 
 LOG = logging.getLogger(__name__)
+REVIEW_EVALUATIONS = Counter("medical_review_evaluations_total", "Review evaluations")
+FINDING_STATUSES = Counter("medical_rule_findings_total", "Rule finding statuses", ["status"])
+TRACER = trace.get_tracer(__name__)
 
 
 class EvaluationConflict(ValueError):
     pass
+
+
+class ReviewFindingRepository(Protocol):
+    def get_review(self, review_id: str) -> ClinicalReview: ...
+    def list_findings(self, review_id: str, limit: int = 100) -> tuple[ClinicalFinding, ...]: ...
+    def save_findings(self, review_id: str, findings: tuple[ClinicalFinding, ...]) -> tuple[ClinicalFinding, ...]: ...
 
 
 def finding_id(review_id: str, rule_id: str, rule_version: str, context_hash: str, request: EvaluationRequest) -> str:
@@ -40,11 +53,19 @@ def finding_id(review_id: str, rule_id: str, rule_version: str, context_hash: st
 
 
 class ClinicalReviewEngine:
-    def __init__(self, repository: SQLitePatientRepository, registry: RuleRegistry | None = None):
+    def __init__(self, repository: ReviewFindingRepository, registry: RuleRegistry | None = None):
         self.repository = repository
         self.registry = registry or default_registry()
 
-    def evaluate(self, review_id: str, request: EvaluationRequest) -> tuple[ClinicalFinding, ...]:
+    def evaluate(
+        self, review_id: str, request: EvaluationRequest, idempotency_key: str | None = None
+    ) -> tuple[ClinicalFinding, ...]:
+        with TRACER.start_as_current_span("clinical.review_evaluation"):
+            return self._evaluate(review_id, request, idempotency_key)
+
+    def _evaluate(
+        self, review_id: str, request: EvaluationRequest, idempotency_key: str | None = None
+    ) -> tuple[ClinicalFinding, ...]:
         review = self.repository.get_review(review_id)
         if review.status is ReviewStatus.COMPLETED:
             raise ReviewCompleted(review_id)
@@ -91,7 +112,9 @@ class ClinicalReviewEngine:
                     )
                     suppression_reason = "rule_evidence_unavailable"
                 else:
-                    result = rule.evaluate(context)
+                    with TRACER.start_as_current_span("clinical.rule_evaluation") as span:
+                        span.set_attribute("rule_id", definition.rule_id)
+                        result = rule.evaluate(context)
             findings.append(
                 ClinicalFinding(
                     finding_id=finding_id(
@@ -114,6 +137,19 @@ class ClinicalReviewEngine:
                     created_at=datetime.now(timezone.utc),
                 )
             )
-        saved = self.repository.save_findings(review_id, tuple(findings))
+        try:
+            if idempotency_key and isinstance(self.repository, PostgresPatientRepository):
+                saved = self.repository.save_findings(review_id, tuple(findings), idempotency_key=idempotency_key)
+            else:
+                saved = self.repository.save_findings(review_id, tuple(findings))
+        except ValueError as exc:
+            if str(exc) == "Review already evaluated with different context":
+                raise EvaluationConflict(
+                    "Review already has findings for another evaluation context; create a new review"
+                ) from exc
+            raise
         LOG.info("review_evaluated review_id=%s finding_count=%d", review_id, len(saved))
+        REVIEW_EVALUATIONS.inc()
+        for finding in saved:
+            FINDING_STATUSES.labels(finding.status.value).inc()
         return saved

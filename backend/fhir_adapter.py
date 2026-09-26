@@ -9,7 +9,7 @@ import math
 import re
 from collections import Counter
 from datetime import date, datetime, timezone
-from typing import Any, Mapping
+from typing import Any, Mapping, NoReturn
 
 from backend.patient_models import (
     Allergy,
@@ -42,7 +42,7 @@ class FHIRInputError(ValueError):
         return {"code": self.code, "path": self.path, "message": self.message}
 
 
-def _fail(code: str, path: str, message: str) -> None:
+def _fail(code: str, path: str, message: str) -> NoReturn:
     raise FHIRInputError(code, path, message)
 
 
@@ -120,7 +120,6 @@ def _quantity(value: Any, path: str) -> Quantity:
     number = obj.get("value")
     if isinstance(number, bool) or not isinstance(number, (int, float)) or not math.isfinite(number):
         _fail("malformed_observation", f"{path}.value", "Quantity requires a finite numeric value")
-    assert isinstance(number, (int, float))
     return Quantity(
         value=float(number),
         unit=_string(obj.get("unit"), f"{path}.unit"),
@@ -160,7 +159,6 @@ def _patient(resource: Mapping[str, Any]) -> Patient:
     label = _string(_obj(names[0], "Patient.name[0]").get("text"), "Patient.name[0].text", True) if names else None
     if not label or not label.startswith("Synthetic Patient"):
         _fail("synthetic_only", "Patient.name", "Use an explicit Synthetic Patient display label")
-    assert label is not None
     gender = _string(resource.get("gender"), "Patient.gender")
     if gender not in (None, "male", "female", "other", "unknown"):
         _fail("invalid_fhir", "Patient.gender", "Unsupported gender code")

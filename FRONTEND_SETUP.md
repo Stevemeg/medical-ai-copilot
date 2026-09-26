@@ -16,4 +16,4 @@ cd frontend
 python -m http.server 5500
 ```
 
-Open `http://localhost:5500`. The HTML client calls `http://localhost:8000`; change the `API` constant in `frontend/index.html` if the server uses another address. Its tabs show Patients, Clinical Review, Ask Evidence, and Knowledge Sources. Demo fixtures and imported patient snapshots use a local SQLite file that is ignored by Git. Do not import real patient records; the prototype has no authentication or production data protections.
+Open `http://localhost:5500`. The HTML client calls the Compose API at `http://localhost:18000`; change the `API` constant in `frontend/index.html` if the server uses another address. Its tabs show Patients, Clinical Review, Ask Evidence, and Knowledge Sources. Demo fixtures import into PostgreSQL. The HTML client is intended for explicit development mode; a production UI must obtain and send an OIDC access token. Do not import real patient records into this prototype.
