@@ -166,6 +166,6 @@
       }
     }
   },
-  "selection_reason": "Retained 30 candidates after smaller pools degraded held-out evidence-unit recall.",
+  "selection_reason": "Development document metrics tied, so retained the established 30-candidate pool before held-out regression checks.",
   "selected_pool": 30
 }

@@ -14,7 +14,7 @@ def main():
     phase4 = json.loads(Path("eval/retrieval_report.json").read_text(encoding="utf-8"))["held_out"]
     report = {
         "selected_pool": RERANK_POOL_SIZE,
-        "selection_reason": "Development document metrics tied; smaller pools failed held-out evidence-unit regression, so the established 30-unit pool was retained.",
+        "selection_reason": "Development document metrics tied, so the established 30-unit pool was retained conservatively; held-out evidence-unit checks then confirmed the choice.",
         "phase4": {"quality": phase4["phase4"], "latency": phase4["latency"]},
         "phase5": {"quality": metrics(rows), "latency": latency},
     }

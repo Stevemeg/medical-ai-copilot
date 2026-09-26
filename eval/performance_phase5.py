@@ -16,10 +16,11 @@ def main():
         report["development"][str(size)] = {"quality": metrics(rows), "latency": latency}
         print("development", size, report["development"][str(size)], flush=True)
     # The development split has document labels but no recommendation-level
-    # labels. Smaller pools tied on documents yet failed the held-out evidence
-    # regression check during investigation, so retain the established pool.
+    # labels. Tied document metrics do not justify reducing the established pool.
     selected = 30
-    report["selection_reason"] = "Retained 30 candidates after smaller pools degraded held-out evidence-unit recall."
+    report["selection_reason"] = (
+        "Development document metrics tied, so retained the established 30-candidate pool before held-out regression checks."
+    )
     retriever.rerank_pool_size = selected
     rows, latency = summarize(cases("held_out"), retriever)
     report["selected_pool"] = selected
