@@ -76,19 +76,23 @@ def main():
         raise RuntimeError("Smoke fixture requires explicit development authentication")
     headers = {"Authorization": f"Bearer {token('clinician')}"}
     with TestClient(app) as client:
-        assert client.get("/health/live").status_code == 200
-        assert client.get("/health/ready").status_code == 200
+        from scripts.cds_demo import request_body
+
+        if not __debug__:
+            raise RuntimeError("Smoke requires assertions enabled")
+        assert client.get("/health/live").status_code == 200  # nosec B101 #- test harness assertion; smoke is never run with Python optimization
+        assert client.get("/health/ready").status_code == 200  # nosec B101 #- test harness assertion; smoke is never run with Python optimization
         imported = client.post("/v1/demo-patients/syn_pat_001/load", headers=headers)
-        assert imported.status_code == 200, imported.text
+        assert imported.status_code == 200, imported.text  # nosec B101 #- test harness assertion; smoke is never run with Python optimization
         patient_id = imported.json()["patient_id"]
-        assert client.get(f"/v1/patients/{patient_id}", headers=headers).status_code == 200
+        assert client.get(f"/v1/patients/{patient_id}", headers=headers).status_code == 200  # nosec B101 #- test harness assertion; smoke is never run with Python optimization
         review = client.post(
             f"/v1/patients/{patient_id}/reviews", headers={**headers, "Idempotency-Key": "smoke-review"}
         )
-        assert review.status_code == 201, review.text
+        assert review.status_code == 201, review.text  # nosec B101 #- test harness assertion; smoke is never run with Python optimization
         review_id = review.json()["review_id"]
         evaluated = client.post(f"/v1/reviews/{review_id}/evaluate", json={"as_of": "2026-09-25"}, headers=headers)
-        assert evaluated.status_code == 200 and evaluated.json(), evaluated.text
+        assert evaluated.status_code == 200 and evaluated.json(), evaluated.text  # nosec B101 #- test harness assertion; smoke is never run with Python optimization
         findings = client.get(f"/v1/reviews/{review_id}/findings", headers=headers).json()
         finding_id = findings[0]["finding_id"]
         action = client.post(
@@ -96,20 +100,20 @@ def main():
             json={"action_type": "accept"},
             headers={**headers, "Idempotency-Key": "smoke-action"},
         )
-        assert action.status_code == 201, action.text
+        assert action.status_code == 201, action.text  # nosec B101 #- test harness assertion; smoke is never run with Python optimization
         repeated = client.post(
             f"/v1/findings/{finding_id}/actions",
             json={"action_type": "accept"},
             headers={**headers, "Idempotency-Key": "smoke-action"},
         )
-        assert repeated.json()["action_id"] == action.json()["action_id"]
-        assert (
+        assert repeated.json()["action_id"] == action.json()["action_id"]  # nosec B101 #- test harness assertion; smoke is never run with Python optimization
+        assert (  # nosec B101 #- test harness assertion; smoke is never run with Python optimization
             client.post(
                 "/v1/patients/import", json={}, headers={"Authorization": f"Bearer {token('auditor')}"}
             ).status_code
             == 403
         )
-        assert client.get("/v1/patients", headers={"Authorization": "Bearer invalid"}).status_code == 401
+        assert client.get("/v1/patients", headers={"Authorization": "Bearer invalid"}).status_code == 401  # nosec B101 #- test harness assertion; smoke is never run with Python optimization
         retriever = EvidenceRetriever(use_reranker=False)
         index = next(
             i
@@ -121,14 +125,23 @@ def main():
         rag_pipeline._service = EvidenceAnswerService(retriever, QuoteGenerator(), QuoteVerifier())
         query = {"query": "How should hypertension be diagnosed?", "document_ids": ["nice-ng136"], "top_k": 5}
         grounded = client.post("/v1/evidence/query", json=query, headers=headers)
-        assert grounded.status_code == 200 and grounded.json()["status"] == "grounded", grounded.text
+        assert grounded.status_code == 200 and grounded.json()["status"] == "grounded", grounded.text  # nosec B101 #- test harness assertion; smoke is never run with Python optimization
         rag_pipeline._service = EvidenceAnswerService(retriever, QuoteGenerator(), UnavailableVerifier())
         uncertain = client.post("/v1/evidence/query", json=query, headers=headers)
-        assert uncertain.status_code == 200 and uncertain.json()["status"] == "abstained"
-        assert uncertain.json()["claims"] == []
+        assert uncertain.status_code == 200 and uncertain.json()["status"] == "abstained"  # nosec B101 #- test harness assertion; smoke is never run with Python optimization
+        assert uncertain.json()["claims"] == []  # nosec B101 #- test harness assertion; smoke is never run with Python optimization
+        discovery = client.get("/cds-services")
+        if discovery.status_code != 200 or len(discovery.json()["services"]) != 1:
+            raise RuntimeError("CDS discovery smoke failed")
+        get_settings().cds_synthetic_fixture_coverage = True
+        cds = client.post("/cds-services/medical-patient-review", json=request_body(), headers=headers)
+        if cds.status_code != 200 or not any("potential care gap" in card["summary"] for card in cds.json()["cards"]):
+            raise RuntimeError("CDS patient-view smoke failed")
     with session_factory()() as session:
-        assert verify_chain(session)["valid"]
-    print("Docker smoke PASS: API, Postgres, review, action, evidence, fail-closed grounding, audit")
+        assert verify_chain(session)["valid"]  # nosec B101 #- test harness assertion; smoke is never run with Python optimization
+    print(
+        "Docker smoke PASS: API, Postgres, review, action, evidence, fail-closed grounding, audit, CDS discovery and cards"
+    )
 
 
 if __name__ == "__main__":

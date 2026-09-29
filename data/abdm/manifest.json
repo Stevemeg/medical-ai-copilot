@@ -1,0 +1,19 @@
+{
+  "package_id": "ndhm.in",
+  "version": "6.5.0",
+  "fhir_version": "4.0.1",
+  "license": "CC0-1.0",
+  "official_url": "https://www.nrces.in/ndhm/fhir/r4/package.tgz",
+  "verified_on": "2026-09-29",
+  "package_sha256": "41fa99955adbd1983a235d7c7136b30f423ce34ff541d86b354d95b7704527d4",
+  "profiles": {
+    "StructureDefinition-Patient.json": "894d04b060e592229c5a753d8d68d3386482577e560be184e33f7d3372518465",
+    "StructureDefinition-Condition.json": "0eba2f56974e23c26f550a4b8f1f2ef665bca08642cf4d30004861f26c74da1a",
+    "StructureDefinition-Observation.json": "357ca3764d4fa94791a9e9b19f5a7de3835b59a348f856eb4fe194bb947fe51e",
+    "StructureDefinition-ObservationVitalSigns.json": "5530697fc7762fccd4cb0f6df076f5fd9608937e3bcad2dd0edcbcc160f249bd",
+    "StructureDefinition-MedicationRequest.json": "c158db6162d4c03e46a6ceb61af4aeb851fc24cdbb02d38ddbb8f4888c1ec286",
+    "StructureDefinition-AllergyIntolerance.json": "b075449c0a20fe2354dd364d93a39d8e74823989e08074b1eef8efe511ecb074",
+    "StructureDefinition-Encounter.json": "5897a9197fe7b6588dc2b58e5e31dda4f3e56f26b8168ec6f445a880c31470f8",
+    "StructureDefinition-Procedure.json": "afbe73d58ec472b95e53885ab3bf0fded42f0306b860d266ff26ef44beea4007"
+  }
+}

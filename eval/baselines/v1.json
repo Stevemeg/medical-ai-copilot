@@ -1,0 +1,30 @@
+{
+  "version": "1.0.0",
+  "rationale": "Prior deterministic safety invariants remain exact. Retrieval document recall retains the Phase 5 floor on an expanded corpus. The expanded synthetic NLI set is exploratory: no supported claim may be a labeled negative. Baseline changes require independent review; CI evaluates the base-branch baseline on pull requests.",
+  "gates": {
+    "clinical_rules.accuracy": {
+      "min": 1.0
+    },
+    "clinical_rules.missing_data_accuracy": {
+      "min": 1.0
+    },
+    "prompt_injection.pass_rate": {
+      "min": 1.0
+    },
+    "safety.pass_rate": {
+      "min": 1.0
+    },
+    "retrieval.held_out.metrics.recall_at_5": {
+      "min": 1.0
+    },
+    "retrieval.held_out.metrics.false_answer_rate": {
+      "max": 0.0
+    },
+    "grounding.held_out.metrics.false_supported_rate": {
+      "max": 0.0
+    },
+    "contracts.pass_rate": {
+      "min": 1.0
+    }
+  }
+}

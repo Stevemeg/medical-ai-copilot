@@ -1,19 +1,9 @@
-# Alternative HTML patient workspace
+﻿# Primary web workspace
 
-The primary deployed interface is `app.py` (Streamlit). `frontend/index.html` is a second client for the same synthetic patient workflow and Ask Evidence API. It requires the FastAPI server.
+Open http://localhost:18000/ after `docker compose up -d --build --wait`. FastAPI serves `frontend/index.html` and same-origin assets; no separate static server or hard-coded API origin is needed.
 
-From the repository root with Python 3.11+:
+Patient Review is primary, with saved Review Findings, Ask Evidence, Guideline Intelligence and System Status navigation. The UI shows snapshot identity, observations/timeline, missing data, deterministic rationale, rule evidence and append-only dispositions. An explicit date and completeness assertion is required to establish a care gap; data fetch success does not establish coverage.
 
-```bash
-pip install -r requirements.txt
-uvicorn api_server:app --port 8000
-```
+The optional session field accepts an existing authorized JWT and holds it in memory only. Development anonymous clinician mode cannot activate guidelines. Authenticated guideline_editor/clinical_admin roles reveal governance controls; server-side authorization applies independently. Production identity-provider login UI is outside this demo; supply a valid deployment token through the session boundary.
 
-In another terminal:
-
-```bash
-cd frontend
-python -m http.server 5500
-```
-
-Open `http://localhost:5500`. The HTML client calls the Compose API at `http://localhost:18000`; change the `API` constant in `frontend/index.html` if the server uses another address. Its tabs show Patients, Clinical Review, Ask Evidence, and Knowledge Sources. Demo fixtures import into PostgreSQL. The HTML client is intended for explicit development mode; a production UI must obtain and send an OIDC access token. Do not import real patient records into this prototype.
+SMART completion imports the browser-bound handoff and labels the context `SMART launch / FHIR server`; the access token is never exposed to the UI. Keyboard-operable controls, labels, headings, text statuses, accessible colors and explicit historical warnings support basic accessibility. The DOM smoke is `node eval/ui_smoke.js`; it is not a full accessibility certification.

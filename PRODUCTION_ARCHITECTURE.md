@@ -73,3 +73,7 @@ Required production variables are `APP_ENV=production`, `DATABASE_URL`, `AUTH_MO
 This is production-oriented infrastructure, not a claim of clinical validation or security compliance. Manual guideline governance, local single-node assumptions, model latency and memory, shared-database audit checkpoints, development identity limitations, and the absence of an automated CI gate remain known limitations.
 
 The Phase 5 dependency audit found eight advisories in the resolved `transformers` 4.57.6 dependency. Published fixes require a 5.x major upgrade, which was not applied without sentence-transformers compatibility and retrieval regression testing. `nltk`, used by offline corpus-building scripts, was removed from runtime requirements and remains in development requirements. Deployments should re-audit their exact locked dependency set and restrict model sources until this upstream migration is validated.
+
+## Phase 6 extensions
+
+Alembic head `62a2guidelines` adds browser-bound SMART state and the guideline candidate/activation layer. The baseline evidence artifacts remain checksummed; active structured releases are a transactional PostgreSQL overlay with preserved history, audited activation and dependent-rule suppression. [Guideline governance](GUIDELINE_INTELLIGENCE.md), [SMART/CDS boundaries](INTEROPERABILITY.md), [retention/security](SECURITY.md) and [release gates](EVALUATION.md) describe the final architecture. The same-origin HTML workspace is the primary product UI. Clinical and audit data are excluded from ephemeral cleanup.

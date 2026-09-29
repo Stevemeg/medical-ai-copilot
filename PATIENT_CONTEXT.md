@@ -11,7 +11,7 @@ Synthetic collection Bundle -> structural validation -> FHIR adapter
 Governed source registry -> lifecycle-aware evidence retrieval -> Ask Evidence
 ```
 
-The patient path and Ask Evidence path are separate. Patient records are not automatically sent to the LLM. Current clinical retrieval excludes the superseded bundled NICE NG28 2022 and NG19 2019 versions. Phase 3 adds a narrow deterministic hypertension annual follow-up finding; the foot-assessment candidate is suppressed pending current governed evidence. See [clinical rules](CLINICAL_RULES.md).
+The patient path and Ask Evidence path are separate. Patient records are not automatically sent to the LLM. Current clinical retrieval excludes the superseded bundled NICE NG28 2022 and NG19 2019 versions. The active deterministic rules cover hypertension annual review and diabetes foot assessment; the latter uses independently governed current NG19 recommendation evidence, not the old PDF. See [clinical rules](CLINICAL_RULES.md).
 
 ## Supported import subset
 
@@ -39,7 +39,7 @@ The timeline combines conditions, observations, medication requests, allergies, 
 
 The versioned API provides `POST /v1/fhir/validate`, `POST /v1/patients/import`, `GET /v1/patients`, `GET /v1/patients/{id}`, `POST /v1/patients/{id}/reviews`, `GET /v1/patients/{id}/reviews`, `GET /v1/reviews/{id}`, and `POST /v1/reviews/{id}/complete`. Demo fixture routes are `GET /v1/demo-patients` and `POST /v1/demo-patients/{key}/load`. `GET /v1/knowledge-sources` exposes registry lifecycle metadata. Existing `/api/ask` remains the separate Ask Evidence route.
 
-The Streamlit workspace shows patient selection/import, summary, timeline, data availability, review snapshots, deterministic Phase 3 findings, Ask Evidence, and knowledge sources. The alternative HTML client has not yet been updated with Phase 3 finding controls. All bundled records in `data/synthetic_fhir/` are fictional. Potential care gaps require clinician review; the interface does not diagnose, prescribe, or issue autonomous treatment recommendations.
+The Streamlit workspace shows patient selection/import, summary, timeline, data availability, review snapshots, deterministic Phase 3 findings, Ask Evidence, and knowledge sources. The primary same-origin HTML client now includes findings, clinician actions, guideline intelligence and system status (see FRONTEND_SETUP.md). All bundled records in `data/synthetic_fhir/` are fictional. Potential care gaps require clinician review; the interface does not diagnose, prescribe, or issue autonomous treatment recommendations.
 
 Normal application logs contain operation identifiers, counts, and hashes; they do not include raw Bundles or normalized patient payloads. The FastAPI service enforces role checks and OIDC JWT verification in production mode. The Streamlit workspace is a development-only demo. Do not import real patient data into this prototype.
 
@@ -54,4 +54,4 @@ python -m mypy
 streamlit run app.py
 ```
 
-For the alternative HTML client, run `uvicorn api_server:app --port 8000` and serve `frontend/index.html` locally. Generate the committed demo fixtures again with `python scripts/generate_synthetic_fhir.py`.
+For the primary HTML client, run `uvicorn api_server:app --port 18000 --no-access-log` and open the API root. Generate the committed demo fixtures again with `python scripts/generate_synthetic_fhir.py`.

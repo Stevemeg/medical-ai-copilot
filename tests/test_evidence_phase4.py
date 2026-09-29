@@ -458,6 +458,7 @@ def test_api_legacy_and_versioned_share_engine(monkeypatch):
 
 def test_frontend_has_claim_conflict_abstention_historical_ui():
     html = (Path(__file__).resolve().parents[1] / "frontend/index.html").read_text(encoding="utf-8")
+    html += (Path(__file__).resolve().parents[1] / "frontend/app.js").read_text(encoding="utf-8")
     for marker in (
         "claim.evidence_ids",
         "Evidence differs",

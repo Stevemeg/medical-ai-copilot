@@ -6,7 +6,7 @@ This repository is an educational prototype. Its default retrieval scope is regi
 
 Authoritative source → `data/source_registry.json` → document/version validation → exact PDF SHA-256 → page parser → evidence chunks → FAISS index and manifest → lifecycle-aware retrieval.
 
-The registry is the source of truth for canonical document identity, version identity, publisher, source type, jurisdiction, dates, local path, canonical URL, lifecycle state and checksum. Unknown dates remain `null`. `KnowledgeDocument` identifies a work independent of filename; `KnowledgeDocumentVersion` identifies the exact local snapshot. `EvidenceChunk` identifies a text span and its page range. Chunk IDs are stable for unchanged versions and chunking configuration. Section and recommendation IDs remain unknown (`null`) because the current PDF parser does not reliably extract them.
+The registry is the source of truth for canonical document identity, version identity, publisher, source type, jurisdiction, dates, local path, canonical URL, lifecycle state and checksum. Unknown dates remain `null`. `KnowledgeDocument` identifies a work independent of filename; `KnowledgeDocumentVersion` identifies the exact local snapshot. `EvidenceChunk` identifies a text span and its page range. Chunk IDs are stable for unchanged versions and chunking configuration. Phase 4 adds conservative recommendation extraction and EvidenceUnit IDs; unmatched sections retain null recommendation IDs.
 
 Locally stored sources are verified on registry load. A missing file or changed SHA-256 stops startup or ingestion. Processed-page sidecars bind extracted JSON to the exact source hash and parser version; unchanged validated sources skip extraction. A chunk manifest binds chunks to the exact processed files and chunker configuration. FAISS manifests bind each index to its metadata hash, registry hash, model name, chunker configuration and source versions/hashes. Missing or stale manifests stop retrieval. A source or registry change requires re-extraction/re-chunking/re-indexing; old artifacts cannot silently bypass the new policies. The committed legacy vectors were migrated only after checking vector counts and exact chunk/metadata alignment. Their embedding library revision at original creation is unverified; future rebuilds use the documented model name.
 
@@ -21,7 +21,7 @@ Locally stored sources are verified on registry load. A missing file or changed 
 
 `unknown` and `withdrawn` are excluded from clinical and historical modes. Public health reports and original epidemiological research describe population data and never enter the default treatment-guideline search. Textbooks and patient education are reserved for explanatory use. The retrieval code constructs a filtered FAISS view **before** searching or applying the relevance gate, so blocked vectors cannot influence ranking. BM25/RRF run on the same filtered evidence. Historical and reference retrieval are internal/API options; the Streamlit UI uses the clinical default.
 
-`POST /api/ask` accepts optional `policy` using the values above. The response preserves legacy `sources` labels for existing UI rendering and adds structured `citations` with chunk/document/version IDs, title, publisher, dates, source type, jurisdiction, lifecycle, URL, and page range. These are retrieved-context citations, not claim-level verification. The API does not decide which policy is appropriate for a patient.
+`POST /api/ask` accepts optional `policy` using the values above. The response preserves legacy `sources` labels for existing UI rendering and adds structured `citations` with chunk/document/version IDs, title, publisher, dates, source type, jurisdiction, lifecycle, URL, and page range. The canonical Phase 4/6 engine now emits claim-level verified citations; unsupported claims and their citations are removed. The API does not decide which policy is appropriate for a patient.
 
 ## Corpus audit (verified 24 September 2026)
 
@@ -63,3 +63,7 @@ The NG19 2019 PDF is still superseded and cannot enter default current retrieval
 ## Limits
 
 Publisher pages may change after this audit, so currentness needs periodic human review. Source dates absent from the source or publisher remain unknown. The original source-retrieval dates are unknown. Page ranges can be imprecise near overlapping chunk boundaries. The system has no reliable section/recommendation extraction, no claim-level grounding, and no clinical validation. The existing LLM generation path remains a research/educational feature, and its answers require professional review.
+
+## Phase 6 structured release overlay
+
+The immutable registry remains the baseline authority. Explicit, audited PostgreSQL activation can add structured recommendation releases and atomically supersede the active version without changing baseline PDFs or indexes. Historical versions remain accessible; dependent rules are suppressed. See [guideline intelligence](GUIDELINE_INTELLIGENCE.md) for review, checksum, atomicity and portability semantics.

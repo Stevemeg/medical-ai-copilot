@@ -1,0 +1,17 @@
+{
+  "schema_version": 1,
+  "exceptions": [
+    {
+      "package": "nltk",
+      "version": "3.10.3",
+      "advisory": "PYSEC-2026-3740",
+      "aliases": ["CVE-2026-81726", "GHSA-8mgp-746c-j5xp"],
+      "reviewed_on": "2026-09-29",
+      "review_by": "2026-10-29",
+      "scope": "development dependency only; offline corpus-building tokenizer",
+      "affected_functionality": "Model persistence path sandbox bypass in transition parser, perceptron and maxent save/load APIs",
+      "mitigation": "Runtime/Docker excludes NLTK. The chunker uses sentence tokenization only; no caller-controlled model paths or model persistence APIs. No untrusted corpus rebuild service is exposed.",
+      "deferment_reason": "Fresh pip-audit reports no fixed version. Review upstream monthly; remove this exception when a fix is available."
+    }
+  ]
+}

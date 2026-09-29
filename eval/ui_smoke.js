@@ -5,7 +5,7 @@ const path = require('node:path');
 const vm = require('node:vm');
 
 const html = fs.readFileSync(path.join(__dirname, '..', 'frontend', 'index.html'), 'utf8');
-const script = html.match(/<script>([\s\S]*?)<\/script>/)?.[1];
+const script = fs.readFileSync(path.join(__dirname, '..', 'frontend', 'app.js'), 'utf8');
 assert.ok(script, 'client script exists');
 const elements = new Map();
 const get = id => {
@@ -14,6 +14,8 @@ const get = id => {
 };
 let evidenceResponse = null;
 const context = {
+  window: {location: {origin: 'http://localhost:18000', search: ''}},
+  URLSearchParams,
   document: { getElementById: get, querySelectorAll: () => [] },
   fetch: async url => ({
     ok: true,

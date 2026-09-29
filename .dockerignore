@@ -1,5 +1,9 @@
 .git
 .venv
+.venv*
+reports
+.audit-*.json
+coverage.xml
 .uv-cache
 .uv-python
 .mypy_cache

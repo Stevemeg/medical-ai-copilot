@@ -10,6 +10,7 @@ from pathlib import Path
 from typing import Callable
 
 import requests
+from backend.safe_http import SafeHTTP
 
 from backend.rule_evidence import (
     REGISTRY_PATH,
@@ -22,13 +23,10 @@ from backend.rule_evidence import (
 
 
 def fetch_official_nice(url: str) -> str:
-    response = requests.get(
-        url, timeout=25, allow_redirects=False, headers={"User-Agent": "medical-ai-copilot-evidence-verifier/1.0"}
+    response = SafeHTTP({"https://www.nice.org.uk"}, max_bytes=2_000_000).request(
+        url, mime_types=("text/html",), headers={"User-Agent": "medical-ai-copilot-evidence-verifier/1.0"}
     )
-    response.raise_for_status()
-    if response.is_redirect:
-        raise ValueError("redirects are not followed by the evidence verifier")
-    return response.text
+    return response.body.decode("utf-8")
 
 
 def verify_registry(path: Path = REGISTRY_PATH, fetcher: Callable[[str], str] = fetch_official_nice) -> dict[str, str]:

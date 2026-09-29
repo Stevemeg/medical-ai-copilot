@@ -13,6 +13,7 @@ from sqlalchemy import (
     DateTime,
     ForeignKey,
     Integer,
+    Index,
     String,
     UniqueConstraint,
     create_engine,
@@ -141,7 +142,10 @@ class AuditCheckpoint(Base):
 
 class IdempotencyKey(Base):
     __tablename__ = "idempotency_keys"
-    __table_args__ = (UniqueConstraint("actor_subject", "operation", "key"),)
+    __table_args__ = (
+        UniqueConstraint("actor_subject", "operation", "key"),
+        Index("ix_idempotency_created", "created_at"),
+    )
     id: Mapped[UUID] = mapped_column(PGUUID(as_uuid=True), primary_key=True, default=uuid4)
     actor_subject: Mapped[str] = mapped_column(String(200), nullable=False)
     operation: Mapped[str] = mapped_column(String(100), nullable=False)
@@ -153,12 +157,50 @@ class IdempotencyKey(Base):
 
 class RateBucket(Base):
     __tablename__ = "rate_buckets"
-    __table_args__ = (UniqueConstraint("actor_subject", "operation", "minute"),)
+    __table_args__ = (
+        UniqueConstraint("actor_subject", "operation", "minute"),
+        Index("ix_rate_buckets_minute", "minute"),
+    )
     id: Mapped[UUID] = mapped_column(PGUUID(as_uuid=True), primary_key=True, default=uuid4)
     actor_subject: Mapped[str] = mapped_column(String(200), nullable=False)
     operation: Mapped[str] = mapped_column(String(100), nullable=False)
     minute: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=False)
     count: Mapped[int] = mapped_column(Integer, nullable=False)
+
+
+class SmartLaunch(Base):
+    __tablename__ = "smart_launches"
+    __table_args__ = (Index("ix_smart_expiry", "expires_at"),)
+    state_hash: Mapped[str] = mapped_column(String(64), primary_key=True)
+    browser_hash: Mapped[str] = mapped_column(String(64), nullable=False)
+    issuer: Mapped[str] = mapped_column(String(1000), nullable=False)
+    token_endpoint: Mapped[str] = mapped_column(String(1000), nullable=False)
+    verifier: Mapped[str | None] = mapped_column(String(128))
+    expires_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=False)
+    consumed: Mapped[bool] = mapped_column(nullable=False, default=False)
+    context_json: Mapped[dict | None] = mapped_column(JSONB)
+
+
+class GuidelineCandidate(Base):
+    __tablename__ = "guideline_candidates"
+    candidate_id: Mapped[UUID] = mapped_column(PGUUID(as_uuid=True), primary_key=True, default=uuid4)
+    document_id: Mapped[str] = mapped_column(String(200), nullable=False)
+    version_id: Mapped[str] = mapped_column(String(200), unique=True, nullable=False)
+    base_version_id: Mapped[str | None] = mapped_column(String(200))
+    status: Mapped[str] = mapped_column(String(40), nullable=False)
+    checksum: Mapped[str] = mapped_column(String(64), nullable=False)
+    payload: Mapped[dict] = mapped_column(JSONB, nullable=False)
+    diff: Mapped[dict] = mapped_column(JSONB, nullable=False)
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utcnow, nullable=False)
+
+
+class GuidelineActivation(Base):
+    __tablename__ = "guideline_activations"
+    document_id: Mapped[str] = mapped_column(String(200), primary_key=True)
+    candidate_id: Mapped[UUID] = mapped_column(
+        PGUUID(as_uuid=True), ForeignKey("guideline_candidates.candidate_id"), nullable=False
+    )
+    activated_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utcnow, nullable=False)
 
 
 @lru_cache

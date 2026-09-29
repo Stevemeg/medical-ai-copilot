@@ -75,6 +75,16 @@ def actor_from_request(request: Request) -> ActorContext:
 
 
 def required_roles(path: str, method: str) -> frozenset[str] | None:
+    if path == "/v1/me":
+        return ROLES
+    if path.startswith("/v1/guideline"):
+        return frozenset({"guideline_editor", "clinical_admin"}) if method != "GET" else ROLES
+    if path == "/v1/system-status":
+        return ROLES
+    if path.startswith("/cds-services/"):
+        if get_settings().cds_require_auth or get_settings().app_env == "production":
+            return frozenset({"clinician", "clinical_admin"})
+        return None
     if path == "/metrics" and get_settings().app_env == "production":
         return frozenset({"auditor", "clinical_admin"})
     if path.startswith("/health/") or path in {"/api/health", "/metrics", "/api/examples", "/api/sources"}:

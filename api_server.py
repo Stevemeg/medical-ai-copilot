@@ -27,6 +27,8 @@ from sqlalchemy import text as sql_text
 from sqlalchemy import select
 from prometheus_client import Counter, Gauge, Histogram, generate_latest, CONTENT_TYPE_LATEST
 from fastapi.responses import Response
+from fastapi.responses import FileResponse
+from fastapi.staticfiles import StaticFiles
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 from backend.knowledge_models import RetrievalPolicy
@@ -34,6 +36,9 @@ from backend.evidence_models import EvidenceQueryRequest, EvidenceQueryResponse
 from backend.evidence_pipeline import public_answer
 from backend.source_registry import SourceRegistry
 from backend.patient_api import router as patient_router
+from backend.smart import router as smart_router
+from backend.cds_hooks import router as cds_router
+from backend.guideline_api import router as guideline_router
 from backend.db import engine, session_factory, AuditEvent
 from backend.settings import get_settings
 from backend.security import actor_from_request, required_roles
@@ -53,6 +58,45 @@ DB_POOL = Gauge("medical_db_pool_connections", "Database pool connections", ["st
 
 app = FastAPI(title="Medical AI Copilot API")
 app.include_router(patient_router)
+app.include_router(smart_router)
+app.include_router(cds_router)
+app.include_router(guideline_router)
+app.mount("/assets", StaticFiles(directory=Path(__file__).resolve().parent / "frontend"), name="frontend")
+
+
+@app.get("/", include_in_schema=False)
+def frontend():
+    return FileResponse(Path(__file__).resolve().parent / "frontend/index.html")
+
+
+@app.get("/v1/me")
+def current_actor(request: Request):
+    actor = request.state.actor
+    return {
+        "roles": sorted(actor.roles),
+        "authenticated": actor.authenticated,
+        "development": settings.auth_mode == "dev",
+    }
+
+
+@app.get("/v1/system-status")
+def system_status():
+    import json
+
+    path = Path(__file__).resolve().parent / "eval/final_system_report.json"
+    report = json.loads(path.read_text(encoding="utf-8")) if path.exists() else {}
+    return {
+        "last_evaluation": report.get("timestamp"),
+        "evaluation_passed": report.get("passed"),
+        "dataset_version": report.get("dataset_version"),
+        "mode": report.get("mode"),
+        "clinical_rules": {k: v for k, v in report.get("clinical_rules", {}).items() if k != "results"},
+        "prompt_injection": report.get("prompt_injection", {}).get("pass_rate"),
+        "safety": report.get("safety", {}).get("pass_rate"),
+        "retrieval": report.get("retrieval", {}).get("held_out", {}).get("metrics", {}),
+        "grounding": report.get("grounding", {}).get("held_out", {}).get("metrics", {}),
+        "knowledge_provenance": "validated" if ready()["status"] == "ready" else "unavailable",
+    }
 
 
 @app.exception_handler(HTTPException)
@@ -78,10 +122,15 @@ async def operational_boundary(request: Request, call_next):
     route = "/v1/protected" if path.startswith("/v1/") else "/unmatched"
     actor = None
     try:
-        if path.startswith("/v1/patients/import") or path.startswith("/v1/fhir/validate"):
-            body = await request.body()
-            if len(body) > settings.max_fhir_body_bytes:
-                raise HTTPException(413, detail={"code": "body_too_large", "message": "FHIR body exceeds size limit"})
+        if request.method in {"POST", "PUT", "PATCH"}:
+            chunks = bytearray()
+            async for chunk in request.stream():
+                if len(chunks) + len(chunk) > settings.max_fhir_body_bytes:
+                    raise HTTPException(
+                        413, detail={"code": "body_too_large", "message": "Request body exceeds size limit"}
+                    )
+                chunks.extend(chunk)
+            request._body = bytes(chunks)
         roles = required_roles(path, request.method)
         if roles is not None:
             actor = actor_from_request(request)
@@ -182,7 +231,9 @@ async def phase3_validation_error(request: Request, exc: RequestValidationError)
     return JSONResponse(
         status_code=422,
         content={
-            "detail": exc.errors(),
+            "detail": [
+                {"loc": list(error["loc"]), "type": error["type"], "msg": "Invalid field"} for error in exc.errors()
+            ],
             "error": {
                 "code": "validation_error",
                 "message": "Invalid request",

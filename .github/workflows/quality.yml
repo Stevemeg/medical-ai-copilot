@@ -1,0 +1,173 @@
+name: Phase 6 quality gates
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: quality-${{ github.ref }}
+  cancel-in-progress: true
+
+env:
+  APP_ENV: test
+  AUTH_MODE: dev
+  DATABASE_URL: postgresql+psycopg://medical:ci_test_only@127.0.0.1:5432/medical_test
+  PYTHONUTF8: '1'
+
+jobs:
+  tests:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+          cache: pip
+      - name: Generate ephemeral test keys
+        run: python -c "import os,secrets; f=open(os.environ['GITHUB_ENV'],'a'); f.write('AUDIT_HMAC_KEY='+secrets.token_hex(32)+'\nDEV_JWT_KEY='+secrets.token_hex(32)+'\n')"
+      - run: pip install torch==2.14.0 --index-url https://download.pytorch.org/whl/cpu
+      - run: pip install -r requirements-dev.txt
+      - run: ruff check .
+      - run: ruff format --check .
+      - run: mypy
+      - run: pytest -m 'not postgres' --cov=backend --cov=embeddings --cov-report=xml --junitxml=reports/tests.xml
+      - run: node eval/ui_smoke.js
+      - run: python -m backend.index_provenance
+      - run: python -m scripts.release_check
+      - run: python -m scripts.validate_abdm
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: test-coverage
+          path: |
+            coverage.xml
+            reports/tests.xml
+
+  postgres:
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:16.10-bookworm
+        env:
+          POSTGRES_DB: medical_test
+          POSTGRES_USER: medical
+          POSTGRES_PASSWORD: ci_test_only
+        ports: ['5432:5432']
+        options: >-
+          --health-cmd "pg_isready -U medical -d medical_test"
+          --health-interval 5s --health-timeout 5s --health-retries 12
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+          cache: pip
+      - name: Generate ephemeral test keys
+        run: python -c "import os,secrets; f=open(os.environ['GITHUB_ENV'],'a'); f.write('AUDIT_HMAC_KEY='+secrets.token_hex(32)+'\nDEV_JWT_KEY='+secrets.token_hex(32)+'\n')"
+      - run: pip install torch==2.14.0 --index-url https://download.pytorch.org/whl/cpu
+      - run: pip install -r requirements-dev.txt
+      - run: alembic upgrade head
+      - run: alembic downgrade base
+      - run: alembic upgrade head
+      - run: alembic check
+      - run: pytest -m postgres --junitxml=reports/postgres.xml
+        env:
+          PHASE5_TEST_DATABASE_URL: ${{ env.DATABASE_URL }}
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: postgres-results
+          path: reports/postgres.xml
+
+  evaluation:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+          cache: pip
+      - name: Generate ephemeral test keys
+        run: python -c "import os,secrets; f=open(os.environ['GITHUB_ENV'],'a'); f.write('AUDIT_HMAC_KEY='+secrets.token_hex(32)+'\nDEV_JWT_KEY='+secrets.token_hex(32)+'\n')"
+      - run: pip install torch==2.14.0 --index-url https://download.pytorch.org/whl/cpu
+      - run: pip install -r requirements-dev.txt
+      - uses: actions/cache@v4
+        with:
+          path: ~/.cache/huggingface
+          key: local-models-${{ runner.os }}-${{ hashFiles('model_manifest.json') }}
+      - run: python -m scripts.cache_models
+      - name: Preserve reviewed baseline from PR base
+        if: github.event_name == 'pull_request'
+        env:
+          BASE_SHA: ${{ github.event.pull_request.base.sha }}
+        run: |
+          mkdir -p reports
+          if git cat-file -e "$BASE_SHA:eval/baselines/v1.json"; then
+            git show "$BASE_SHA:eval/baselines/v1.json" > reports/reviewed-baseline.json
+          else
+            cp eval/baselines/v1.json reports/reviewed-baseline.json
+          fi
+      - name: Evaluate local models and safety
+        env:
+          HF_HUB_OFFLINE: '1'
+          TRANSFORMERS_OFFLINE: '1'
+        run: |
+          if [ -f reports/reviewed-baseline.json ]; then
+            python -m eval.run_all --models --baseline reports/reviewed-baseline.json --output reports/evaluation.json
+          else
+            python -m eval.run_all --models --output reports/evaluation.json
+          fi
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: evaluation
+          path: reports/evaluation.json
+
+  security:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+          cache: pip
+      - name: Generate ephemeral test keys
+        run: python -c "import os,secrets; f=open(os.environ['GITHUB_ENV'],'a'); f.write('AUDIT_HMAC_KEY='+secrets.token_hex(32)+'\nDEV_JWT_KEY='+secrets.token_hex(32)+'\n')"
+      - run: pip install torch==2.14.0 --index-url https://download.pytorch.org/whl/cpu
+      - run: pip install -r requirements-dev.txt
+      - run: python -m scripts.security_audit
+      - run: bandit -r backend embeddings api_server.py app.py scripts -f json -o reports/bandit.json
+      - uses: gitleaks/gitleaks-action@v2
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: security
+          path: |
+            reports/pip-audit.json
+            reports/security-summary.json
+            reports/bandit.json
+
+  docker:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Generate ephemeral Docker test keys
+        run: python3 -c "import os,secrets; f=open(os.environ['GITHUB_ENV'],'a'); f.write('AUDIT_HMAC_KEY='+secrets.token_hex(32)+'\nDEV_JWT_KEY='+secrets.token_hex(32)+'\n')"
+      - run: docker compose build
+      - run: docker compose up -d --wait
+      - run: docker compose exec -T api python -m scripts.docker_smoke
+      - run: docker compose exec -T api python -m scripts.verify_audit_chain
+      - run: docker compose down
+        if: always()

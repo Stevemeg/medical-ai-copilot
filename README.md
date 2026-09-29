@@ -1,84 +1,101 @@
-# Medical AI Copilot
+﻿# Medical AI Copilot
 
-A production-oriented clinical review and governed evidence prototype with PostgreSQL state, authenticated role-based APIs, tamper-evident audit, deterministic clinical rules, grounded evidence queries, and observable deployment infrastructure.
+## Evidence-Grounded Clinical Review & Guideline Intelligence Platform
 
-The bundled patients are synthetic. Findings support clinician review; the application does not diagnose, prescribe, or select medication. It is not clinically validated or certified for regulated use.
+Medical AI Copilot combines deterministic clinical rules, lifecycle-governed medical evidence, FHIR patient context, claim-level grounding, clinician feedback, and SMART/CDS interfaces. It is a synthetic-data engineering demonstration, not a clinical deployment or medical device.
 
-## What it does
+A generic medical chatbot cannot establish record completeness, preserve the patient snapshot behind a decision, determine whether a guideline version is current, or make generated claims independently verifiable. This application makes those boundaries explicit. **Patient Review is the primary workflow; Ask Evidence is a supporting workflow.**
 
-- Ingests a scoped FHIR R4-compatible synthetic Bundle into normalized patient context.
-- Stores immutable context snapshots and binds each clinical review to one snapshot.
-- Evaluates deterministic, evidence-bound rules without an LLM and records immutable findings.
-- Records clinician dispositions as separate append-only actions.
-- Retrieves governed evidence with lifecycle filtering before cosine and BM25 ranking, then reranks candidates and verifies generated claims. Unsupported claims are excluded.
-- Exposes `/v1/` APIs with JWT/OIDC verification, server-side roles, request IDs, bounded inputs, PostgreSQL rate limiting, and keyed audit integrity.
+### Implemented clinical scope
 
-## Architecture
+Two deterministic annual-review rules cover adults with hypertension and adults with type 2 diabetes requiring foot assessment. Rules distinguish satisfied, potential care gap, insufficient data, not applicable, and suppressed. Dates, applicability, observation selection, and record coverage are code decisions. Unknown coverage cannot establish a care gap. There is no diagnosis, prescribing, medication-selection engine, or LLM clinical threshold logic.
 
-```text
-Client / clinician UI
-         │
-         ▼
-  FastAPI service ── authentication ── RBAC ── request context
-         │
-         ▼
-  Application services
-   ├─ patient and review repositories ── PostgreSQL ── durable audit
-   ├─ deterministic clinical rules
-   └─ governed evidence service
-       └─ policy filter → FAISS cosine + cached BM25 → RRF
-          → bounded reranker → generator → independent verifier
+### Architecture
 
-  Structured logs / Prometheus metrics / OpenTelemetry-compatible spans
+```mermaid
+flowchart TD
+    EHR[EHR / SMART launch / scoped FHIR R4] --> PC[Immutable PatientContext snapshot]
+    PC --> R[Deterministic rules]
+    R --> F[Immutable clinical findings]
+    F --> C[Clinician review]
+    F --> CDS[CDS Hooks patient-view cards]
+    C --> E[Governed evidence retrieval]
+    E --> V[Independent claim verification]
+    V --> C
+    C --> A[Append-only disposition and HMAC audit]
+    G[Official registered guideline source] --> Q[Quarantined structured import]
+    Q --> D[Version / checksum / textual diff]
+    D --> H[Authorized human review]
+    H --> ACT[Transactional activation]
+    ACT --> E
+    ACT --> RR[Dependent rules suppressed pending reverification]
+    DB[(PostgreSQL 16)] --- PC
+    DB --- A
+    DB --- ACT
 ```
 
-Version-controlled source and rule evidence registries, processed artifacts, and FAISS manifests remain authoritative for evidence governance. PostgreSQL holds mutable application state. See [production architecture](PRODUCTION_ARCHITECTURE.md) for schema, security, operations, and limitations.
+Evidence retrieval filters lifecycle and jurisdiction before normalized cosine search and cached BM25, combines ranks with weighted RRF, then applies a bounded cross-encoder. Generated claims require valid evidence IDs, consistent registry metadata, and independent semantic support. An unavailable verifier produces uncertainty and removes unsupported claims. Retrieved content is untrusted data. Conflicts are surfaced without choosing an automatic winner.
 
-## Local deployment
+The bundled old NG28 and NG19 PDFs remain superseded. Current NG19 recommendation evidence is governed separately and does not promote its old PDF. Activated structured releases overlay immutable, checksummed baseline artifacts through a PostgreSQL pointer; historical releases remain accessible.
 
-Requires Docker Compose. The Compose file uses a PostgreSQL 16 container and an explicit migration service. Its default credentials are development-only examples.
+### Run locally
+
+Requires Docker Compose. These commands use development credentials and synthetic fixtures only:
 
 ```bash
 cp .env.example .env
-# Replace the development JWT and audit keys in .env.
-docker compose up -d --build
-docker compose ps
-docker compose exec api python -m scripts.docker_smoke
-docker compose exec api python -m scripts.verify_audit_chain
+# Set independent random DEV_JWT_KEY and AUDIT_HMAC_KEY (at least 32 characters).
+docker compose up -d --build --wait
+docker compose exec -T api python -m scripts.docker_smoke
+docker compose exec -T api python -m scripts.verify_audit_chain
 ```
 
-The PostgreSQL host port is `55432`; the API is at `http://localhost:18000`. `/health/live` checks process liveness; `/health/ready` checks PostgreSQL and governed evidence provenance. `/metrics` serves Prometheus text. The explicit migration service completes before the API starts; do not run migrations independently in every worker.
+Open **http://localhost:18000/**. The HTML application provides Patient Review, Review Findings, Ask Evidence, Guideline Intelligence, and System Status. Load a synthetic fixture, inspect its availability and timeline, create a snapshot-bound review, evaluate with an explicit review date/coverage declaration, and record a disposition. Missing information has a distinct status. The older Streamlit entry point remains an optional evidence/review client.
 
-For local Python development, set `APP_ENV`, `DATABASE_URL`, `AUTH_MODE`, and `AUDIT_HMAC_KEY` as shown in `.env.example`, then run `alembic upgrade head` and `uvicorn api_server:app`. Production requires `AUTH_MODE=oidc` with issuer, audience, and JWKS URL. It rejects missing critical configuration and wildcard CORS.
+Compose runs PostgreSQL 16, a one-shot Alembic migration service, and the API as a non-root user. Readiness checks PostgreSQL and artifact provenance; liveness checks the process. PostgreSQL uses host port 55432. Stop with `docker compose down`; keep the named data volume. Do not delete volumes to resolve an ordinary migration issue.
 
-The old SQLite files are local demo state and are **not** automatically migrated to PostgreSQL. The initial Alembic migration creates a clean production schema; historical clinical data is never silently erased by downgrade.
+Ask Evidence can use the configured Groq provider; no provider key is needed for tests, evaluation, or the controlled Docker smoke. Without an available generator/verifier, answers abstain. Local model downloads are required for real retrieval/model evaluation; pinned revisions are in `model_manifest.json`.
 
-## API and authentication
-
-The stable API prefix is `/v1`. Clinical routes require `clinician` or `clinical_admin`. Evidence query also accepts `guideline_editor`. Audit read requires `auditor` or `clinical_admin`. The compatibility `/api/ask` route uses the same governed evidence engine. In explicit development mode, a local anonymous clinician identity is available for the demo; signed short-lived development JWTs are also supported. Production only accepts verified OIDC JWTs.
-
-Write routes accept `Idempotency-Key`. PostgreSQL stores the actor, operation, request fingerprint, and logical response in the same transaction as the write. Reuse with a different request returns a conflict. List routes have bounded limits. Audit events contain identifiers, hashes, counts, statuses, and correlation IDs, not raw FHIR Bundles or medical narrative.
-
-## Verification
+For Python development:
 
 ```bash
-python -m pytest -q
-PHASE5_TEST_DATABASE_URL=postgresql+psycopg://medical:development_only_change_me@localhost:55432/medical_test python -m pytest -q tests/test_phase5_postgres.py
-python -m eval.final_phase5_benchmark
-ruff check .
-ruff format --check .
-mypy backend/settings.py backend/db.py backend/security.py backend/durable_audit.py backend/postgres_store.py backend/operations.py
+python3.11 -m venv .venv
+# Activate the virtual environment for your shell.
+pip install -r requirements-dev.txt
+# Configure .env from .env.example and start PostgreSQL.
+alembic upgrade head
+uvicorn api_server:app --host 127.0.0.1 --port 18000 --no-access-log
 ```
 
-The benchmark requires locally available embedding and reranker models but no Groq request. Unit tests use fakes; PostgreSQL integration tests require a separately migrated test database. The Docker smoke uses a deterministic fake generator and verifier while exercising the real API, retrieval filters, PostgreSQL workflows, and audit chain.
+Production mode requires OIDC issuer, audience, JWKS URL, independent audit key, and explicit CORS origins. The development anonymous clinician has no guideline activation permission. A signed editor/admin JWT is required for governance; the browser holds a supplied JWT only in memory. See [operations and security](SECURITY.md).
 
-## Further reading
+### Interoperability and governance
 
-- [Knowledge governance](KNOWLEDGE_GOVERNANCE.md)
-- [Patient context](PATIENT_CONTEXT.md)
-- [Clinical rules](CLINICAL_RULES.md)
-- [Phase 4 evidence design](EVIDENCE_PHASE4.md)
-- [Production architecture and operations](PRODUCTION_ARCHITECTURE.md)
-- [Compliance considerations](COMPLIANCE_CONSIDERATIONS.md)
+- [SMART and CDS Hooks](INTEROPERABILITY.md): SMART 2.2.0 public client with PKCE, single-use state, registered endpoints, server-side token use, and scoped synthetic FHIR ingestion. CDS Hooks 2.0.1 implements patient-view 1.0 with informational evidence-backed cards.
+- [ABDM mapping](ABDM_MAPPING.md): selected profiles from the published `ndhm.in#6.5.0` package, FHIR 4.0.1. This is compatibility analysis, not certification or ABHA integration.
+- [Guideline intelligence](GUIDELINE_INTELLIGENCE.md): trusted origins, bounded acquisition, quarantine, recommendation diff, authorized approval/activation, rule impact, and historical preservation. No internet crawler or automatic clinical activation.
+- [Evaluation](EVALUATION.md): versioned development/held-out model sets and deterministic regression contracts; machine-readable metrics and failing gates.
+- [Known limitations](KNOWN_LIMITATIONS.md), [clinical semantics](CLINICAL_RULES.md), [knowledge governance](KNOWLEDGE_GOVERNANCE.md), [patient context](PATIENT_CONTEXT.md), [production architecture](PRODUCTION_ARCHITECTURE.md).
 
-No real patient information is included. Manual source lifecycle governance remains required. Models and endpoints need independent clinical, privacy, and deployment review before any clinical use.
+### Verification
+
+```bash
+ruff check .
+ruff format --check .
+mypy
+pytest --cov=backend --cov=embeddings --cov-report=term-missing
+python -m eval.run_all
+python -m scripts.cache_models
+python -m eval.run_all --models
+python -m scripts.security_audit
+bandit -r backend embeddings api_server.py app.py scripts
+python -m scripts.release_check
+```
+
+Set `PHASE5_TEST_DATABASE_URL` to a migrated, isolated PostgreSQL test database to include database tests; set `RUN_MODEL_INTEGRATION=1` to include the local-model integration test. `python -m eval.run_all --models --postgres` includes PostgreSQL contracts. No paid provider, live NICE endpoint, OIDC provider, or SMART sandbox is required by CI. GitHub Actions has tests, postgres, evaluation, security, and docker jobs. Branch protection must be configured separately; workflow presence alone does not enforce merge policy.
+
+The internal model corpus contains 42 retrieval cases and 34 claim/evidence cases, with separate development and held-out splits. These are engineering measurements, not clinical validation or an accuracy guarantee. The executed [final system report](eval/final_system_report.json) records counts, model metrics, safety results, thresholds, environment, timestamp, and source SHA. [Release metadata](release_manifest.json) binds registry/index checksums, schema and standard versions to the evaluated source.
+
+### Safety boundaries
+
+Synthetic patients only. This project is not a substitute for clinical judgment and is not offered as a medical device. It does not autonomously diagnose or prescribe. Its scope is limited to implemented rules. Evidence freshness requires human governance, and semantic verification has false negatives and uncertainty. Historical evidence is visibly labeled. SMART tokens are not stored in browser persistence or logs. CDS cards do not execute orders. No HIPAA, FDA, ABDM, NHA, or NHS approval/certification claim is made.

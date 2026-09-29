@@ -2,7 +2,7 @@
 
 import re
 from threading import Lock
-from typing import TYPE_CHECKING, Protocol
+from typing import TYPE_CHECKING, Any, Protocol
 
 if TYPE_CHECKING:
     from sentence_transformers import CrossEncoder
@@ -11,10 +11,20 @@ import numpy as np
 
 from backend.evidence_models import AnswerClaim, EvidenceUnit, RetrievalResult, SupportStatus
 from backend.knowledge_models import Lifecycle
+from backend.model_versions import REVISIONS
 from backend.source_registry import RegistryError, SourceRegistry
 
 NLI_MODEL = "cross-encoder/nli-MiniLM2-L6-H768"
+
 VERIFICATION_PASSAGE_CHARS = 850
+CONTROL_TEXT = re.compile(
+    r"(?:ignore|override|reveal|disclose|print).{0,70}(?:instructions|system prompt|secret|api.?key|token)|"
+    r"(?:api.?key|system prompt|access token)\s*(?:is|:|=)|"
+    r"(?:set|change|override).{0,35}(?:lifecycle|jurisdiction|citation.?id)|"
+    r"(?:ignore|bypass|disable).{0,35}(?:grounding|verification)|"
+    r"use outside knowledge|stale evidence is current|force a recommendation",
+    re.IGNORECASE | re.DOTALL,
+)
 
 
 class ClaimSupportVerifier(Protocol):
@@ -44,11 +54,21 @@ class NLIClaimVerifier:
                 if self._model is None:
                     from sentence_transformers import CrossEncoder
 
-                    self._model = CrossEncoder(self.model_name, max_length=512)
-                pairs = [(supporting_passage(unit.text, claim.text), claim.text) for unit in evidence]
+                    self._model = CrossEncoder(
+                        self.model_name,
+                        max_length=512,
+                        revision=REVISIONS.get(self.model_name),
+                        trust_remote_code=False,
+                    )
+                # The upstream multimodal overload is invariant; these are validated text pairs.
+                pairs: list[Any] = [(supporting_passage(unit.text, claim.text), claim.text) for unit in evidence]
                 model = self._model
                 scores = np.asarray(model.predict(pairs, apply_softmax=True))
-                labels = {str(name).lower(): int(index) for index, name in model.model.config.id2label.items()}
+                config = getattr(model.model, "config", None)
+                mapping = getattr(config, "id2label", None)
+                if not isinstance(mapping, dict):
+                    return SupportStatus.UNCERTAIN
+                labels = {str(name).lower(): int(index) for index, name in mapping.items()}
             entailment = next(index for name, index in labels.items() if "entail" in name)
             contradiction = next(index for name, index in labels.items() if "contrad" in name)
         except Exception:
@@ -66,10 +86,19 @@ class NLIClaimVerifier:
                 if self._model is None:
                     from sentence_transformers import CrossEncoder
 
-                    self._model = CrossEncoder(self.model_name, max_length=512)
+                    self._model = CrossEncoder(
+                        self.model_name,
+                        max_length=512,
+                        revision=REVISIONS.get(self.model_name),
+                        trust_remote_code=False,
+                    )
                 model = self._model
                 scores = np.asarray(model.predict([(first, second), (second, first)], apply_softmax=True))
-                labels = {str(name).lower(): int(index) for index, name in model.model.config.id2label.items()}
+                config = getattr(model.model, "config", None)
+                mapping = getattr(config, "id2label", None)
+                if not isinstance(mapping, dict):
+                    return False
+                labels = {str(name).lower(): int(index) for index, name in mapping.items()}
             contradiction = next(index for name, index in labels.items() if "contrad" in name)
             return bool(np.all(scores[:, contradiction] >= 0.85))
         except Exception:
@@ -83,6 +112,8 @@ def verify_claim(
     registry: SourceRegistry | None = None,
 ) -> AnswerClaim:
     available = {ranked.unit.evidence_unit_id: ranked.unit for ranked in retrieval.evidence}
+    if CONTROL_TEXT.search(claim.text):
+        return claim.model_copy(update={"support_status": SupportStatus.UNSUPPORTED})
     if not claim.evidence_ids or len(set(claim.evidence_ids)) != len(claim.evidence_ids):
         return claim.model_copy(update={"support_status": SupportStatus.UNSUPPORTED})
     units = []
@@ -129,5 +160,7 @@ def verify_claim(
         except ValueError:
             return claim.model_copy(update={"support_status": SupportStatus.UNSUPPORTED})
         units.append(unit)
+    if any(CONTROL_TEXT.search(unit.text) for unit in units):
+        return claim.model_copy(update={"support_status": SupportStatus.UNSUPPORTED})
     passages = {unit.evidence_unit_id: supporting_passage(unit.text, claim.text) for unit in units}
     return claim.model_copy(update={"support_status": semantic.verify(claim, units), "verification_passages": passages})

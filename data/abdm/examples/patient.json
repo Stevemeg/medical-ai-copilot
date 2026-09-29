@@ -1,0 +1,41 @@
+{
+  "resourceType": "Patient",
+  "id": "SYN-PAT-001",
+  "meta": {
+    "tag": [
+      {
+        "system": "urn:medical-ai-copilot:synthetic",
+        "code": "synthetic"
+      }
+    ],
+    "profile": [
+      "https://nrces.in/ndhm/fhir/r4/StructureDefinition/Patient"
+    ]
+  },
+  "identifier": [
+    {
+      "system": "https://example.org/synthetic-patient",
+      "value": "SYN-ABDM-001",
+      "type": {
+        "coding": [
+          {
+            "system": "http://terminology.hl7.org/CodeSystem/v2-0203",
+            "code": "MR",
+            "display": "Medical record number"
+          }
+        ]
+      }
+    }
+  ],
+  "name": [
+    {
+      "text": "Synthetic Patient A"
+    }
+  ],
+  "birthDate": "1972-04-12",
+  "gender": "female",
+  "text": {
+    "status": "generated",
+    "div": "<div xmlns=\"http://www.w3.org/1999/xhtml\">Synthetic Patient A. Fictional ABDM mapping example only.</div>"
+  }
+}

@@ -20,6 +20,11 @@ class JSONFormatter(logging.Formatter):
 
 
 def configure_logging(level: str, production: bool) -> None:
+    # Uvicorn/httpx default access messages include query strings (OAuth codes)
+    # and discovered URLs. Application access events already use route templates.
+    logging.getLogger("uvicorn.access").disabled = True
+    logging.getLogger("httpx").setLevel(logging.WARNING)
+    logging.getLogger("httpcore").setLevel(logging.WARNING)
     handler = logging.StreamHandler()
     if production:
         handler.setFormatter(JSONFormatter())

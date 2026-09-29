@@ -3,6 +3,10 @@ __pycache__/
 *.pyc
 .env
 venv/
+.venv*/
+.audit-*.json
+coverage.xml
+reports/
 *.egg-info/
 .pytest_cache/
 .ruff_cache/

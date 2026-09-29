@@ -137,6 +137,8 @@ class EvidenceRetriever:
         units_and_vectors: tuple[list[EvidenceUnit], np.ndarray] | None = None,
     ):
         self.registry = registry or SourceRegistry()
+        self._base_registry = self.registry
+        self._governance_lock = Lock()
         self.embedder = embedder
         self._embedder_lock = Lock()
         self.reranker = reranker or (CrossEncoderReranker() if use_reranker else RRFFallbackReranker())
@@ -188,9 +190,13 @@ class EvidenceRetriever:
 
                 from backend.settings import get_settings
 
-                self.embedder = SentenceTransformer(get_settings().embedding_model)
+                from backend.model_versions import REVISIONS
+
+                name = get_settings().embedding_model
+                self.embedder = SentenceTransformer(name, revision=REVISIONS.get(name), trust_remote_code=False)
             embedder = self.embedder
-            assert embedder is not None
+            if embedder is None:
+                raise RuntimeError("Embedding model is unavailable")
             vector = np.asarray(embedder.encode([query], normalize_embeddings=True), dtype="float32")
         norm = np.linalg.norm(vector[0])
         if norm <= 0:
@@ -210,20 +216,33 @@ class EvidenceRetriever:
         )
 
     def retrieve(self, request: RetrievalRequest) -> RetrievalResult:
-        with TRACER.start_as_current_span("evidence.retrieval"):
+        with TRACER.start_as_current_span("evidence.retrieval"), self._governance_lock:
             return self._retrieve(request)
 
     def _retrieve(self, request: RetrievalRequest) -> RetrievalResult:
         if self._artifact_signature is not None and self._current_artifact_signature() != self._artifact_signature:
             raise StaleArtifact("Governed evidence provenance changed; recreate retriever")
         began = perf_counter()
-        selected = [i for i, unit in enumerate(self.units) if self._eligible(unit, request)]
+        from backend.settings import get_settings
+
+        all_units, all_vectors = self.units, self.vectors
+        if get_settings().guideline_updates_enabled:
+            from backend.guideline_updates import active_overlay
+
+            self.registry, added, matrix = active_overlay(self._base_registry)
+            all_units = [
+                unit.model_copy(update={"lifecycle_status": self.registry.versions[unit.version_id].status})
+                for unit in self.units
+            ] + added
+            if added:
+                all_vectors = np.concatenate((self.vectors, matrix))
+        selected = [i for i, unit in enumerate(all_units) if self._eligible(unit, request)]
         diagnostics = RetrievalDiagnostics()
         if not selected:
             diagnostics.acceptance_reason = "no_eligible_evidence"
             return RetrievalResult(request=request, accepted=False, evidence=[], diagnostics=diagnostics)
-        units = [self.units[i] for i in selected]
-        vectors = self.vectors[selected]
+        units = [all_units[i] for i in selected]
+        vectors = all_vectors[selected]
         started = perf_counter()
         query_vector = self._encode(request.query)
         dense = self.dense_retriever.retrieve(units, vectors, query_vector, CANDIDATE_POOL_SIZE)

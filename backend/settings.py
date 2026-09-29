@@ -31,6 +31,16 @@ class Settings(BaseSettings):
     rate_limit_per_minute: int = Field(default=20, ge=1)
     max_fhir_body_bytes: int = Field(default=2_000_000, ge=1024)
     log_level: str = "INFO"
+    rate_bucket_retention_hours: int = Field(default=24, ge=1, le=720)
+    idempotency_retention_days: int = Field(default=7, ge=1, le=365)
+    smart_client_id: str = "medical-copilot-demo"
+    smart_redirect_uri: str = "http://localhost:18000/smart/callback"
+    smart_issuers: list[str] = []
+    smart_endpoint_origins: list[str] = []
+    smart_state_seconds: int = Field(default=300, ge=60, le=600)
+    cds_require_auth: bool = True
+    cds_synthetic_fixture_coverage: bool = False
+    guideline_updates_enabled: bool = False
 
     @model_validator(mode="after")
     def secure_modes(self) -> "Settings":

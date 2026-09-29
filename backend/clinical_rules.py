@@ -231,6 +231,13 @@ class RuleRegistry:
         self.rules: dict[tuple[str, str], ClinicalRule] = {}
 
     def evidence(self, definition: RuleDefinition) -> RuleEvidenceReference:
+        from backend.settings import get_settings
+
+        if get_settings().guideline_updates_enabled:
+            from backend.guideline_updates import rule_needs_review
+
+            if rule_needs_review(definition.source_document_id):
+                raise RuleEvidenceError("Activated guideline replacement requires rule evidence review")
         doc = self.evidence_registry.documents.get(definition.source_document_id)
         if doc is None or doc.source_type is not SourceType.CLINICAL_GUIDELINE:
             raise RuleEvidenceError("evidence document is not a registered clinical guideline")

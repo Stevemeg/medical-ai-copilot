@@ -1,0 +1,15 @@
+# Known limitations
+
+- Clinical scope is two annual-review rules for hypertension/type 2 diabetes. It excludes diagnosis, treatment selection and orders. Synthetic fixtures are not clinical validation.
+- The authoritative guideline corpus is small. The 42 retrieval and 34 grounding cases test selected repository evidence and synthetic adversarial statements, not population-level reliability. Deterministic regression cases are not an independent medical gold standard.
+- NLI verification can miss valid paraphrases or remain uncertain; finite adversarial tests do not prove universal resistance. Unsupported/uncertain claims are excluded. The rule engine never depends on NLI to determine a finding.
+- Retrieval/reranker/verifier models have startup/download costs. Warm local timings do not establish concurrent EHR latency. Model upgrades require reevaluation.
+- Guideline import is a bounded, manually curated structured recommendation release. No fragile HTML crawler or automatic PDF parser is exposed. A source URL alone does not authenticate manually entered text; editors must inspect official text and licensing. Acquisition is never activation.
+- Human approval and activation are separate recorded actions. Any activated replacement conservatively suppresses dependent rules until a versioned rule-evidence review; there is no automatic clinical rule rewriting or simple re-enable button.
+- SMART is tested with a controlled discovery/OAuth/FHIR host, not a live certified EHR. Only the supported synthetic FHIR subset is accepted. No refresh-token persistence or general SMART user-identity login is implemented; launch context import still uses application authorization.
+- CDS Hooks is informational patient-view only. General EHR data without explicit record-coverage proof produces insufficient-data findings, not inferred care gaps. The optional development coverage fixture matcher is disabled in production.
+- ABDM alignment uses published 6.5.0 profiles. Direct cardinality analysis covers the supported subset; a selected synthetic Patient additionally passed the official HL7 profile validator with external terminology disabled. This does not validate every resource, terminology set or document composition. No certification, consent exchange or ABHA integration exists.
+- Compose is a single-node development deployment. Production TLS, key rotation, encrypted disks/backups, HA, restore exercises and an external audit checkpoint anchor are not supplied. A privileged attacker holding the DB and HMAC key could rewrite the full audit chain.
+- Idempotency protection lasts the configured retry window (default seven days); a retry after cleanup is a new operation. Clinical snapshots/findings/actions/audit/guideline history have no automatic deletion policy.
+- The development-only NLTK advisory is individually contained with an expiring review record. The runtime image omits this package. See SECURITY.md; do not describe the full development environment as zero-advisory.
+- Required GitHub checks need branch protection configured by a repository administrator. Passing workflow runs alone do not prevent direct pushes.

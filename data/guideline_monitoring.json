@@ -1,0 +1,9 @@
+{
+  "schema_version": 1,
+  "sources": [
+    {"document_id": "nice-ng136", "mode": "manual", "reason": "No registered stable structured whole-guideline version feed; official recommendation drift can be checked separately."},
+    {"document_id": "nice-ng238", "mode": "manual", "reason": "Human checks official publication and redistribution permission before candidate import."},
+    {"document_id": "nice-ng19", "mode": "manual", "reason": "Historical PDF and current recommendation evidence remain separate."},
+    {"document_id": "nice-ng28", "mode": "manual", "reason": "Historical PDF is not upgraded by metadata changes."}
+  ]
+}

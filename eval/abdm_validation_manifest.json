@@ -1,0 +1,50 @@
+{
+  "verified_on": "2026-09-29T16:38:44.460599+00:00",
+  "validator_version": "6.10.4",
+  "validator_jar_sha256": "1106b9d58f9e363e47bea7c4fc065841e5fc91fe9d062775c3bfdd212bd653cc",
+  "package_id": "ndhm.in",
+  "package_version": "6.5.0",
+  "package_sha256": "41fa99955adbd1983a235d7c7136b30f423ce34ff541d86b354d95b7704527d4",
+  "loaded_packages": [
+    "hl7.fhir.r4.core#4.0.1",
+    "hl7.fhir.xver-extensions#0.1.0",
+    "hl7.terminology.r4#6.2.0",
+    "hl7.fhir.uv.extensions.r4#5.2.0",
+    "hl7.terminology#7.4.0",
+    "hl7.fhir.uv.extensions.r5#5.2.0",
+    "hl7.terminology.r5#7.1.0",
+    "hl7.fhir.uv.extensions#5.3.0",
+    "hl7.terminology.r4#6.0.2",
+    "hl7.fhir.uv.extensions.r4#5.1.0",
+    "ndhm.in#6.5.0"
+  ],
+  "terminology_server": "none (-tx n/a)",
+  "allow_example_urls": "true for corrected synthetic example; false in original negative run",
+  "scope": "Patient profile structural and invariant validation; external terminology membership unavailable",
+  "results": [
+    {
+      "example": "data/abdm/examples/patient.json",
+      "example_sha256": "31a44966877e96b194ae0c32b30a111bf831b3eb5a7a07605abe392a2db2a235",
+      "outcome": "eval/abdm_patient_validation.json",
+      "outcome_sha256": "957ed5d7595e349489a2fb82e1663e0eb16bc07099caa6c206bf03e52798bcea",
+      "issues": {
+        "fatal": 0,
+        "error": 0,
+        "warning": 0,
+        "information": 1
+      }
+    },
+    {
+      "example": "data/abdm/examples/patient_incomplete.json",
+      "example_sha256": "fb730ef8673cb88345588951dfd0bef72e8bbb84b3ac8e7976c99f8495d5f92f",
+      "outcome": "eval/abdm_patient_negative_validation.json",
+      "outcome_sha256": "06de3a3dca2475214e75db43951f419c37f9abadd1018fbb6fbde5675228c65c",
+      "issues": {
+        "fatal": 0,
+        "error": 2,
+        "warning": 1,
+        "information": 1
+      }
+    }
+  ]
+}

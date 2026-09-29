@@ -23,15 +23,16 @@
   </style>
 </head>
 <body>
-<header><h1>Medical AI Copilot</h1><p>Governed evidence · structured synthetic patient review</p></header>
+<header><h1>Medical AI Copilot</h1><p>Evidence-Grounded Clinical Review &amp; Guideline Intelligence Platform</p></header>
 <main>
   <span class="badge">SYNTHETIC DEMO DATA ONLY</span>
-  <p class="muted">This prototype presents supplied records for clinician review. It does not evaluate care gaps or make treatment decisions.</p>
+  <p class="muted">Review synthetic patient records, deterministic follow-up findings and governed evidence. Findings require clinician review.</p>
   <nav aria-label="Primary navigation">
-    <button data-tab="patients" class="active">Patients</button><button data-tab="review">Clinical Review</button>
-    <button data-tab="evidence">Ask Evidence</button><button data-tab="sources">Knowledge Sources</button>
+    <button data-tab="patients" class="active">Patient Review</button><button data-tab="review">Review Findings</button>
+    <button data-tab="evidence">Ask Evidence</button><button data-tab="sources">Guideline Intelligence</button><button data-tab="status">Evaluation / System Status</button>
   </nav>
-  <div id="message" role="status"></div>
+  <details class="card"><summary>Session access</summary><label for="session-token">Development JWT or deployment access token (memory only)</label><input id="session-token" type="password" autocomplete="off"><button id="connect">Connect</button><span id="session-state"></span></details>
+  <div id="context-source" class="notice hidden"></div><div id="message" role="status" aria-live="polite"></div>
   <section id="patients">
     <div class="card"><h2>Load a synthetic patient</h2><div class="toolbar"><select id="demo" aria-label="Demo patient"></select><button class="primary" id="load-demo">Load demo</button></div>
       <label for="bundle-file">Or import a supported synthetic FHIR R4 collection Bundle</label><div class="toolbar"><input id="bundle-file" type="file" accept=".json,application/json"><button id="import-file">Validate and import</button></div></div>
@@ -39,72 +40,10 @@
     <div id="patient-detail"></div>
   </section>
   <section id="review" class="hidden"><div class="card"><h2>Clinical Review</h2><p class="muted">Create a reproducible snapshot of the selected synthetic patient.</p><button class="primary" id="create-review">Create review snapshot</button></div><div id="review-history"></div><div id="review-detail"></div></section>
-  <section id="evidence" class="hidden"><div class="card"><h2>Ask Evidence</h2><p class="muted">Patient data is not included in these requests.</p><label for="intent">Evidence mode</label> <select id="intent"><option value="clinical_guidance">Current clinical guidance</option><option value="reference_explanation">Reference explanation</option><option value="historical">Historical / superseded evidence</option></select><textarea id="question" placeholder="Ask a general evidence question"></textarea><div class="toolbar"><button class="primary" id="ask">Search evidence</button></div><div id="answer"></div></div></section>
-  <section id="sources" class="hidden"><div class="card"><h2>Knowledge Sources</h2><p class="muted">Lifecycle and source type determine which evidence is eligible for current guideline retrieval.</p><div id="source-list"></div></div></section>
+  <section id="evidence" class="hidden"><div class="card"><h2>Ask Evidence</h2><p class="muted">Patient data is not included in these requests.</p><label for="intent">Evidence mode</label> <select id="intent"><option value="clinical_guidance">Current clinical guidance</option><option value="reference_explanation">Reference explanation</option><option value="historical">Historical / superseded evidence</option></select><label for="question">Evidence question</label><textarea id="question" placeholder="Ask a general evidence question"></textarea><div class="toolbar"><button class="primary" id="ask">Search evidence</button></div><div id="answer"></div></div></section>
+  <section id="sources" class="hidden"><div class="card"><h2>Guideline Intelligence</h2><p class="muted">Lifecycle and source type determine which evidence is eligible for current guideline retrieval.</p><div id="source-list"></div><h3>Candidate updates</h3><p>Download and approval are separate from activation. Changed guideline evidence suppresses dependent rules pending review.</p><button id="refresh-updates">Refresh updates</button><div id="update-list"></div></div></section>
+<section id="status" class="hidden"><div class="card"><h2>Evaluation / System Status</h2><p>Internal engineering evaluation on synthetic fixtures; these are not clinical validation metrics.</p><button id="refresh-status">Refresh status</button><div id="system-status"></div></div></section>
 </main>
-<script>
-const API = 'http://localhost:18000';
-let selectedPatient = null;
-const $ = id => document.getElementById(id);
-const escapeHtml = value => String(value ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
-const text = value => escapeHtml(value ?? 'Not supplied');
-function table(columns, rows){
-  if(!rows.length)return '<p class="muted">No records supplied.</p>';
-  return `<table><thead><tr>${columns.map(c=>`<th>${escapeHtml(c[0])}</th>`).join('')}</tr></thead><tbody>${rows.map(r=>`<tr>${columns.map(c=>`<td>${text(c[1](r))}</td>`).join('')}</tr>`).join('')}</tbody></table>`;
-}
-function card(title, body){return `<div class="card"><h3>${escapeHtml(title)}</h3>${body}</div>`;}
-function message(value, error=false){$('message').innerHTML=value?`<p class="${error?'error':'notice'}">${escapeHtml(value)}</p>`:'';}
-async function request(path, options={}){
-  const response=await fetch(API+path,{...options,headers:{'Content-Type':'application/json',...(options.headers||{})}});
-  const body=await response.json();
-  if(!response.ok)throw new Error(body.detail?.message||`Request failed (${response.status})`);
-  return body;
-}
-function show(tab){
-  document.querySelectorAll('main > section').forEach(x=>x.classList.toggle('hidden',x.id!==tab));
-  document.querySelectorAll('nav button').forEach(x=>x.classList.toggle('active',x.dataset.tab===tab));
-}
-document.querySelectorAll('nav button').forEach(button=>button.addEventListener('click',()=>show(button.dataset.tab)));
-async function demos(){const rows=await request('/v1/demo-patients');$('demo').innerHTML=rows.map(x=>`<option value="${escapeHtml(x.key)}">${escapeHtml(x.label)}</option>`).join('');}
-async function patients(){
-  const rows=await request('/v1/patients');
-  $('patient-list').innerHTML=rows.map(x=>`<option value="${escapeHtml(x.patient_id)}">${escapeHtml(x.synthetic_label)} · ${escapeHtml(x.source_patient_id)}</option>`).join('');
-  if(rows.length){selectedPatient=rows.some(x=>x.patient_id===selectedPatient)?selectedPatient:rows[0].patient_id;$('patient-list').value=selectedPatient;await patientDetail();}
-  else{$('patient-detail').innerHTML='<p class="muted">Load a bundled synthetic patient to begin.</p>';}
-}
-async function patientDetail(){
-  if(!selectedPatient)return;
-  const data=await request(`/v1/patients/${encodeURIComponent(selectedPatient)}`), c=data.context;
-  const active=c.conditions.filter(x=>x.clinical_status==='active');
-  const meds=c.medications.filter(x=>x.status==='active');
-  const allergies=c.allergies.filter(x=>x.clinical_status!=='inactive'&&!['refuted','entered-in-error'].includes(x.verification_status));
-  const observations=c.observations.filter(x=>!['entered-in-error','cancelled'].includes(x.status)).sort((a,b)=>(b.effective||'').localeCompare(a.effective||''));
-  const value=o=>o.value?`${o.value.value} ${o.value.unit||''}`:o.components.map(x=>`${x.code.text||x.code.coding[0]?.display}: ${x.value.value} ${x.value.unit||''}`).join(', ');
-  $('patient-detail').innerHTML=
-    card(`${c.patient.synthetic_label} · ${c.patient.source_patient_id}`,`<p>Birth date: ${text(c.patient.birth_date)} · Gender as recorded: ${text(c.patient.gender)}</p><small>Snapshot ${escapeHtml(data.context_hash.slice(0,16))}…</small>`)+
-    `<div class="grid"><div>${card('Conditions',table([['Condition',x=>x.code.text||x.code.coding[0]?.display],['Status',x=>x.clinical_status],['Onset',x=>x.onset]],active))}${card('Medications',table([['Medication',x=>x.code.text||x.code.coding[0]?.display],['Status',x=>x.status],['Authored',x=>x.authored_on]],meds))}${card('Allergies',table([['Allergy',x=>x.code.text||x.code.coding[0]?.display],['Status',x=>x.clinical_status],['Verification',x=>x.verification_status]],allergies))}</div><div>${card('Recent observations',table([['Observation',x=>x.code.text||x.code.coding[0]?.display],['Value',value],['Date',x=>x.effective]],observations.slice(0,8)))}${card('Encounters',table([['Type',x=>x.type?.text||'Encounter'],['Status',x=>x.status],['Start',x=>x.start]],c.encounters))}${card('Data availability',`<p>Supplied: ${text(data.data_availability.available_data_types.join(', ')||'none')}</p><p>Not supplied: ${text(data.data_availability.missing_data_types.join(', ')||'none')}</p>`)}</div></div>`+
-    card('Timeline',table([['When',x=>x.timestamp||'Undated'],['Type',x=>x.event_type],['Event',x=>x.title]],data.timeline));
-  await reviewHistory();
-}
-async function reviewHistory(){
-  const rows=await request(`/v1/patients/${encodeURIComponent(selectedPatient)}/reviews`);
-  $('review-history').innerHTML=rows.length?card('Saved reviews',rows.map(x=>`<p><button data-review="${escapeHtml(x.review_id)}">${escapeHtml(x.created_at)} · ${escapeHtml(x.status)}</button></p>`).join('')):'';
-  document.querySelectorAll('[data-review]').forEach(button=>button.addEventListener('click',async()=>{try{renderReview(await request(`/v1/reviews/${encodeURIComponent(button.dataset.review)}`));}catch(e){message(e.message,true);}}));
-  $('review-detail').innerHTML='';
-}
-function renderReview(r){
-  $('review-detail').innerHTML=card('Review snapshot',`<p>Status: ${text(r.status)} · Snapshot ${escapeHtml(r.patient_context_hash.slice(0,16))}…</p><h3>Findings</h3><p>No rule-based clinical findings are available for this review.</p><h3>Record information</h3><p>Supplied: ${text(r.data_availability.available_data_types.join(', ')||'none')}</p><p>Not supplied: ${text(r.data_availability.missing_data_types.join(', ')||'none')}</p>${table([['When',x=>x.timestamp||'Undated'],['Type',x=>x.event_type],['Event',x=>x.title]],r.timeline)}${r.status==='completed'?'':'<p><button id="complete-review">Mark review completed</button></p>'}`);
-  $('complete-review')?.addEventListener('click',async()=>{try{renderReview(await request(`/v1/reviews/${encodeURIComponent(r.review_id)}/complete`,{method:'POST'}));}catch(e){message(e.message,true);}});
-}
-$('load-demo').onclick=async()=>{try{const result=await request(`/v1/demo-patients/${encodeURIComponent($('demo').value)}/load`,{method:'POST'});selectedPatient=result.patient_id;await patients();message('Synthetic patient loaded.');}catch(e){message(e.message,true);}};
-$('import-file').onclick=async()=>{try{const file=$('bundle-file').files[0];if(!file)throw new Error('Select a JSON Bundle first.');const raw=JSON.parse(await file.text());const validation=await request('/v1/fhir/validate',{method:'POST',body:JSON.stringify(raw)});if(!validation.valid)throw new Error(validation.errors.map(x=>x.message).join('; '));const result=await request('/v1/patients/import',{method:'POST',body:JSON.stringify(raw)});selectedPatient=result.patient_id;await patients();message('Synthetic patient imported.');}catch(e){message(e.message,true);}};
-$('patient-list').onchange=async e=>{selectedPatient=e.target.value;await patientDetail();};
-$('refresh').onclick=()=>patients().catch(e=>message(e.message,true));
-$('create-review').onclick=async()=>{try{if(!selectedPatient)throw new Error('Select a patient first.');const review=await request(`/v1/patients/${encodeURIComponent(selectedPatient)}/reviews`,{method:'POST'});await reviewHistory();renderReview(review);}catch(e){message(e.message,true);}};
-function evidenceCard(e){return card(`${e.publisher} · ${e.canonical_title}`,`<p>${text(e.version_id)} · ${text(e.updated_at||e.published_at)} · ${text(e.jurisdiction)} · ${text(e.lifecycle_status)}</p><p>${e.recommendation_id?`Recommendation ${text(e.recommendation_id)} · `:''}Section ${text(e.section)} · pages ${text(e.page_start)}-${text(e.page_end)}</p><blockquote>${text(e.supporting_excerpt)}</blockquote>${e.canonical_source_url?`<a href="${escapeHtml(e.canonical_source_url)}" target="_blank" rel="noopener">Open source</a>`:''}`);}
-$('ask').onclick=async()=>{try{const query=$('question').value.trim();if(!query)throw new Error('Enter a question.');const intent=$('intent').value;$('answer').textContent='Searching governed evidence…';const result=await request('/v1/evidence/query',{method:'POST',body:JSON.stringify({query,intent})});const byId=Object.fromEntries((result.evidence||[]).map(e=>[e.evidence_unit_id,e]));let html=intent==='historical'?'<p class="error">Historical / superseded evidence. Do not treat as current guidance.</p>':'';if(result.status==='abstained')html+='<p class="notice">The indexed evidence does not support a reliable answer.</p>';else if(result.status==='conflict')html+='<p class="error">Evidence differs. Review each source; no recommendation was selected.</p>';else html+=`<pre>${escapeHtml(result.answer_text)}</pre>`;for(const claim of result.claims||[]){html+=card(`Claim · ${claim.support_status}`,`<p>${text(claim.text)}</p>${claim.evidence_ids.map(id=>byId[id]?evidenceCard({...byId[id],supporting_excerpt:claim.verification_passages?.[id]||byId[id].supporting_excerpt}):'').join('')}`);}for(const conflict of result.conflicts||[]){html+=card('Evidence differs',`<p>${text(conflict.description)}</p>${conflict.evidence_ids.map(id=>byId[id]?evidenceCard(byId[id]):'').join('')}`);}$('answer').innerHTML=html;}catch(e){message(e.message,true);}};
-async function sources(){const rows=await request('/v1/knowledge-sources');$('source-list').innerHTML=table([['Title',x=>x.title],['Publisher',x=>x.publisher],['Type',x=>x.source_type],['Lifecycle',x=>x.lifecycle],['Version',x=>x.version]],rows);}
-Promise.all([demos(),patients(),sources()]).catch(e=>message(`API unavailable: ${e.message}`,true));
-</script>
+<script src="/assets/app.js" defer></script>
 </body>
 </html>

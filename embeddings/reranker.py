@@ -1,6 +1,6 @@
 """Optional local second-stage cross-encoder, with explicit fallback."""
 
-from typing import TYPE_CHECKING, Protocol
+from typing import TYPE_CHECKING, Any, Protocol
 from threading import Lock
 
 if TYPE_CHECKING:
@@ -38,9 +38,16 @@ class CrossEncoderReranker:
                 if self._model is None:
                     from sentence_transformers import CrossEncoder
 
-                    self._model = CrossEncoder(self.model_name, max_length=256)
+                    from backend.model_versions import REVISIONS
+
+                    self._model = CrossEncoder(
+                        self.model_name,
+                        max_length=256,
+                        revision=REVISIONS.get(self.model_name),
+                        trust_remote_code=False,
+                    )
                 model = self._model
-                pairs = [(query, c.unit.text[:1200]) for c in candidates]
+                pairs: list[Any] = [(query, c.unit.text[:1200]) for c in candidates]
                 try:
                     scores = model.predict(pairs, batch_size=32)
                 except TypeError:

@@ -47,7 +47,7 @@ Before semantic checking, the verifier checks that every ID belongs to this retr
 
 Before generation, conflict screening checks source distinction, topic overlap, and material opposition around routine annual testing. An optional NLI contradiction check catches additional same-topic differences. Cross-jurisdiction compatible claims are jurisdiction-labelled in the answer; materially conflicting units return `status=conflict` with separate evidence cards and no selected winner. This is deliberately conservative and does not cover every kind of clinical disagreement.
 
-The final answer is rendered from supported claim text, never the raw generator response. If none survive, it abstains. Unsupported draft text is absent from the public response; claim IDs and statuses remain in the local hash-chain audit entry. Legacy `/api/ask` calls this same service and derives its `sources` and `citations` only from evidence supporting surviving claims. The versioned `POST /v1/evidence/query` returns typed status, claims, conflicts, evidence references, and bounded retrieval diagnostics.
+The final answer is rendered from supported claim text, never the raw generator response. If none survive, it abstains. Unsupported draft text is absent from the public response; production execution metadata is recorded in the durable PostgreSQL HMAC audit, without raw claim/question text. Legacy `/api/ask` calls this same service and derives its `sources` and `citations` only from evidence supporting surviving claims. The versioned `POST /v1/evidence/query` returns typed status, claims, conflicts, evidence references, and bounded retrieval diagnostics.
 
 ## Evaluation
 
@@ -65,3 +65,5 @@ These are small local engineering test sets. Their scores are not clinical accur
 - Conflict detection recognizes limited patterns and NLI disagreement; it does not resolve guideline precedence.
 - The corpus has only a few current guideline documents. The held-out query set and citation labels are small.
 - Groq structured output still depends on provider availability. Provider responses never bypass local validation and verification.
+
+Phase 6 expands these archived benchmarks into [versioned evaluation](EVALUATION.md), pins model revisions and upgrades Transformers while retaining fail-closed semantics. The original Phase 4 result files are historical engineering measurements.
