@@ -1,14 +1,20 @@
 {
-  "dataset_version": "1.0.0",
-  "timestamp": "2026-09-29T04:19:08.178760+00:00",
+  "dataset_version": "1.1.0",
+  "timestamp": "2026-09-30T03:05:04.172570+00:00",
   "git": {
-    "sha": "229aefdfc0f523870f8a41f0a840de66952cc8d4",
-    "dirty": true
+    "sha": "dc0cf38489143731aad18790d011bdd925b29f44",
+    "dirty": false
   },
   "environment": {
     "python": "3.11.0",
     "platform": "Windows-10-10.0.26200-SP0",
-    "cpu_count": 8
+    "cpu_count": 8,
+    "packages": {
+      "transformers": "5.17.0",
+      "sentence-transformers": "5.7.0",
+      "torch": "2.14.0",
+      "numpy": "1.26.4"
+    }
   },
   "mode": "local_models",
   "clinical_rules": {
@@ -322,6 +328,517 @@
       "insufficient_current": true
     }
   },
+  "contracts": {
+    "cases": 41,
+    "scenarios": 100,
+    "pass_rate": 1.0,
+    "postgres_included": true,
+    "suites": {
+      "abdm": {
+        "cases": 1,
+        "scenarios": 1,
+        "passed": true
+      },
+      "abstention": {
+        "cases": 1,
+        "scenarios": 1,
+        "passed": true
+      },
+      "cds_hooks": {
+        "cases": 5,
+        "scenarios": 8,
+        "passed": true
+      },
+      "citations": {
+        "cases": 3,
+        "scenarios": 3,
+        "passed": true
+      },
+      "concurrency_audit": {
+        "cases": 2,
+        "scenarios": 2,
+        "passed": true
+      },
+      "conflicts": {
+        "cases": 1,
+        "scenarios": 1,
+        "passed": true
+      },
+      "fhir_normalization": {
+        "cases": 3,
+        "scenarios": 19,
+        "passed": true
+      },
+      "guideline_activation": {
+        "cases": 3,
+        "scenarios": 3,
+        "passed": true
+      },
+      "guideline_diff": {
+        "cases": 3,
+        "scenarios": 5,
+        "passed": true
+      },
+      "historical_retrieval": {
+        "cases": 1,
+        "scenarios": 1,
+        "passed": true
+      },
+      "missing_data": {
+        "cases": 2,
+        "scenarios": 2,
+        "passed": true
+      },
+      "operations_performance": {
+        "cases": 2,
+        "scenarios": 2,
+        "passed": true
+      },
+      "rbac_security": {
+        "cases": 3,
+        "scenarios": 6,
+        "passed": true
+      },
+      "retention": {
+        "cases": 1,
+        "scenarios": 1,
+        "passed": true
+      },
+      "smart_context": {
+        "cases": 4,
+        "scenarios": 9,
+        "passed": true
+      },
+      "smart_roundtrip": {
+        "cases": 1,
+        "scenarios": 7,
+        "passed": true
+      },
+      "ssrf": {
+        "cases": 3,
+        "scenarios": 27,
+        "passed": true
+      },
+      "stale_source_rejection": {
+        "cases": 2,
+        "scenarios": 2,
+        "passed": true
+      }
+    },
+    "results": [
+      {
+        "case_id": "citations-claim_verification_removes_unsupported_and_invalid_ids",
+        "suite": "citations",
+        "split": "regression",
+        "scenario_count": 1,
+        "failed": 0,
+        "skipped": 0,
+        "passed": true,
+        "duration_seconds": 0.002
+      },
+      {
+        "case_id": "citations-stale_and_unknown_citation_never_supported",
+        "suite": "citations",
+        "split": "regression",
+        "scenario_count": 1,
+        "failed": 0,
+        "skipped": 0,
+        "passed": true,
+        "duration_seconds": 0.001
+      },
+      {
+        "case_id": "citations-citation_metadata_cannot_override_registry_jurisdiction",
+        "suite": "citations",
+        "split": "regression",
+        "scenario_count": 1,
+        "failed": 0,
+        "skipped": 0,
+        "passed": true,
+        "duration_seconds": 0.101
+      },
+      {
+        "case_id": "conflicts-conflicts_and_compatible_sources",
+        "suite": "conflicts",
+        "split": "regression",
+        "scenario_count": 1,
+        "failed": 0,
+        "skipped": 0,
+        "passed": true,
+        "duration_seconds": 0.001
+      },
+      {
+        "case_id": "abstention-verifier_unavailable_and_malformed_retry",
+        "suite": "abstention",
+        "split": "regression",
+        "scenario_count": 1,
+        "failed": 0,
+        "skipped": 0,
+        "passed": true,
+        "duration_seconds": 0.037
+      },
+      {
+        "case_id": "stale_source_rejection-lifecycle_and_source_type_boundaries",
+        "suite": "stale_source_rejection",
+        "split": "regression",
+        "scenario_count": 1,
+        "failed": 0,
+        "skipped": 0,
+        "passed": true,
+        "duration_seconds": 0.043
+      },
+      {
+        "case_id": "stale_source_rejection-manifest_staleness",
+        "suite": "stale_source_rejection",
+        "split": "regression",
+        "scenario_count": 1,
+        "failed": 0,
+        "skipped": 0,
+        "passed": true,
+        "duration_seconds": 0.027
+      },
+      {
+        "case_id": "historical_retrieval-cosine_filter_and_rrf_provenance",
+        "suite": "historical_retrieval",
+        "split": "regression",
+        "scenario_count": 1,
+        "failed": 0,
+        "skipped": 0,
+        "passed": true,
+        "duration_seconds": 0.001
+      },
+      {
+        "case_id": "fhir_normalization-all_synthetic_fixtures",
+        "suite": "fhir_normalization",
+        "split": "regression",
+        "scenario_count": 5,
+        "failed": 0,
+        "skipped": 0,
+        "passed": true,
+        "duration_seconds": 0.006
+      },
+      {
+        "case_id": "fhir_normalization-invalid_bundle_rejected",
+        "suite": "fhir_normalization",
+        "split": "regression",
+        "scenario_count": 13,
+        "failed": 0,
+        "skipped": 0,
+        "passed": true,
+        "duration_seconds": 0.013000000000000005
+      },
+      {
+        "case_id": "fhir_normalization-normalization_reordering_and_transport_format_do_not_change_hash",
+        "suite": "fhir_normalization",
+        "split": "regression",
+        "scenario_count": 1,
+        "failed": 0,
+        "skipped": 0,
+        "passed": true,
+        "duration_seconds": 0.003
+      },
+      {
+        "case_id": "smart_context-smart_discovery_and_pkce",
+        "suite": "smart_context",
+        "split": "regression",
+        "scenario_count": 1,
+        "failed": 0,
+        "skipped": 0,
+        "passed": true,
+        "duration_seconds": 0.007
+      },
+      {
+        "case_id": "smart_context-fhir_fetch_and_bearer",
+        "suite": "smart_context",
+        "split": "regression",
+        "scenario_count": 1,
+        "failed": 0,
+        "skipped": 0,
+        "passed": true,
+        "duration_seconds": 0.006
+      },
+      {
+        "case_id": "smart_context-fhir_fetch_fail_closed",
+        "suite": "smart_context",
+        "split": "regression",
+        "scenario_count": 6,
+        "failed": 0,
+        "skipped": 0,
+        "passed": true,
+        "duration_seconds": 0.008
+      },
+      {
+        "case_id": "cds_hooks-cds_prefetch_and_fallback",
+        "suite": "cds_hooks",
+        "split": "regression",
+        "scenario_count": 1,
+        "failed": 0,
+        "skipped": 0,
+        "passed": true,
+        "duration_seconds": 0.04
+      },
+      {
+        "case_id": "cds_hooks-cds_cards_use_rule_engine",
+        "suite": "cds_hooks",
+        "split": "regression",
+        "scenario_count": 4,
+        "failed": 0,
+        "skipped": 0,
+        "passed": true,
+        "duration_seconds": 0.654
+      },
+      {
+        "case_id": "cds_hooks-cds_cannot_infer_coverage",
+        "suite": "cds_hooks",
+        "split": "regression",
+        "scenario_count": 1,
+        "failed": 0,
+        "skipped": 0,
+        "passed": true,
+        "duration_seconds": 0.002
+      },
+      {
+        "case_id": "cds_hooks-cds_discovery_validation_and_endpoint",
+        "suite": "cds_hooks",
+        "split": "regression",
+        "scenario_count": 1,
+        "failed": 0,
+        "skipped": 0,
+        "passed": true,
+        "duration_seconds": 0.306
+      },
+      {
+        "case_id": "guideline_diff-diff_all_classifications_and_text_record",
+        "suite": "guideline_diff",
+        "split": "regression",
+        "scenario_count": 1,
+        "failed": 0,
+        "skipped": 0,
+        "passed": true,
+        "duration_seconds": 0.001
+      },
+      {
+        "case_id": "guideline_diff-ambiguous_matching_is_not_forced",
+        "suite": "guideline_diff",
+        "split": "regression",
+        "scenario_count": 3,
+        "failed": 0,
+        "skipped": 0,
+        "passed": true,
+        "duration_seconds": 0.003
+      },
+      {
+        "case_id": "guideline_diff-candidate_contract_rejects_unbounded_and_invalid_metadata",
+        "suite": "guideline_diff",
+        "split": "regression",
+        "scenario_count": 1,
+        "failed": 0,
+        "skipped": 0,
+        "passed": true,
+        "duration_seconds": 0.001
+      },
+      {
+        "case_id": "rbac_security-dev_jwt_validation_matrix",
+        "suite": "rbac_security",
+        "split": "regression",
+        "scenario_count": 1,
+        "failed": 0,
+        "skipped": 0,
+        "passed": true,
+        "duration_seconds": 0.003
+      },
+      {
+        "case_id": "rbac_security-permission_matrix",
+        "suite": "rbac_security",
+        "split": "regression",
+        "scenario_count": 4,
+        "failed": 0,
+        "skipped": 0,
+        "passed": true,
+        "duration_seconds": 0.004
+      },
+      {
+        "case_id": "rbac_security-oidc_rs256_verification_with_test_key",
+        "suite": "rbac_security",
+        "split": "regression",
+        "scenario_count": 1,
+        "failed": 0,
+        "skipped": 0,
+        "passed": true,
+        "duration_seconds": 0.062
+      },
+      {
+        "case_id": "ssrf-reject_unsafe_origins",
+        "suite": "ssrf",
+        "split": "regression",
+        "scenario_count": 12,
+        "failed": 0,
+        "skipped": 0,
+        "passed": true,
+        "duration_seconds": 0.013000000000000001
+      },
+      {
+        "case_id": "ssrf-dns_private_and_ipv6_blocked",
+        "suite": "ssrf",
+        "split": "regression",
+        "scenario_count": 9,
+        "failed": 0,
+        "skipped": 0,
+        "passed": true,
+        "duration_seconds": 0.009000000000000001
+      },
+      {
+        "case_id": "ssrf-response_security",
+        "suite": "ssrf",
+        "split": "regression",
+        "scenario_count": 6,
+        "failed": 0,
+        "skipped": 0,
+        "passed": true,
+        "duration_seconds": 0.006
+      },
+      {
+        "case_id": "operations_performance-bm25_partition_reuse_and_text_invalidation",
+        "suite": "operations_performance",
+        "split": "regression",
+        "scenario_count": 1,
+        "failed": 0,
+        "skipped": 0,
+        "passed": true,
+        "duration_seconds": 0.086
+      },
+      {
+        "case_id": "operations_performance-retriever_rejects_changed_manifest_signature",
+        "suite": "operations_performance",
+        "split": "regression",
+        "scenario_count": 1,
+        "failed": 0,
+        "skipped": 0,
+        "passed": true,
+        "duration_seconds": 0.122
+      },
+      {
+        "case_id": "abdm-official_abdm_profiles_and_missing_fields",
+        "suite": "abdm",
+        "split": "regression",
+        "scenario_count": 1,
+        "failed": 0,
+        "skipped": 0,
+        "passed": true,
+        "duration_seconds": 0.106
+      },
+      {
+        "case_id": "missing_data-unknown_and_partial_coverage_never_create_gap",
+        "suite": "missing_data",
+        "split": "regression",
+        "scenario_count": 1,
+        "failed": 0,
+        "skipped": 0,
+        "passed": true,
+        "duration_seconds": 0.639
+      },
+      {
+        "case_id": "missing_data-recent_or_unknown_diagnosis_does_not_create_annual_gap",
+        "suite": "missing_data",
+        "split": "regression",
+        "scenario_count": 1,
+        "failed": 0,
+        "skipped": 0,
+        "passed": true,
+        "duration_seconds": 0.372
+      },
+      {
+        "case_id": "guideline_activation-guideline_quarantine_diff_activation_history_and_audit",
+        "suite": "guideline_activation",
+        "split": "regression",
+        "scenario_count": 1,
+        "failed": 0,
+        "skipped": 0,
+        "passed": true,
+        "duration_seconds": 1.643
+      },
+      {
+        "case_id": "guideline_activation-concurrent_activation_rejects_obsolete_base_and_audit_failure_rolls_back",
+        "suite": "guideline_activation",
+        "split": "regression",
+        "scenario_count": 1,
+        "failed": 0,
+        "skipped": 0,
+        "passed": true,
+        "duration_seconds": 0.96
+      },
+      {
+        "case_id": "guideline_activation-guideline_http_rbac_and_review_transitions",
+        "suite": "guideline_activation",
+        "split": "regression",
+        "scenario_count": 1,
+        "failed": 0,
+        "skipped": 0,
+        "passed": true,
+        "duration_seconds": 1.627
+      },
+      {
+        "case_id": "smart_roundtrip-smart_roundtrip_and_failures",
+        "suite": "smart_roundtrip",
+        "split": "regression",
+        "scenario_count": 7,
+        "failed": 0,
+        "skipped": 0,
+        "passed": true,
+        "duration_seconds": 0.609
+      },
+      {
+        "case_id": "retention-retention_dry_run_and_execute_preserve_history",
+        "suite": "retention",
+        "split": "regression",
+        "scenario_count": 1,
+        "failed": 0,
+        "skipped": 0,
+        "passed": true,
+        "duration_seconds": 0.153
+      },
+      {
+        "case_id": "concurrency_audit-concurrent_import_review_evaluation_action_and_audit",
+        "suite": "concurrency_audit",
+        "split": "regression",
+        "scenario_count": 1,
+        "failed": 0,
+        "skipped": 0,
+        "passed": true,
+        "duration_seconds": 0.597
+      },
+      {
+        "case_id": "concurrency_audit-audit_concurrent_chain_and_corruption_detection",
+        "suite": "concurrency_audit",
+        "split": "regression",
+        "scenario_count": 1,
+        "failed": 0,
+        "skipped": 0,
+        "passed": true,
+        "duration_seconds": 0.324
+      },
+      {
+        "case_id": "smart_context-fhir_pagination_collects_complete_searchset",
+        "suite": "smart_context",
+        "split": "regression",
+        "scenario_count": 1,
+        "failed": 0,
+        "skipped": 0,
+        "passed": true,
+        "duration_seconds": 0.004
+      },
+      {
+        "case_id": "cds_hooks-cds_authorization_and_bounded_body",
+        "suite": "cds_hooks",
+        "split": "regression",
+        "scenario_count": 1,
+        "failed": 0,
+        "skipped": 0,
+        "passed": true,
+        "duration_seconds": 0.01
+      }
+    ],
+    "process_exit_code": 0
+  },
   "retrieval": {
     "development": {
       "cases": 17,
@@ -340,20 +857,20 @@
       },
       "latency": {
         "dense": {
-          "median_ms": 19.69059999100864,
-          "p95_ms": 9679.42088002452
+          "median_ms": 14.20290005626157,
+          "p95_ms": 4547.387380007405
         },
         "bm25": {
-          "median_ms": 2.257099957205355,
-          "p95_ms": 460.3067800111602
+          "median_ms": 1.9987999694421887,
+          "p95_ms": 282.6446700142694
         },
         "reranking": {
-          "median_ms": 1470.7680999999866,
-          "p95_ms": 6685.989515008979
+          "median_ms": 1078.2348500215448,
+          "p95_ms": 1268.4860150271559
         },
         "full_retrieval": {
-          "median_ms": 1525.849100027699,
-          "p95_ms": 15041.006030031667
+          "median_ms": 1111.543899984099,
+          "p95_ms": 5955.229700001639
         }
       },
       "results": [
@@ -1358,20 +1875,20 @@
       },
       "latency": {
         "dense": {
-          "median_ms": 20.735399972181767,
-          "p95_ms": 45.96969997510314
+          "median_ms": 14.471400005277246,
+          "p95_ms": 17.726199992466718
         },
         "bm25": {
-          "median_ms": 2.338399994187057,
-          "p95_ms": 15.41759999236092
+          "median_ms": 1.693999976851046,
+          "p95_ms": 12.5537000130862
         },
         "reranking": {
-          "median_ms": 1465.8953000034671,
-          "p95_ms": 1637.06848002912
+          "median_ms": 1040.7899499987252,
+          "p95_ms": 1098.3101999532664
         },
         "full_retrieval": {
-          "median_ms": 1520.9721000283025,
-          "p95_ms": 1696.462599968072
+          "median_ms": 1070.514299964998,
+          "p95_ms": 1136.2356999889016
         }
       },
       "results": [
@@ -2922,18 +3439,18 @@
   },
   "grounding": {
     "development": {
-      "cases": 11,
+      "cases": 19,
       "metrics": {
         "supported_precision": 1.0,
-        "supported_recall": 0.3333333333333333,
+        "supported_recall": 0.5714285714285714,
         "unsupported_detection": 1.0,
         "false_supported_rate": 0.0,
-        "false_unsupported_rate": 0.3333333333333333,
-        "uncertain_rate": 0.36363636363636365,
+        "false_unsupported_rate": 0.14285714285714285,
+        "uncertain_rate": 0.3684210526315789,
         "citation_precision": 1.0,
-        "citation_recall": 0.3333333333333333,
-        "verification_p50_ms": 48.67019999073818,
-        "verification_p95_ms": 3541.664199990919
+        "citation_recall": 0.5714285714285714,
+        "verification_p50_ms": 37.81049995450303,
+        "verification_p95_ms": 248.97777997539126
       },
       "results": [
         {
@@ -2972,7 +3489,7 @@
           "provenance": "Synthetic engineering fixture; not a medical recommendation",
           "expected_behavior": "supported",
           "actual": "uncertain",
-          "latency_ms": 7008.797799993772
+          "latency_ms": 1319.6751999785192
         },
         {
           "case_id": "g2",
@@ -3006,7 +3523,7 @@
           "provenance": "Synthetic engineering fixture; not a medical recommendation",
           "expected_behavior": "unsupported",
           "actual": "uncertain",
-          "latency_ms": 74.53059998806566
+          "latency_ms": 69.39459999557585
         },
         {
           "case_id": "g3",
@@ -3040,7 +3557,7 @@
           "provenance": "Synthetic engineering fixture; not a medical recommendation",
           "expected_behavior": "contradicted",
           "actual": "unsupported",
-          "latency_ms": 41.11950000515208
+          "latency_ms": 32.56299998611212
         },
         {
           "case_id": "g4",
@@ -3074,7 +3591,7 @@
           "provenance": "Synthetic engineering fixture; not a medical recommendation",
           "expected_behavior": "insufficient",
           "actual": "uncertain",
-          "latency_ms": 44.35869998997077
+          "latency_ms": 29.099499981384724
         },
         {
           "case_id": "p6-g1",
@@ -3115,7 +3632,7 @@
           "provenance": "Synthetic engineering fixture; not a medical recommendation",
           "expected_behavior": "supported",
           "actual": "unsupported",
-          "latency_ms": 51.3422999647446
+          "latency_ms": 31.696800026111305
         },
         {
           "case_id": "p6-g4",
@@ -3152,7 +3669,7 @@
           "provenance": "Synthetic engineering fixture; not a medical recommendation",
           "expected_behavior": "contradicted",
           "actual": "unsupported",
-          "latency_ms": 48.67019999073818
+          "latency_ms": 34.20729999197647
         },
         {
           "case_id": "p6-g7",
@@ -3189,7 +3706,7 @@
           "provenance": "Synthetic engineering fixture; not a medical recommendation",
           "expected_behavior": "contradicted",
           "actual": "unsupported",
-          "latency_ms": 39.46120000910014
+          "latency_ms": 35.726399975828826
         },
         {
           "case_id": "p6-g10",
@@ -3226,7 +3743,7 @@
           "provenance": "Synthetic engineering fixture; not a medical recommendation",
           "expected_behavior": "unsupported",
           "actual": "uncertain",
-          "latency_ms": 56.627499987371266
+          "latency_ms": 34.73419998772442
         },
         {
           "case_id": "p6-g13",
@@ -3263,7 +3780,7 @@
           "provenance": "Synthetic engineering fixture; not a medical recommendation",
           "expected_behavior": "unsupported",
           "actual": "unsupported",
-          "latency_ms": 49.394399975426495
+          "latency_ms": 32.78090001549572
         },
         {
           "case_id": "p6-g16",
@@ -3304,7 +3821,7 @@
           "provenance": "Synthetic engineering fixture; not a medical recommendation",
           "expected_behavior": "supported",
           "actual": "supported",
-          "latency_ms": 45.1735999668017
+          "latency_ms": 37.81049995450303
         },
         {
           "case_id": "p6-g19",
@@ -3341,23 +3858,501 @@
           "provenance": "Synthetic engineering fixture; not a medical recommendation",
           "expected_behavior": "contradicted",
           "actual": "unsupported",
-          "latency_ms": 39.98160001356155
+          "latency_ms": 32.71499997936189
+        },
+        {
+          "case_id": "governed-nice-ng136-1.2.1",
+          "suite": "grounding",
+          "version": "1.1.0",
+          "split": "development",
+          "description": "Independent paraphrase or deliberate contradiction of nice-ng136-2026-02-26:rec:1.2.1",
+          "input": {
+            "claim": "Both arms should be measured when considering a hypertension diagnosis.",
+            "evidence_unit_id": "nice-ng136-2026-02-26:rec:1.2.1"
+          },
+          "expected_behavior": "supported",
+          "expected": "supported",
+          "claim": "Both arms should be measured when considering a hypertension diagnosis.",
+          "evidence": {
+            "nice-ng136-2026-02-26:rec:1.2.1": "When considering a diagnosis of hypertension, measure blood pressure in both arms: \u2022 If the difference in readings between arms is more than 15 mmHg, repeat the measurements. \u2022 If the difference in readings between arms remains more than 15 mmHg on the second measurement, measure subsequent blood pressures in the arm with the higher reading. [2019]"
+          },
+          "cited_ids": [
+            "nice-ng136-2026-02-26:rec:1.2.1"
+          ],
+          "relevant_ids": [
+            "nice-ng136-2026-02-26:rec:1.2.1"
+          ],
+          "governed_unit": {
+            "evidence_unit_id": "nice-ng136-2026-02-26:rec:1.2.1",
+            "unit_type": "recommendation",
+            "chunk_id": null,
+            "source_chunk_ids": [
+              "nice-ng136-2026-02-26:3",
+              "nice-ng136-2026-02-26:4"
+            ],
+            "recommendation_id": "1.2.1",
+            "document_id": "nice-ng136",
+            "version_id": "nice-ng136-2026-02-26",
+            "text": "When considering a diagnosis of hypertension, measure blood pressure in both arms: \u2022 If the difference in readings between arms is more than 15 mmHg, repeat the measurements. \u2022 If the difference in readings between arms remains more than 15 mmHg on the second measurement, measure subsequent blood pressures in the arm with the higher reading. [2019]",
+            "section": "1.2",
+            "page_start": 7,
+            "page_end": 7,
+            "source_type": "clinical_guideline",
+            "jurisdiction": "UK",
+            "lifecycle_status": "current",
+            "canonical_source_url": "https://www.nice.org.uk/guidance/ng136",
+            "publisher": "NICE",
+            "canonical_title": "Hypertension in adults: diagnosis and management",
+            "published_at": "2019-08-28",
+            "updated_at": "2026-02-26",
+            "extractor_version": "nice-numbered-action-v3"
+          },
+          "tags": [
+            "governed_passage",
+            "paraphrase"
+          ],
+          "provenance": {
+            "document_id": "nice-ng136",
+            "version_id": "nice-ng136-2026-02-26",
+            "recommendation_id": "1.2.1",
+            "canonical_url": "https://www.nice.org.uk/guidance/ng136",
+            "label_note": "Contradicted claims are synthetic negative assertions, never publisher recommendations."
+          },
+          "actual": "supported",
+          "latency_ms": 78.45990004716441
+        },
+        {
+          "case_id": "governed-nice-ng136-1.2.2",
+          "suite": "grounding",
+          "version": "1.1.0",
+          "split": "development",
+          "description": "Independent paraphrase or deliberate contradiction of nice-ng136-2026-02-26:rec:1.2.2",
+          "input": {
+            "claim": "Record the higher of the last two clinic blood-pressure readings.",
+            "evidence_unit_id": "nice-ng136-2026-02-26:rec:1.2.2"
+          },
+          "expected_behavior": "contradicted",
+          "expected": "contradicted",
+          "claim": "Record the higher of the last two clinic blood-pressure readings.",
+          "evidence": {
+            "nice-ng136-2026-02-26:rec:1.2.2": "If blood pressure measured in the clinic is 140/90 mmHg or higher: \u2022 Take a second measurement during the consultation. \u2022 If the second measurement is substantially different from the first, take a third measurement. Record the lower of the last 2 measurements as the clinic blood pressure. [2019]"
+          },
+          "cited_ids": [
+            "nice-ng136-2026-02-26:rec:1.2.2"
+          ],
+          "relevant_ids": [],
+          "governed_unit": {
+            "evidence_unit_id": "nice-ng136-2026-02-26:rec:1.2.2",
+            "unit_type": "recommendation",
+            "chunk_id": null,
+            "source_chunk_ids": [
+              "nice-ng136-2026-02-26:3",
+              "nice-ng136-2026-02-26:4"
+            ],
+            "recommendation_id": "1.2.2",
+            "document_id": "nice-ng136",
+            "version_id": "nice-ng136-2026-02-26",
+            "text": "If blood pressure measured in the clinic is 140/90 mmHg or higher: \u2022 Take a second measurement during the consultation. \u2022 If the second measurement is substantially different from the first, take a third measurement. Record the lower of the last 2 measurements as the clinic blood pressure. [2019]",
+            "section": "1.2",
+            "page_start": 7,
+            "page_end": 7,
+            "source_type": "clinical_guideline",
+            "jurisdiction": "UK",
+            "lifecycle_status": "current",
+            "canonical_source_url": "https://www.nice.org.uk/guidance/ng136",
+            "publisher": "NICE",
+            "canonical_title": "Hypertension in adults: diagnosis and management",
+            "published_at": "2019-08-28",
+            "updated_at": "2026-02-26",
+            "extractor_version": "nice-numbered-action-v3"
+          },
+          "tags": [
+            "governed_passage",
+            "deliberate_contradiction"
+          ],
+          "provenance": {
+            "document_id": "nice-ng136",
+            "version_id": "nice-ng136-2026-02-26",
+            "recommendation_id": "1.2.2",
+            "canonical_url": "https://www.nice.org.uk/guidance/ng136",
+            "label_note": "Contradicted claims are synthetic negative assertions, never publisher recommendations."
+          },
+          "actual": "unsupported",
+          "latency_ms": 47.63470002217218
+        },
+        {
+          "case_id": "governed-nice-ng136-1.2.6",
+          "suite": "grounding",
+          "version": "1.1.0",
+          "split": "development",
+          "description": "Independent paraphrase or deliberate contradiction of nice-ng136-2026-02-26:rec:1.2.6",
+          "input": {
+            "claim": "ABPM confirmation should average at least 14 readings taken during waking hours.",
+            "evidence_unit_id": "nice-ng136-2026-02-26:rec:1.2.6"
+          },
+          "expected_behavior": "supported",
+          "expected": "supported",
+          "claim": "ABPM confirmation should average at least 14 readings taken during waking hours.",
+          "evidence": {
+            "nice-ng136-2026-02-26:rec:1.2.6": "When using ABPM to confirm a diagnosis of hypertension, ensure that at least 2 measurements per hour are taken during the person's usual waking hours (for example, between 08:00 and 22:00). Use the average value of at least 14 measurements taken during the person's usual waking hours to confirm a diagnosis of hypertension. [2011]"
+          },
+          "cited_ids": [
+            "nice-ng136-2026-02-26:rec:1.2.6"
+          ],
+          "relevant_ids": [
+            "nice-ng136-2026-02-26:rec:1.2.6"
+          ],
+          "governed_unit": {
+            "evidence_unit_id": "nice-ng136-2026-02-26:rec:1.2.6",
+            "unit_type": "recommendation",
+            "chunk_id": null,
+            "source_chunk_ids": [
+              "nice-ng136-2026-02-26:4",
+              "nice-ng136-2026-02-26:5"
+            ],
+            "recommendation_id": "1.2.6",
+            "document_id": "nice-ng136",
+            "version_id": "nice-ng136-2026-02-26",
+            "text": "When using ABPM to confirm a diagnosis of hypertension, ensure that at least 2 measurements per hour are taken during the person's usual waking hours (for example, between 08:00 and 22:00). Use the average value of at least 14 measurements taken during the person's usual waking hours to confirm a diagnosis of hypertension. [2011]",
+            "section": "1.2",
+            "page_start": 8,
+            "page_end": 8,
+            "source_type": "clinical_guideline",
+            "jurisdiction": "UK",
+            "lifecycle_status": "current",
+            "canonical_source_url": "https://www.nice.org.uk/guidance/ng136",
+            "publisher": "NICE",
+            "canonical_title": "Hypertension in adults: diagnosis and management",
+            "published_at": "2019-08-28",
+            "updated_at": "2026-02-26",
+            "extractor_version": "nice-numbered-action-v3"
+          },
+          "tags": [
+            "governed_passage",
+            "paraphrase"
+          ],
+          "provenance": {
+            "document_id": "nice-ng136",
+            "version_id": "nice-ng136-2026-02-26",
+            "recommendation_id": "1.2.6",
+            "canonical_url": "https://www.nice.org.uk/guidance/ng136",
+            "label_note": "Contradicted claims are synthetic negative assertions, never publisher recommendations."
+          },
+          "actual": "uncertain",
+          "latency_ms": 78.89710000017658
+        },
+        {
+          "case_id": "governed-nice-ng136-1.2.7",
+          "suite": "grounding",
+          "version": "1.1.0",
+          "split": "development",
+          "description": "Independent paraphrase or deliberate contradiction of nice-ng136-2026-02-26:rec:1.2.7",
+          "input": {
+            "claim": "HBPM averaging should include the measurements from the first day.",
+            "evidence_unit_id": "nice-ng136-2026-02-26:rec:1.2.7"
+          },
+          "expected_behavior": "contradicted",
+          "expected": "contradicted",
+          "claim": "HBPM averaging should include the measurements from the first day.",
+          "evidence": {
+            "nice-ng136-2026-02-26:rec:1.2.7": "When using HBPM to confirm a diagnosis of hypertension, ensure that: \u2022 for each blood pressure recording, 2 consecutive measurements are taken, at least 1 minute apart and with the person seated and \u2022 blood pressure is recorded twice daily, ideally in the morning and evening and \u2022 blood pressure recording continues for at least 4 days, ideally for 7 days. Discard the measurements taken on the first day and use the average value of all the remaining measurements to confirm a diagnosis of hypertension. [2011] 1.2.8 Confirm diagnosis of hypertension in people with a: \u2022 clinic blood pressure of 140/90 mmHg or higher and \u2022 ABPM daytime average or HBPM average of 135/85 mmHg or higher. [2019]"
+          },
+          "cited_ids": [
+            "nice-ng136-2026-02-26:rec:1.2.7"
+          ],
+          "relevant_ids": [],
+          "governed_unit": {
+            "evidence_unit_id": "nice-ng136-2026-02-26:rec:1.2.7",
+            "unit_type": "recommendation",
+            "chunk_id": null,
+            "source_chunk_ids": [
+              "nice-ng136-2026-02-26:4",
+              "nice-ng136-2026-02-26:5"
+            ],
+            "recommendation_id": "1.2.7",
+            "document_id": "nice-ng136",
+            "version_id": "nice-ng136-2026-02-26",
+            "text": "When using HBPM to confirm a diagnosis of hypertension, ensure that: \u2022 for each blood pressure recording, 2 consecutive measurements are taken, at least 1 minute apart and with the person seated and \u2022 blood pressure is recorded twice daily, ideally in the morning and evening and \u2022 blood pressure recording continues for at least 4 days, ideally for 7 days. Discard the measurements taken on the first day and use the average value of all the remaining measurements to confirm a diagnosis of hypertension. [2011] 1.2.8 Confirm diagnosis of hypertension in people with a: \u2022 clinic blood pressure of 140/90 mmHg or higher and \u2022 ABPM daytime average or HBPM average of 135/85 mmHg or higher. [2019]",
+            "section": "1.2",
+            "page_start": 8,
+            "page_end": 8,
+            "source_type": "clinical_guideline",
+            "jurisdiction": "UK",
+            "lifecycle_status": "current",
+            "canonical_source_url": "https://www.nice.org.uk/guidance/ng136",
+            "publisher": "NICE",
+            "canonical_title": "Hypertension in adults: diagnosis and management",
+            "published_at": "2019-08-28",
+            "updated_at": "2026-02-26",
+            "extractor_version": "nice-numbered-action-v3"
+          },
+          "tags": [
+            "governed_passage",
+            "deliberate_contradiction"
+          ],
+          "provenance": {
+            "document_id": "nice-ng136",
+            "version_id": "nice-ng136-2026-02-26",
+            "recommendation_id": "1.2.7",
+            "canonical_url": "https://www.nice.org.uk/guidance/ng136",
+            "label_note": "Contradicted claims are synthetic negative assertions, never publisher recommendations."
+          },
+          "actual": "uncertain",
+          "latency_ms": 91.96540003176779
+        },
+        {
+          "case_id": "governed-nice-ng136-1.2.10",
+          "suite": "grounding",
+          "version": "1.1.0",
+          "split": "development",
+          "description": "Independent paraphrase or deliberate contradiction of nice-ng136-2026-02-26:rec:1.2.10",
+          "input": {
+            "claim": "If hypertension is not diagnosed, clinic blood pressure should be measured at least every 5 years subsequently.",
+            "evidence_unit_id": "nice-ng136-2026-02-26:rec:1.2.10"
+          },
+          "expected_behavior": "supported",
+          "expected": "supported",
+          "claim": "If hypertension is not diagnosed, clinic blood pressure should be measured at least every 5 years subsequently.",
+          "evidence": {
+            "nice-ng136-2026-02-26:rec:1.2.10": "If hypertension is not diagnosed, measure the person's clinic blood pressure at least every 5 years subsequently, and consider measuring it more frequently if the person's clinic blood pressure is less than 140/90 mmHg but still raised. [2011]"
+          },
+          "cited_ids": [
+            "nice-ng136-2026-02-26:rec:1.2.10"
+          ],
+          "relevant_ids": [
+            "nice-ng136-2026-02-26:rec:1.2.10"
+          ],
+          "governed_unit": {
+            "evidence_unit_id": "nice-ng136-2026-02-26:rec:1.2.10",
+            "unit_type": "recommendation",
+            "chunk_id": null,
+            "source_chunk_ids": [
+              "nice-ng136-2026-02-26:5"
+            ],
+            "recommendation_id": "1.2.10",
+            "document_id": "nice-ng136",
+            "version_id": "nice-ng136-2026-02-26",
+            "text": "If hypertension is not diagnosed, measure the person's clinic blood pressure at least every 5 years subsequently, and consider measuring it more frequently if the person's clinic blood pressure is less than 140/90 mmHg but still raised. [2011]",
+            "section": "1.2",
+            "page_start": 9,
+            "page_end": 9,
+            "source_type": "clinical_guideline",
+            "jurisdiction": "UK",
+            "lifecycle_status": "current",
+            "canonical_source_url": "https://www.nice.org.uk/guidance/ng136",
+            "publisher": "NICE",
+            "canonical_title": "Hypertension in adults: diagnosis and management",
+            "published_at": "2019-08-28",
+            "updated_at": "2026-02-26",
+            "extractor_version": "nice-numbered-action-v3"
+          },
+          "tags": [
+            "governed_passage",
+            "paraphrase"
+          ],
+          "provenance": {
+            "document_id": "nice-ng136",
+            "version_id": "nice-ng136-2026-02-26",
+            "recommendation_id": "1.2.10",
+            "canonical_url": "https://www.nice.org.uk/guidance/ng136",
+            "label_note": "Contradicted claims are synthetic negative assertions, never publisher recommendations."
+          },
+          "actual": "supported",
+          "latency_ms": 52.63530003139749
+        },
+        {
+          "case_id": "governed-nice-ng238-1.1.5",
+          "suite": "grounding",
+          "version": "1.1.0",
+          "split": "development",
+          "description": "Independent paraphrase or deliberate contradiction of nice-ng238-2023-12-14:rec:1.1.5",
+          "input": {
+            "claim": "Formal cardiovascular risk assessment cannot be declined.",
+            "evidence_unit_id": "nice-ng238-2023-12-14:rec:1.1.5"
+          },
+          "expected_behavior": "contradicted",
+          "expected": "contradicted",
+          "claim": "Formal cardiovascular risk assessment cannot be declined.",
+          "evidence": {
+            "nice-ng238-2023-12-14:rec:1.1.5": "Discuss the process of risk assessment with the person identified as being at risk, including the option of declining any formal risk assessment. [2008]"
+          },
+          "cited_ids": [
+            "nice-ng238-2023-12-14:rec:1.1.5"
+          ],
+          "relevant_ids": [],
+          "governed_unit": {
+            "evidence_unit_id": "nice-ng238-2023-12-14:rec:1.1.5",
+            "unit_type": "recommendation",
+            "chunk_id": null,
+            "source_chunk_ids": [
+              "nice-ng238-2023-12-14:2"
+            ],
+            "recommendation_id": "1.1.5",
+            "document_id": "nice-ng238",
+            "version_id": "nice-ng238-2023-12-14",
+            "text": "Discuss the process of risk assessment with the person identified as being at risk, including the option of declining any formal risk assessment. [2008]",
+            "section": "1.1",
+            "page_start": 5,
+            "page_end": 5,
+            "source_type": "clinical_guideline",
+            "jurisdiction": "UK",
+            "lifecycle_status": "current",
+            "canonical_source_url": "https://www.nice.org.uk/guidance/ng238",
+            "publisher": "NICE",
+            "canonical_title": "Cardiovascular disease: risk assessment and reduction, including lipid modification",
+            "published_at": "2023-12-14",
+            "updated_at": null,
+            "extractor_version": "nice-numbered-action-v3"
+          },
+          "tags": [
+            "governed_passage",
+            "deliberate_contradiction"
+          ],
+          "provenance": {
+            "document_id": "nice-ng238",
+            "version_id": "nice-ng238-2023-12-14",
+            "recommendation_id": "1.1.5",
+            "canonical_url": "https://www.nice.org.uk/guidance/ng238",
+            "label_note": "Contradicted claims are synthetic negative assertions, never publisher recommendations."
+          },
+          "actual": "uncertain",
+          "latency_ms": 37.514999974519014
+        },
+        {
+          "case_id": "governed-nice-ng238-1.3.4",
+          "suite": "grounding",
+          "version": "1.1.0",
+          "split": "development",
+          "description": "Independent paraphrase or deliberate contradiction of nice-ng238-2023-12-14:rec:1.3.4",
+          "input": {
+            "claim": "Dietary advice should ignore comorbidities and drug treatment.",
+            "evidence_unit_id": "nice-ng238-2023-12-14:rec:1.3.4"
+          },
+          "expected_behavior": "contradicted",
+          "expected": "contradicted",
+          "claim": "Dietary advice should ignore comorbidities and drug treatment.",
+          "evidence": {
+            "nice-ng238-2023-12-14:rec:1.3.4": "Take account of a person's individual circumstances, for example, drug treatment, comorbidities and other lifestyle changes, when giving dietary advice. [2014]"
+          },
+          "cited_ids": [
+            "nice-ng238-2023-12-14:rec:1.3.4"
+          ],
+          "relevant_ids": [],
+          "governed_unit": {
+            "evidence_unit_id": "nice-ng238-2023-12-14:rec:1.3.4",
+            "unit_type": "recommendation",
+            "chunk_id": null,
+            "source_chunk_ids": [
+              "nice-ng238-2023-12-14:9",
+              "nice-ng238-2023-12-14:10"
+            ],
+            "recommendation_id": "1.3.4",
+            "document_id": "nice-ng238",
+            "version_id": "nice-ng238-2023-12-14",
+            "text": "Take account of a person's individual circumstances, for example, drug treatment, comorbidities and other lifestyle changes, when giving dietary advice. [2014]",
+            "section": "1.3",
+            "page_start": 15,
+            "page_end": 15,
+            "source_type": "clinical_guideline",
+            "jurisdiction": "UK",
+            "lifecycle_status": "current",
+            "canonical_source_url": "https://www.nice.org.uk/guidance/ng238",
+            "publisher": "NICE",
+            "canonical_title": "Cardiovascular disease: risk assessment and reduction, including lipid modification",
+            "published_at": "2023-12-14",
+            "updated_at": null,
+            "extractor_version": "nice-numbered-action-v3"
+          },
+          "tags": [
+            "governed_passage",
+            "deliberate_contradiction"
+          ],
+          "provenance": {
+            "document_id": "nice-ng238",
+            "version_id": "nice-ng238-2023-12-14",
+            "recommendation_id": "1.3.4",
+            "canonical_url": "https://www.nice.org.uk/guidance/ng238",
+            "label_note": "Contradicted claims are synthetic negative assertions, never publisher recommendations."
+          },
+          "actual": "unsupported",
+          "latency_ms": 130.01139997504652
+        },
+        {
+          "case_id": "governed-nice-ng238-1.3.5",
+          "suite": "grounding",
+          "version": "1.1.0",
+          "split": "development",
+          "description": "Independent paraphrase or deliberate contradiction of nice-ng238-2023-12-14:rec:1.3.5",
+          "input": {
+            "claim": "Aerobic and muscle-strengthening activities are advised for people at high risk of or with CVD.",
+            "evidence_unit_id": "nice-ng238-2023-12-14:rec:1.3.5"
+          },
+          "expected_behavior": "supported",
+          "expected": "supported",
+          "claim": "Aerobic and muscle-strengthening activities are advised for people at high risk of or with CVD.",
+          "evidence": {
+            "nice-ng238-2023-12-14:rec:1.3.5": "Advise people at high risk of or with CVD to do aerobic and muscle-strengthening activities in line with the UK Chief Medical Officers' physical activity guidelines. [2008, amended 2014]"
+          },
+          "cited_ids": [
+            "nice-ng238-2023-12-14:rec:1.3.5"
+          ],
+          "relevant_ids": [
+            "nice-ng238-2023-12-14:rec:1.3.5"
+          ],
+          "governed_unit": {
+            "evidence_unit_id": "nice-ng238-2023-12-14:rec:1.3.5",
+            "unit_type": "recommendation",
+            "chunk_id": null,
+            "source_chunk_ids": [
+              "nice-ng238-2023-12-14:9",
+              "nice-ng238-2023-12-14:10"
+            ],
+            "recommendation_id": "1.3.5",
+            "document_id": "nice-ng238",
+            "version_id": "nice-ng238-2023-12-14",
+            "text": "Advise people at high risk of or with CVD to do aerobic and muscle-strengthening activities in line with the UK Chief Medical Officers' physical activity guidelines. [2008, amended 2014]",
+            "section": "1.3",
+            "page_start": 15,
+            "page_end": 15,
+            "source_type": "clinical_guideline",
+            "jurisdiction": "UK",
+            "lifecycle_status": "current",
+            "canonical_source_url": "https://www.nice.org.uk/guidance/ng238",
+            "publisher": "NICE",
+            "canonical_title": "Cardiovascular disease: risk assessment and reduction, including lipid modification",
+            "published_at": "2023-12-14",
+            "updated_at": null,
+            "extractor_version": "nice-numbered-action-v3"
+          },
+          "tags": [
+            "governed_passage",
+            "paraphrase"
+          ],
+          "provenance": {
+            "document_id": "nice-ng238",
+            "version_id": "nice-ng238-2023-12-14",
+            "recommendation_id": "1.3.5",
+            "canonical_url": "https://www.nice.org.uk/guidance/ng238",
+            "label_note": "Contradicted claims are synthetic negative assertions, never publisher recommendations."
+          },
+          "actual": "supported",
+          "latency_ms": 46.631199948024005
         }
       ]
     },
     "held_out": {
-      "cases": 23,
+      "cases": 31,
       "metrics": {
         "supported_precision": 1.0,
-        "supported_recall": 1.0,
+        "supported_recall": 0.8,
         "unsupported_detection": 1.0,
         "false_supported_rate": 0.0,
         "false_unsupported_rate": 0.0,
-        "uncertain_rate": 0.2608695652173913,
+        "uncertain_rate": 0.3225806451612903,
         "citation_precision": 1.0,
-        "citation_recall": 1.0,
-        "verification_p50_ms": 40.297400031704456,
-        "verification_p95_ms": 62.58809998398646
+        "citation_recall": 0.8,
+        "verification_p50_ms": 29.89559998968616,
+        "verification_p95_ms": 71.76600000821054
       },
       "results": [
         {
@@ -3396,7 +4391,7 @@
           "provenance": "Synthetic engineering fixture; not a medical recommendation",
           "expected_behavior": "supported",
           "actual": "supported",
-          "latency_ms": 42.43359999964014
+          "latency_ms": 28.614700015168637
         },
         {
           "case_id": "g6",
@@ -3430,7 +4425,7 @@
           "provenance": "Synthetic engineering fixture; not a medical recommendation",
           "expected_behavior": "unsupported",
           "actual": "unsupported",
-          "latency_ms": 35.255299997515976
+          "latency_ms": 31.47789998911321
         },
         {
           "case_id": "g7",
@@ -3464,7 +4459,7 @@
           "provenance": "Synthetic engineering fixture; not a medical recommendation",
           "expected_behavior": "contradicted",
           "actual": "unsupported",
-          "latency_ms": 32.8950000111945
+          "latency_ms": 28.231100004632026
         },
         {
           "case_id": "g8",
@@ -3498,7 +4493,7 @@
           "provenance": "Synthetic engineering fixture; not a medical recommendation",
           "expected_behavior": "insufficient",
           "actual": "uncertain",
-          "latency_ms": 34.7625000285916
+          "latency_ms": 41.866399988066405
         },
         {
           "case_id": "g9",
@@ -3540,7 +4535,7 @@
           "provenance": "Synthetic engineering fixture; not a medical recommendation",
           "expected_behavior": "unsupported",
           "actual": "uncertain",
-          "latency_ms": 58.174500009045005
+          "latency_ms": 60.27489999542013
         },
         {
           "case_id": "p6-g2",
@@ -3577,7 +4572,7 @@
           "provenance": "Synthetic engineering fixture; not a medical recommendation",
           "expected_behavior": "contradicted",
           "actual": "unsupported",
-          "latency_ms": 42.73260000627488
+          "latency_ms": 32.538400031626225
         },
         {
           "case_id": "p6-g3",
@@ -3614,7 +4609,7 @@
           "provenance": "Synthetic engineering fixture; not a medical recommendation",
           "expected_behavior": "contradicted",
           "actual": "unsupported",
-          "latency_ms": 33.75339997000992
+          "latency_ms": 33.27700000954792
         },
         {
           "case_id": "p6-g5",
@@ -3651,7 +4646,7 @@
           "provenance": "Synthetic engineering fixture; not a medical recommendation",
           "expected_behavior": "contradicted",
           "actual": "unsupported",
-          "latency_ms": 34.11589999450371
+          "latency_ms": 24.887200037483126
         },
         {
           "case_id": "p6-g6",
@@ -3692,7 +4687,7 @@
           "provenance": "Synthetic engineering fixture; not a medical recommendation",
           "expected_behavior": "supported",
           "actual": "supported",
-          "latency_ms": 38.60799997346476
+          "latency_ms": 29.667299997527152
         },
         {
           "case_id": "p6-g8",
@@ -3729,7 +4724,7 @@
           "provenance": "Synthetic engineering fixture; not a medical recommendation",
           "expected_behavior": "insufficient",
           "actual": "uncertain",
-          "latency_ms": 47.88129997905344
+          "latency_ms": 27.441599988378584
         },
         {
           "case_id": "p6-g9",
@@ -3766,7 +4761,7 @@
           "provenance": "Synthetic engineering fixture; not a medical recommendation",
           "expected_behavior": "unsupported",
           "actual": "uncertain",
-          "latency_ms": 43.770300049800426
+          "latency_ms": 28.403499978594482
         },
         {
           "case_id": "p6-g11",
@@ -3807,7 +4802,7 @@
           "provenance": "Synthetic engineering fixture; not a medical recommendation",
           "expected_behavior": "supported",
           "actual": "supported",
-          "latency_ms": 39.42709998227656
+          "latency_ms": 25.348399998620152
         },
         {
           "case_id": "p6-g12",
@@ -3848,7 +4843,7 @@
           "provenance": "Synthetic engineering fixture; not a medical recommendation",
           "expected_behavior": "supported",
           "actual": "supported",
-          "latency_ms": 40.297400031704456
+          "latency_ms": 25.232799991499633
         },
         {
           "case_id": "p6-g14",
@@ -3885,7 +4880,7 @@
           "provenance": "Synthetic engineering fixture; not a medical recommendation",
           "expected_behavior": "unsupported",
           "actual": "uncertain",
-          "latency_ms": 55.12309999903664
+          "latency_ms": 28.891000023577362
         },
         {
           "case_id": "p6-g15",
@@ -3922,7 +4917,7 @@
           "provenance": "Synthetic engineering fixture; not a medical recommendation",
           "expected_behavior": "contradicted",
           "actual": "unsupported",
-          "latency_ms": 55.80859998008236
+          "latency_ms": 25.389300019014627
         },
         {
           "case_id": "p6-g17",
@@ -3959,7 +4954,7 @@
           "provenance": "Synthetic engineering fixture; not a medical recommendation",
           "expected_behavior": "contradicted",
           "actual": "unsupported",
-          "latency_ms": 63.078499981202185
+          "latency_ms": 27.61709998594597
         },
         {
           "case_id": "p6-g18",
@@ -4000,7 +4995,7 @@
           "provenance": "Synthetic engineering fixture; not a medical recommendation",
           "expected_behavior": "supported",
           "actual": "supported",
-          "latency_ms": 46.78350000176579
+          "latency_ms": 29.89559998968616
         },
         {
           "case_id": "p6-g20",
@@ -4037,7 +5032,7 @@
           "provenance": "Synthetic engineering fixture; not a medical recommendation",
           "expected_behavior": "unsupported",
           "actual": "unsupported",
-          "latency_ms": 37.1702000265941
+          "latency_ms": 30.3254000027664
         },
         {
           "case_id": "p6-g21",
@@ -4078,7 +5073,7 @@
           "provenance": "Synthetic engineering fixture; not a medical recommendation",
           "expected_behavior": "supported",
           "actual": "supported",
-          "latency_ms": 41.83559998637065
+          "latency_ms": 24.894899979699403
         },
         {
           "case_id": "p6-provenance-wrong_id",
@@ -4117,7 +5112,7 @@
           "provenance": "Synthetic engineering fixture; not a medical recommendation",
           "expected_behavior": "unsupported",
           "actual": "unsupported",
-          "latency_ms": 0.049399968702346087
+          "latency_ms": 0.08739996701478958
         },
         {
           "case_id": "p6-provenance-stale",
@@ -4156,7 +5151,7 @@
           "provenance": "Synthetic engineering fixture; not a medical recommendation",
           "expected_behavior": "unsupported",
           "actual": "unsupported",
-          "latency_ms": 0.03290001768618822
+          "latency_ms": 0.06549997488036752
         },
         {
           "case_id": "p6-provenance-wrong_jurisdiction",
@@ -4195,7 +5190,7 @@
           "provenance": "Synthetic engineering fixture; not a medical recommendation",
           "expected_behavior": "unsupported",
           "actual": "unsupported",
-          "latency_ms": 220.95589997479692
+          "latency_ms": 210.86260001175106
         },
         {
           "case_id": "p6-provenance-verifier_unavailable",
@@ -4234,9 +5229,592 @@
           "provenance": "Synthetic engineering fixture; not a medical recommendation",
           "expected_behavior": "unsupported",
           "actual": "uncertain",
-          "latency_ms": 0.11470000026747584
+          "latency_ms": 0.08530000923201442
+        },
+        {
+          "case_id": "governed-nice-ng136-1.2.3",
+          "suite": "grounding",
+          "version": "1.1.0",
+          "split": "held_out",
+          "description": "Independent paraphrase or deliberate contradiction of nice-ng136-2026-02-26:rec:1.2.3",
+          "input": {
+            "claim": "Offer ABPM to confirm hypertension if clinic blood pressure is between 140/90 mmHg and 180/120 mmHg.",
+            "evidence_unit_id": "nice-ng136-2026-02-26:rec:1.2.3"
+          },
+          "expected_behavior": "supported",
+          "expected": "supported",
+          "claim": "Offer ABPM to confirm hypertension if clinic blood pressure is between 140/90 mmHg and 180/120 mmHg.",
+          "evidence": {
+            "nice-ng136-2026-02-26:rec:1.2.3": "If clinic blood pressure is between 140/90 mmHg and 180/120 mmHg, offer ambulatory blood pressure monitoring (ABPM) to confirm the diagnosis of hypertension. See the section on identifying who to refer for people with a clinic blood pressure 180/120 mmHg or higher. [2019]"
+          },
+          "cited_ids": [
+            "nice-ng136-2026-02-26:rec:1.2.3"
+          ],
+          "relevant_ids": [
+            "nice-ng136-2026-02-26:rec:1.2.3"
+          ],
+          "governed_unit": {
+            "evidence_unit_id": "nice-ng136-2026-02-26:rec:1.2.3",
+            "unit_type": "recommendation",
+            "chunk_id": null,
+            "source_chunk_ids": [
+              "nice-ng136-2026-02-26:3",
+              "nice-ng136-2026-02-26:4"
+            ],
+            "recommendation_id": "1.2.3",
+            "document_id": "nice-ng136",
+            "version_id": "nice-ng136-2026-02-26",
+            "text": "If clinic blood pressure is between 140/90 mmHg and 180/120 mmHg, offer ambulatory blood pressure monitoring (ABPM) to confirm the diagnosis of hypertension. See the section on identifying who to refer for people with a clinic blood pressure 180/120 mmHg or higher. [2019]",
+            "section": "1.2",
+            "page_start": 7,
+            "page_end": 7,
+            "source_type": "clinical_guideline",
+            "jurisdiction": "UK",
+            "lifecycle_status": "current",
+            "canonical_source_url": "https://www.nice.org.uk/guidance/ng136",
+            "publisher": "NICE",
+            "canonical_title": "Hypertension in adults: diagnosis and management",
+            "published_at": "2019-08-28",
+            "updated_at": "2026-02-26",
+            "extractor_version": "nice-numbered-action-v3"
+          },
+          "tags": [
+            "governed_passage",
+            "paraphrase"
+          ],
+          "provenance": {
+            "document_id": "nice-ng136",
+            "version_id": "nice-ng136-2026-02-26",
+            "recommendation_id": "1.2.3",
+            "canonical_url": "https://www.nice.org.uk/guidance/ng136",
+            "label_note": "Contradicted claims are synthetic negative assertions, never publisher recommendations."
+          },
+          "actual": "supported",
+          "latency_ms": 72.49520003097132
+        },
+        {
+          "case_id": "governed-nice-ng136-1.2.12",
+          "suite": "grounding",
+          "version": "1.1.0",
+          "split": "held_out",
+          "description": "Independent paraphrase or deliberate contradiction of nice-ng136-2026-02-26:rec:1.2.12",
+          "input": {
+            "claim": "Measure blood pressure at least annually in adults with type 2 diabetes without previously diagnosed hypertension or renal disease.",
+            "evidence_unit_id": "nice-ng136-2026-02-26:rec:1.2.12"
+          },
+          "expected_behavior": "supported",
+          "expected": "supported",
+          "claim": "Measure blood pressure at least annually in adults with type 2 diabetes without previously diagnosed hypertension or renal disease.",
+          "evidence": {
+            "nice-ng136-2026-02-26:rec:1.2.12": "Measure blood pressure at least annually in an adult with type 2 diabetes without previously diagnosed hypertension or renal disease. Offer and reinforce preventive lifestyle advice. [2009]"
+          },
+          "cited_ids": [
+            "nice-ng136-2026-02-26:rec:1.2.12"
+          ],
+          "relevant_ids": [
+            "nice-ng136-2026-02-26:rec:1.2.12"
+          ],
+          "governed_unit": {
+            "evidence_unit_id": "nice-ng136-2026-02-26:rec:1.2.12",
+            "unit_type": "recommendation",
+            "chunk_id": null,
+            "source_chunk_ids": [
+              "nice-ng136-2026-02-26:5"
+            ],
+            "recommendation_id": "1.2.12",
+            "document_id": "nice-ng136",
+            "version_id": "nice-ng136-2026-02-26",
+            "text": "Measure blood pressure at least annually in an adult with type 2 diabetes without previously diagnosed hypertension or renal disease. Offer and reinforce preventive lifestyle advice. [2009]",
+            "section": "1.2",
+            "page_start": 9,
+            "page_end": 9,
+            "source_type": "clinical_guideline",
+            "jurisdiction": "UK",
+            "lifecycle_status": "current",
+            "canonical_source_url": "https://www.nice.org.uk/guidance/ng136",
+            "publisher": "NICE",
+            "canonical_title": "Hypertension in adults: diagnosis and management",
+            "published_at": "2019-08-28",
+            "updated_at": "2026-02-26",
+            "extractor_version": "nice-numbered-action-v3"
+          },
+          "tags": [
+            "governed_passage",
+            "paraphrase"
+          ],
+          "provenance": {
+            "document_id": "nice-ng136",
+            "version_id": "nice-ng136-2026-02-26",
+            "recommendation_id": "1.2.12",
+            "canonical_url": "https://www.nice.org.uk/guidance/ng136",
+            "label_note": "Contradicted claims are synthetic negative assertions, never publisher recommendations."
+          },
+          "actual": "uncertain",
+          "latency_ms": 48.13249997096136
+        },
+        {
+          "case_id": "governed-nice-ng136-1.4.1",
+          "suite": "grounding",
+          "version": "1.1.0",
+          "split": "held_out",
+          "description": "Independent paraphrase or deliberate contradiction of nice-ng136-2026-02-26:rec:1.4.1",
+          "input": {
+            "claim": "Lifestyle advice should stop after hypertension is diagnosed.",
+            "evidence_unit_id": "nice-ng136-2026-02-26:rec:1.4.1"
+          },
+          "expected_behavior": "contradicted",
+          "expected": "contradicted",
+          "claim": "Lifestyle advice should stop after hypertension is diagnosed.",
+          "evidence": {
+            "nice-ng136-2026-02-26:rec:1.4.1": "Offer lifestyle advice to people with suspected or diagnosed hypertension, and continue to offer it periodically. [2004]"
+          },
+          "cited_ids": [
+            "nice-ng136-2026-02-26:rec:1.4.1"
+          ],
+          "relevant_ids": [],
+          "governed_unit": {
+            "evidence_unit_id": "nice-ng136-2026-02-26:rec:1.4.1",
+            "unit_type": "recommendation",
+            "chunk_id": null,
+            "source_chunk_ids": [
+              "nice-ng136-2026-02-26:6",
+              "nice-ng136-2026-02-26:7"
+            ],
+            "recommendation_id": "1.4.1",
+            "document_id": "nice-ng136",
+            "version_id": "nice-ng136-2026-02-26",
+            "text": "Offer lifestyle advice to people with suspected or diagnosed hypertension, and continue to offer it periodically. [2004]",
+            "section": "1.4",
+            "page_start": 11,
+            "page_end": 11,
+            "source_type": "clinical_guideline",
+            "jurisdiction": "UK",
+            "lifecycle_status": "current",
+            "canonical_source_url": "https://www.nice.org.uk/guidance/ng136",
+            "publisher": "NICE",
+            "canonical_title": "Hypertension in adults: diagnosis and management",
+            "published_at": "2019-08-28",
+            "updated_at": "2026-02-26",
+            "extractor_version": "nice-numbered-action-v3"
+          },
+          "tags": [
+            "governed_passage",
+            "deliberate_contradiction"
+          ],
+          "provenance": {
+            "document_id": "nice-ng136",
+            "version_id": "nice-ng136-2026-02-26",
+            "recommendation_id": "1.4.1",
+            "canonical_url": "https://www.nice.org.uk/guidance/ng136",
+            "label_note": "Contradicted claims are synthetic negative assertions, never publisher recommendations."
+          },
+          "actual": "uncertain",
+          "latency_ms": 34.16759998071939
+        },
+        {
+          "case_id": "governed-nice-ng136-1.4.6",
+          "suite": "grounding",
+          "version": "1.1.0",
+          "split": "held_out",
+          "description": "Independent paraphrase or deliberate contradiction of nice-ng136-2026-02-26:rec:1.4.6",
+          "input": {
+            "claim": "Calcium supplements should be offered to reduce blood pressure.",
+            "evidence_unit_id": "nice-ng136-2026-02-26:rec:1.4.6"
+          },
+          "expected_behavior": "contradicted",
+          "expected": "contradicted",
+          "claim": "Calcium supplements should be offered to reduce blood pressure.",
+          "evidence": {
+            "nice-ng136-2026-02-26:rec:1.4.6": "Do not offer calcium, magnesium or potassium supplements as a method for reducing blood pressure. [2004]"
+          },
+          "cited_ids": [
+            "nice-ng136-2026-02-26:rec:1.4.6"
+          ],
+          "relevant_ids": [],
+          "governed_unit": {
+            "evidence_unit_id": "nice-ng136-2026-02-26:rec:1.4.6",
+            "unit_type": "recommendation",
+            "chunk_id": null,
+            "source_chunk_ids": [
+              "nice-ng136-2026-02-26:6",
+              "nice-ng136-2026-02-26:7"
+            ],
+            "recommendation_id": "1.4.6",
+            "document_id": "nice-ng136",
+            "version_id": "nice-ng136-2026-02-26",
+            "text": "Do not offer calcium, magnesium or potassium supplements as a method for reducing blood pressure. [2004]",
+            "section": "1.4",
+            "page_start": 11,
+            "page_end": 11,
+            "source_type": "clinical_guideline",
+            "jurisdiction": "UK",
+            "lifecycle_status": "current",
+            "canonical_source_url": "https://www.nice.org.uk/guidance/ng136",
+            "publisher": "NICE",
+            "canonical_title": "Hypertension in adults: diagnosis and management",
+            "published_at": "2019-08-28",
+            "updated_at": "2026-02-26",
+            "extractor_version": "nice-numbered-action-v3"
+          },
+          "tags": [
+            "governed_passage",
+            "deliberate_contradiction"
+          ],
+          "provenance": {
+            "document_id": "nice-ng136",
+            "version_id": "nice-ng136-2026-02-26",
+            "recommendation_id": "1.4.6",
+            "canonical_url": "https://www.nice.org.uk/guidance/ng136",
+            "label_note": "Contradicted claims are synthetic negative assertions, never publisher recommendations."
+          },
+          "actual": "uncertain",
+          "latency_ms": 40.583499998319894
+        },
+        {
+          "case_id": "governed-nice-ng238-1.1.6",
+          "suite": "grounding",
+          "version": "1.1.0",
+          "split": "held_out",
+          "description": "Independent paraphrase or deliberate contradiction of nice-ng238-2023-12-14:rec:1.1.6",
+          "input": {
+            "claim": "Use opportunistic assessment as the main primary-care strategy to identify CVD risk in unselected people.",
+            "evidence_unit_id": "nice-ng238-2023-12-14:rec:1.1.6"
+          },
+          "expected_behavior": "contradicted",
+          "expected": "contradicted",
+          "claim": "Use opportunistic assessment as the main primary-care strategy to identify CVD risk in unselected people.",
+          "evidence": {
+            "nice-ng238-2023-12-14:rec:1.1.6": "Do not use opportunistic assessment as the main strategy in primary care to identify CVD risk in unselected people. [2008]"
+          },
+          "cited_ids": [
+            "nice-ng238-2023-12-14:rec:1.1.6"
+          ],
+          "relevant_ids": [],
+          "governed_unit": {
+            "evidence_unit_id": "nice-ng238-2023-12-14:rec:1.1.6",
+            "unit_type": "recommendation",
+            "chunk_id": null,
+            "source_chunk_ids": [
+              "nice-ng238-2023-12-14:2"
+            ],
+            "recommendation_id": "1.1.6",
+            "document_id": "nice-ng238",
+            "version_id": "nice-ng238-2023-12-14",
+            "text": "Do not use opportunistic assessment as the main strategy in primary care to identify CVD risk in unselected people. [2008]",
+            "section": "1.1",
+            "page_start": 5,
+            "page_end": 5,
+            "source_type": "clinical_guideline",
+            "jurisdiction": "UK",
+            "lifecycle_status": "current",
+            "canonical_source_url": "https://www.nice.org.uk/guidance/ng238",
+            "publisher": "NICE",
+            "canonical_title": "Cardiovascular disease: risk assessment and reduction, including lipid modification",
+            "published_at": "2023-12-14",
+            "updated_at": null,
+            "extractor_version": "nice-numbered-action-v3"
+          },
+          "tags": [
+            "governed_passage",
+            "deliberate_contradiction"
+          ],
+          "provenance": {
+            "document_id": "nice-ng238",
+            "version_id": "nice-ng238-2023-12-14",
+            "recommendation_id": "1.1.6",
+            "canonical_url": "https://www.nice.org.uk/guidance/ng238",
+            "label_note": "Contradicted claims are synthetic negative assertions, never publisher recommendations."
+          },
+          "actual": "unsupported",
+          "latency_ms": 37.05019998596981
+        },
+        {
+          "case_id": "governed-nice-ng238-1.1.7",
+          "suite": "grounding",
+          "version": "1.1.0",
+          "split": "held_out",
+          "description": "Independent paraphrase or deliberate contradiction of nice-ng238-2023-12-14:rec:1.1.7",
+          "input": {
+            "claim": "Use QRISK3 to estimate CVD risk over the next 10 years for people aged 25 to 84 without CVD.",
+            "evidence_unit_id": "nice-ng238-2023-12-14:rec:1.1.7"
+          },
+          "expected_behavior": "supported",
+          "expected": "supported",
+          "claim": "Use QRISK3 to estimate CVD risk over the next 10 years for people aged 25 to 84 without CVD.",
+          "evidence": {
+            "nice-ng238-2023-12-14:rec:1.1.7": "Use the QRISK3 tool to calculate the estimated CVD risk within the next 10 years for people aged between 25 and 84 without CVD. [May 2023] \u00a9 NICE 2026. All rights reserved. Subject to Notice of rights (https://www.nice.org.uk/terms-and- Page 5 of conditions#notice-of-rights). 52 Cardiovascular disease: risk assessment and reduction, including lipid modification (NG238)"
+          },
+          "cited_ids": [
+            "nice-ng238-2023-12-14:rec:1.1.7"
+          ],
+          "relevant_ids": [
+            "nice-ng238-2023-12-14:rec:1.1.7"
+          ],
+          "governed_unit": {
+            "evidence_unit_id": "nice-ng238-2023-12-14:rec:1.1.7",
+            "unit_type": "recommendation",
+            "chunk_id": null,
+            "source_chunk_ids": [
+              "nice-ng238-2023-12-14:2",
+              "nice-ng238-2023-12-14:3"
+            ],
+            "recommendation_id": "1.1.7",
+            "document_id": "nice-ng238",
+            "version_id": "nice-ng238-2023-12-14",
+            "text": "Use the QRISK3 tool to calculate the estimated CVD risk within the next 10 years for people aged between 25 and 84 without CVD. [May 2023] \u00a9 NICE 2026. All rights reserved. Subject to Notice of rights (https://www.nice.org.uk/terms-and- Page 5 of conditions#notice-of-rights). 52 Cardiovascular disease: risk assessment and reduction, including lipid modification (NG238)",
+            "section": "1.1",
+            "page_start": 5,
+            "page_end": 6,
+            "source_type": "clinical_guideline",
+            "jurisdiction": "UK",
+            "lifecycle_status": "current",
+            "canonical_source_url": "https://www.nice.org.uk/guidance/ng238",
+            "publisher": "NICE",
+            "canonical_title": "Cardiovascular disease: risk assessment and reduction, including lipid modification",
+            "published_at": "2023-12-14",
+            "updated_at": null,
+            "extractor_version": "nice-numbered-action-v3"
+          },
+          "tags": [
+            "governed_passage",
+            "paraphrase"
+          ],
+          "provenance": {
+            "document_id": "nice-ng238",
+            "version_id": "nice-ng238-2023-12-14",
+            "recommendation_id": "1.1.7",
+            "canonical_url": "https://www.nice.org.uk/guidance/ng238",
+            "label_note": "Contradicted claims are synthetic negative assertions, never publisher recommendations."
+          },
+          "actual": "uncertain",
+          "latency_ms": 71.03679998544976
+        },
+        {
+          "case_id": "governed-nice-ng238-1.1.8",
+          "suite": "grounding",
+          "version": "1.1.0",
+          "split": "held_out",
+          "description": "Independent paraphrase or deliberate contradiction of nice-ng238-2023-12-14:rec:1.1.8",
+          "input": {
+            "claim": "Use QRISK3 for people with type 2 diabetes aged 25 to 84.",
+            "evidence_unit_id": "nice-ng238-2023-12-14:rec:1.1.8"
+          },
+          "expected_behavior": "supported",
+          "expected": "supported",
+          "claim": "Use QRISK3 for people with type 2 diabetes aged 25 to 84.",
+          "evidence": {
+            "nice-ng238-2023-12-14:rec:1.1.8": "Use the QRISK3 tool for people with type 2 diabetes aged between 25 and 84. [May 2023]"
+          },
+          "cited_ids": [
+            "nice-ng238-2023-12-14:rec:1.1.8"
+          ],
+          "relevant_ids": [
+            "nice-ng238-2023-12-14:rec:1.1.8"
+          ],
+          "governed_unit": {
+            "evidence_unit_id": "nice-ng238-2023-12-14:rec:1.1.8",
+            "unit_type": "recommendation",
+            "chunk_id": null,
+            "source_chunk_ids": [
+              "nice-ng238-2023-12-14:2",
+              "nice-ng238-2023-12-14:3"
+            ],
+            "recommendation_id": "1.1.8",
+            "document_id": "nice-ng238",
+            "version_id": "nice-ng238-2023-12-14",
+            "text": "Use the QRISK3 tool for people with type 2 diabetes aged between 25 and 84. [May 2023]",
+            "section": "1.1",
+            "page_start": 6,
+            "page_end": 6,
+            "source_type": "clinical_guideline",
+            "jurisdiction": "UK",
+            "lifecycle_status": "current",
+            "canonical_source_url": "https://www.nice.org.uk/guidance/ng238",
+            "publisher": "NICE",
+            "canonical_title": "Cardiovascular disease: risk assessment and reduction, including lipid modification",
+            "published_at": "2023-12-14",
+            "updated_at": null,
+            "extractor_version": "nice-numbered-action-v3"
+          },
+          "tags": [
+            "governed_passage",
+            "paraphrase"
+          ],
+          "provenance": {
+            "document_id": "nice-ng238",
+            "version_id": "nice-ng238-2023-12-14",
+            "recommendation_id": "1.1.8",
+            "canonical_url": "https://www.nice.org.uk/guidance/ng238",
+            "label_note": "Contradicted claims are synthetic negative assertions, never publisher recommendations."
+          },
+          "actual": "supported",
+          "latency_ms": 43.251600000075996
+        },
+        {
+          "case_id": "governed-nice-ng238-1.3.2",
+          "suite": "grounding",
+          "version": "1.1.0",
+          "split": "held_out",
+          "description": "Independent paraphrase or deliberate contradiction of nice-ng238-2023-12-14:rec:1.3.2",
+          "input": {
+            "claim": "For people at high risk of or with CVD, the recommended saturated-fat limit is 70% of total energy intake.",
+            "evidence_unit_id": "nice-ng238-2023-12-14:rec:1.3.2"
+          },
+          "expected_behavior": "contradicted",
+          "expected": "contradicted",
+          "claim": "For people at high risk of or with CVD, the recommended saturated-fat limit is 70% of total energy intake.",
+          "evidence": {
+            "nice-ng238-2023-12-14:rec:1.3.2": "Advise people at high risk of or with CVD to eat a diet in which total fat intake is 30% or less of total energy intake, saturated fats are 7% or less of total energy intake, and where possible saturated fats are replaced by mono\u2011unsaturated and polyunsaturated fats. [May 2023]"
+          },
+          "cited_ids": [
+            "nice-ng238-2023-12-14:rec:1.3.2"
+          ],
+          "relevant_ids": [],
+          "governed_unit": {
+            "evidence_unit_id": "nice-ng238-2023-12-14:rec:1.3.2",
+            "unit_type": "recommendation",
+            "chunk_id": null,
+            "source_chunk_ids": [
+              "nice-ng238-2023-12-14:8",
+              "nice-ng238-2023-12-14:9"
+            ],
+            "recommendation_id": "1.3.2",
+            "document_id": "nice-ng238",
+            "version_id": "nice-ng238-2023-12-14",
+            "text": "Advise people at high risk of or with CVD to eat a diet in which total fat intake is 30% or less of total energy intake, saturated fats are 7% or less of total energy intake, and where possible saturated fats are replaced by mono\u2011unsaturated and polyunsaturated fats. [May 2023]",
+            "section": "1.3",
+            "page_start": 14,
+            "page_end": 14,
+            "source_type": "clinical_guideline",
+            "jurisdiction": "UK",
+            "lifecycle_status": "current",
+            "canonical_source_url": "https://www.nice.org.uk/guidance/ng238",
+            "publisher": "NICE",
+            "canonical_title": "Cardiovascular disease: risk assessment and reduction, including lipid modification",
+            "published_at": "2023-12-14",
+            "updated_at": null,
+            "extractor_version": "nice-numbered-action-v3"
+          },
+          "tags": [
+            "governed_passage",
+            "deliberate_contradiction"
+          ],
+          "provenance": {
+            "document_id": "nice-ng238",
+            "version_id": "nice-ng238-2023-12-14",
+            "recommendation_id": "1.3.2",
+            "canonical_url": "https://www.nice.org.uk/guidance/ng238",
+            "label_note": "Contradicted claims are synthetic negative assertions, never publisher recommendations."
+          },
+          "actual": "unsupported",
+          "latency_ms": 52.560499985702336
         }
       ]
+    }
+  },
+  "phase5_comparison": {
+    "description": "Unchanged Phase 5 held-out queries, retained pool size 30; warm local models",
+    "cases": 12,
+    "metrics": {
+      "recall_at_5": 1.0,
+      "recall_at_10": 1.0,
+      "mrr": 1.0,
+      "ndcg_at_10": 1.0,
+      "evidence_recall_at_5_labeled_subset": 1.0,
+      "evidence_mrr_labeled_subset": 0.8333333333333334,
+      "answerable_answered": 7,
+      "answerable_total": 7,
+      "unanswerable_abstained": 5,
+      "unanswerable_total": 5,
+      "false_answer_rate": 0.0
+    },
+    "latency": {
+      "dense": {
+        "median_ms": 13.572300027590245,
+        "p95_ms": 18.938300001900643
+      },
+      "bm25": {
+        "median_ms": 1.7241000314243138,
+        "p95_ms": 10.642900015227495
+      },
+      "reranking": {
+        "median_ms": 1069.515599985607,
+        "p95_ms": 1122.8749700065237
+      },
+      "full_retrieval": {
+        "median_ms": 1092.07489999244,
+        "p95_ms": 1170.766959968023
+      }
+    },
+    "prior": {
+      "selected_pool": 30,
+      "selection_reason": "Development document metrics tied, so the established 30-unit pool was retained conservatively; held-out evidence-unit checks then confirmed the choice.",
+      "phase4": {
+        "quality": {
+          "recall_at_5": 1.0,
+          "recall_at_10": 1.0,
+          "mrr": 1.0,
+          "ndcg_at_10": 1.0,
+          "evidence_recall_at_5_labeled_subset": 1.0,
+          "evidence_mrr_labeled_subset": 0.8333333333333334,
+          "answerable_answered": 7,
+          "answerable_total": 7,
+          "unanswerable_abstained": 5,
+          "unanswerable_total": 5,
+          "false_answer_rate": 0.0
+        },
+        "latency": {
+          "dense": {
+            "median_ms": 43.682700001227204,
+            "p95_ms": 76.8779399979394
+          },
+          "bm25": {
+            "median_ms": 92.89879999414552,
+            "p95_ms": 1023.419560001639
+          },
+          "reranking": {
+            "median_ms": 5892.075700001442,
+            "p95_ms": 6081.573300003947
+          },
+          "full_retrieval": {
+            "median_ms": 6130.21899999876,
+            "p95_ms": 7191.5257000000565
+          }
+        }
+      },
+      "phase5": {
+        "quality": {
+          "recall_at_5": 1.0,
+          "recall_at_10": 1.0,
+          "mrr": 1.0,
+          "ndcg_at_10": 1.0,
+          "evidence_recall_at_5_labeled_subset": 1.0,
+          "evidence_mrr_labeled_subset": 0.8333333333333334,
+          "answerable_answered": 7,
+          "answerable_total": 7,
+          "unanswerable_abstained": 5,
+          "unanswerable_total": 5,
+          "false_answer_rate": 0.0
+        },
+        "latency": {
+          "dense": {
+            "median_ms": 29.972399992402643,
+            "p95_ms": 49.47478000249248
+          },
+          "bm25": {
+            "median_ms": 2.4545999913243577,
+            "p95_ms": 13.576359991566278
+          },
+          "reranking": {
+            "median_ms": 1123.3631000068272,
+            "p95_ms": 1152.007129995036
+          },
+          "full_retrieval": {
+            "median_ms": 1181.4806000038516,
+            "p95_ms": 1207.949059997918
+          }
+        }
+      }
     }
   },
   "baseline_version": "1.0.0",
@@ -4261,6 +5839,9 @@
     },
     "grounding.held_out.metrics.false_supported_rate": {
       "max": 0.0
+    },
+    "contracts.pass_rate": {
+      "min": 1.0
     }
   },
   "gate_failures": [],

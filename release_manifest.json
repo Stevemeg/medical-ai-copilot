@@ -1,0 +1,22 @@
+{
+  "schema_version": 1,
+  "git_sha": "dc0cf38489143731aad18790d011bdd925b29f44",
+  "source_digest": "a25027a7ea71d6898cbb01a141f48169561d17c781489e0861e7fc690a09e8b2",
+  "schema_revision": "62a2guidelines",
+  "knowledge_registry_sha256": "0e52c0ecf47a6c7d1dfbfa859da23f56657bb3dd67ac37d8ac284999824ed331",
+  "rule_evidence_registry_sha256": "6e80e4e039e64172689b5d83a360aa5c76f8b74e54543be38a211bb0ddb64534",
+  "vector_manifests": {
+    "clinical": "76002e4d4dd7ff3767ff3aa8b60391d7353af750f839191205a4afe49ac1fc65",
+    "anatomy": "250b8e3f03e7c29451b2579c8ff730e780791ed16b29b7d7985fded480bf3290"
+  },
+  "evaluation_baseline_version": "1.0.0",
+  "evaluation_report_sha256": "028d9351bfe54040c500d18d6c6d888fe3ca3b5c7baab0d55044626db97dfdb3",
+  "model_manifest_sha256": "6c90ac616e08c720e8d0b605a0ec9e6bd444eb587dedacf5f00f39e2300fe60b",
+  "abdm_manifest_sha256": "cd6cd0b28ffb332f255fb1cfdd0ab5b5b2fe102646957dc4e5f6e50962b1f753",
+  "fhir_version": "4.0.1",
+  "smart_version": "2.2.0",
+  "cds_hooks_version": "2.0.1",
+  "patient_view_version": "1.0",
+  "abdm_ig_version": "6.5.0",
+  "python_version": "3.11.0"
+}
