@@ -4,3 +4,4 @@ data/** -text whitespace=blank-at-eol,blank-at-eof,space-before-tab,cr-at-eol
 eval/abdm*.json -text whitespace=blank-at-eol,blank-at-eof,space-before-tab,cr-at-eol
 eval/final_system_report.json -text
 release_manifest.json -text
+model_manifest.json -text
