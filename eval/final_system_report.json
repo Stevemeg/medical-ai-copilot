@@ -1,8 +1,8 @@
 {
   "dataset_version": "1.1.0",
-  "timestamp": "2026-09-30T03:08:34.379793+00:00",
+  "timestamp": "2026-09-30T03:17:53.020889+00:00",
   "git": {
-    "sha": "758a545bc666113652504d0ae01370d24d21296f",
+    "sha": "3a63c605b8689b4c1571052db4f20b3fedb78b31",
     "dirty": false
   },
   "environment": {
@@ -454,7 +454,7 @@
         "failed": 0,
         "skipped": 0,
         "passed": true,
-        "duration_seconds": 0.066
+        "duration_seconds": 0.074
       },
       {
         "case_id": "conflicts-conflicts_and_compatible_sources",
@@ -464,7 +464,7 @@
         "failed": 0,
         "skipped": 0,
         "passed": true,
-        "duration_seconds": 0.001
+        "duration_seconds": 0.002
       },
       {
         "case_id": "abstention-verifier_unavailable_and_malformed_retry",
@@ -474,7 +474,7 @@
         "failed": 0,
         "skipped": 0,
         "passed": true,
-        "duration_seconds": 0.003
+        "duration_seconds": 0.001
       },
       {
         "case_id": "stale_source_rejection-lifecycle_and_source_type_boundaries",
@@ -484,7 +484,7 @@
         "failed": 0,
         "skipped": 0,
         "passed": true,
-        "duration_seconds": 0.027
+        "duration_seconds": 0.04
       },
       {
         "case_id": "stale_source_rejection-manifest_staleness",
@@ -494,7 +494,7 @@
         "failed": 0,
         "skipped": 0,
         "passed": true,
-        "duration_seconds": 0.019
+        "duration_seconds": 0.042
       },
       {
         "case_id": "historical_retrieval-cosine_filter_and_rrf_provenance",
@@ -514,7 +514,7 @@
         "failed": 0,
         "skipped": 0,
         "passed": true,
-        "duration_seconds": 0.005
+        "duration_seconds": 0.008
       },
       {
         "case_id": "fhir_normalization-invalid_bundle_rejected",
@@ -534,7 +534,7 @@
         "failed": 0,
         "skipped": 0,
         "passed": true,
-        "duration_seconds": 0.003
+        "duration_seconds": 0.002
       },
       {
         "case_id": "smart_context-smart_discovery_and_pkce",
@@ -544,7 +544,7 @@
         "failed": 0,
         "skipped": 0,
         "passed": true,
-        "duration_seconds": 0.002
+        "duration_seconds": 0.003
       },
       {
         "case_id": "smart_context-fhir_fetch_and_bearer",
@@ -554,7 +554,7 @@
         "failed": 0,
         "skipped": 0,
         "passed": true,
-        "duration_seconds": 0.003
+        "duration_seconds": 0.004
       },
       {
         "case_id": "smart_context-fhir_fetch_fail_closed",
@@ -574,7 +574,7 @@
         "failed": 0,
         "skipped": 0,
         "passed": true,
-        "duration_seconds": 0.005
+        "duration_seconds": 0.004
       },
       {
         "case_id": "cds_hooks-cds_cards_use_rule_engine",
@@ -584,7 +584,7 @@
         "failed": 0,
         "skipped": 0,
         "passed": true,
-        "duration_seconds": 0.41200000000000003
+        "duration_seconds": 1.371
       },
       {
         "case_id": "cds_hooks-cds_cannot_infer_coverage",
@@ -594,7 +594,7 @@
         "failed": 0,
         "skipped": 0,
         "passed": true,
-        "duration_seconds": 0.001
+        "duration_seconds": 0.003
       },
       {
         "case_id": "cds_hooks-cds_discovery_validation_and_endpoint",
@@ -604,7 +604,7 @@
         "failed": 0,
         "skipped": 0,
         "passed": true,
-        "duration_seconds": 0.229
+        "duration_seconds": 0.51
       },
       {
         "case_id": "guideline_diff-diff_all_classifications_and_text_record",
@@ -614,7 +614,7 @@
         "failed": 0,
         "skipped": 0,
         "passed": true,
-        "duration_seconds": 0.0
+        "duration_seconds": 0.002
       },
       {
         "case_id": "guideline_diff-ambiguous_matching_is_not_forced",
@@ -624,7 +624,7 @@
         "failed": 0,
         "skipped": 0,
         "passed": true,
-        "duration_seconds": 0.001
+        "duration_seconds": 0.005
       },
       {
         "case_id": "guideline_diff-candidate_contract_rejects_unbounded_and_invalid_metadata",
@@ -634,7 +634,7 @@
         "failed": 0,
         "skipped": 0,
         "passed": true,
-        "duration_seconds": 0.0
+        "duration_seconds": 0.001
       },
       {
         "case_id": "rbac_security-dev_jwt_validation_matrix",
@@ -644,7 +644,7 @@
         "failed": 0,
         "skipped": 0,
         "passed": true,
-        "duration_seconds": 0.004
+        "duration_seconds": 0.003
       },
       {
         "case_id": "rbac_security-permission_matrix",
@@ -664,7 +664,7 @@
         "failed": 0,
         "skipped": 0,
         "passed": true,
-        "duration_seconds": 0.053
+        "duration_seconds": 0.039
       },
       {
         "case_id": "ssrf-reject_unsafe_origins",
@@ -674,7 +674,7 @@
         "failed": 0,
         "skipped": 0,
         "passed": true,
-        "duration_seconds": 0.013000000000000001
+        "duration_seconds": 0.012
       },
       {
         "case_id": "ssrf-dns_private_and_ipv6_blocked",
@@ -704,7 +704,7 @@
         "failed": 0,
         "skipped": 0,
         "passed": true,
-        "duration_seconds": 0.073
+        "duration_seconds": 0.094
       },
       {
         "case_id": "operations_performance-retriever_rejects_changed_manifest_signature",
@@ -714,7 +714,7 @@
         "failed": 0,
         "skipped": 0,
         "passed": true,
-        "duration_seconds": 0.096
+        "duration_seconds": 0.152
       },
       {
         "case_id": "abdm-official_abdm_profiles_and_missing_fields",
@@ -724,7 +724,7 @@
         "failed": 0,
         "skipped": 0,
         "passed": true,
-        "duration_seconds": 0.081
+        "duration_seconds": 0.148
       },
       {
         "case_id": "missing_data-unknown_and_partial_coverage_never_create_gap",
@@ -734,7 +734,7 @@
         "failed": 0,
         "skipped": 0,
         "passed": true,
-        "duration_seconds": 0.432
+        "duration_seconds": 0.72
       },
       {
         "case_id": "missing_data-recent_or_unknown_diagnosis_does_not_create_annual_gap",
@@ -744,7 +744,7 @@
         "failed": 0,
         "skipped": 0,
         "passed": true,
-        "duration_seconds": 0.207
+        "duration_seconds": 0.293
       },
       {
         "case_id": "guideline_activation-guideline_quarantine_diff_activation_history_and_audit",
@@ -754,7 +754,7 @@
         "failed": 0,
         "skipped": 0,
         "passed": true,
-        "duration_seconds": 1.124
+        "duration_seconds": 1.564
       },
       {
         "case_id": "guideline_activation-concurrent_activation_rejects_obsolete_base_and_audit_failure_rolls_back",
@@ -764,7 +764,7 @@
         "failed": 0,
         "skipped": 0,
         "passed": true,
-        "duration_seconds": 0.679
+        "duration_seconds": 0.943
       },
       {
         "case_id": "guideline_activation-guideline_http_rbac_and_review_transitions",
@@ -774,7 +774,7 @@
         "failed": 0,
         "skipped": 0,
         "passed": true,
-        "duration_seconds": 1.165
+        "duration_seconds": 1.588
       },
       {
         "case_id": "smart_roundtrip-smart_roundtrip_and_failures",
@@ -784,7 +784,7 @@
         "failed": 0,
         "skipped": 0,
         "passed": true,
-        "duration_seconds": 0.383
+        "duration_seconds": 0.44599999999999995
       },
       {
         "case_id": "retention-retention_dry_run_and_execute_preserve_history",
@@ -794,7 +794,7 @@
         "failed": 0,
         "skipped": 0,
         "passed": true,
-        "duration_seconds": 0.09
+        "duration_seconds": 0.088
       },
       {
         "case_id": "concurrency_audit-concurrent_import_review_evaluation_action_and_audit",
@@ -804,7 +804,7 @@
         "failed": 0,
         "skipped": 0,
         "passed": true,
-        "duration_seconds": 0.368
+        "duration_seconds": 0.465
       },
       {
         "case_id": "concurrency_audit-audit_concurrent_chain_and_corruption_detection",
@@ -814,7 +814,7 @@
         "failed": 0,
         "skipped": 0,
         "passed": true,
-        "duration_seconds": 0.232
+        "duration_seconds": 0.253
       },
       {
         "case_id": "smart_context-fhir_pagination_collects_complete_searchset",
@@ -834,7 +834,7 @@
         "failed": 0,
         "skipped": 0,
         "passed": true,
-        "duration_seconds": 0.009
+        "duration_seconds": 0.01
       }
     ],
     "process_exit_code": 0
@@ -857,20 +857,20 @@
       },
       "latency": {
         "dense": {
-          "median_ms": 12.040300003718585,
-          "p95_ms": 2423.04011998348
+          "median_ms": 24.299099983181804,
+          "p95_ms": 3524.9452800140593
         },
         "bm25": {
-          "median_ms": 1.5573999844491482,
-          "p95_ms": 208.22649002075184
+          "median_ms": 3.0467999749816954,
+          "p95_ms": 441.10150000196876
         },
         "reranking": {
-          "median_ms": 1019.0792999928817,
-          "p95_ms": 1452.0511899783742
+          "median_ms": 1681.178299972089,
+          "p95_ms": 1955.0823700032195
         },
         "full_retrieval": {
-          "median_ms": 1044.62139995303,
-          "p95_ms": 3822.8242700220935
+          "median_ms": 1707.1910999948159,
+          "p95_ms": 5473.880840023037
         }
       },
       "results": [
@@ -1875,20 +1875,20 @@
       },
       "latency": {
         "dense": {
-          "median_ms": 13.000799983274192,
-          "p95_ms": 20.322699972894043
+          "median_ms": 42.88759996416047,
+          "p95_ms": 522.0145999919623
         },
         "bm25": {
-          "median_ms": 1.6915000160224736,
-          "p95_ms": 14.831200009211898
+          "median_ms": 5.8323999983258545,
+          "p95_ms": 37.08360000746325
         },
         "reranking": {
-          "median_ms": 1064.552099996945,
-          "p95_ms": 1209.9266900069779
+          "median_ms": 3224.398000020301,
+          "p95_ms": 6594.381724990674
         },
         "full_retrieval": {
-          "median_ms": 1098.6189999966882,
-          "p95_ms": 1268.2593999779783
+          "median_ms": 3373.158100002911,
+          "p95_ms": 7604.331800015643
         }
       },
       "results": [
@@ -3449,8 +3449,8 @@
         "uncertain_rate": 0.3684210526315789,
         "citation_precision": 1.0,
         "citation_recall": 0.5714285714285714,
-        "verification_p50_ms": 33.94969995133579,
-        "verification_p95_ms": 151.546709996181
+        "verification_p50_ms": 58.43580001965165,
+        "verification_p95_ms": 277.80617997632135
       },
       "results": [
         {
@@ -3489,7 +3489,7 @@
           "provenance": "Synthetic engineering fixture; not a medical recommendation",
           "expected_behavior": "supported",
           "actual": "uncertain",
-          "latency_ms": 774.4404000113718
+          "latency_ms": 1251.9200999522582
         },
         {
           "case_id": "g2",
@@ -3523,7 +3523,7 @@
           "provenance": "Synthetic engineering fixture; not a medical recommendation",
           "expected_behavior": "unsupported",
           "actual": "uncertain",
-          "latency_ms": 28.902799997013062
+          "latency_ms": 54.42559998482466
         },
         {
           "case_id": "g3",
@@ -3557,7 +3557,7 @@
           "provenance": "Synthetic engineering fixture; not a medical recommendation",
           "expected_behavior": "contradicted",
           "actual": "unsupported",
-          "latency_ms": 27.921200031414628
+          "latency_ms": 53.91980003332719
         },
         {
           "case_id": "g4",
@@ -3591,7 +3591,7 @@
           "provenance": "Synthetic engineering fixture; not a medical recommendation",
           "expected_behavior": "insufficient",
           "actual": "uncertain",
-          "latency_ms": 27.46439998736605
+          "latency_ms": 50.33019999973476
         },
         {
           "case_id": "p6-g1",
@@ -3632,7 +3632,7 @@
           "provenance": "Synthetic engineering fixture; not a medical recommendation",
           "expected_behavior": "supported",
           "actual": "unsupported",
-          "latency_ms": 28.427999990526587
+          "latency_ms": 49.60309999296442
         },
         {
           "case_id": "p6-g4",
@@ -3669,7 +3669,7 @@
           "provenance": "Synthetic engineering fixture; not a medical recommendation",
           "expected_behavior": "contradicted",
           "actual": "unsupported",
-          "latency_ms": 33.50099996896461
+          "latency_ms": 50.74600002262741
         },
         {
           "case_id": "p6-g7",
@@ -3706,7 +3706,7 @@
           "provenance": "Synthetic engineering fixture; not a medical recommendation",
           "expected_behavior": "contradicted",
           "actual": "unsupported",
-          "latency_ms": 33.24879996944219
+          "latency_ms": 52.39989998517558
         },
         {
           "case_id": "p6-g10",
@@ -3743,7 +3743,7 @@
           "provenance": "Synthetic engineering fixture; not a medical recommendation",
           "expected_behavior": "unsupported",
           "actual": "uncertain",
-          "latency_ms": 33.94969995133579
+          "latency_ms": 46.506699989549816
         },
         {
           "case_id": "p6-g13",
@@ -3780,7 +3780,7 @@
           "provenance": "Synthetic engineering fixture; not a medical recommendation",
           "expected_behavior": "unsupported",
           "actual": "unsupported",
-          "latency_ms": 29.586700024083257
+          "latency_ms": 54.000900010578334
         },
         {
           "case_id": "p6-g16",
@@ -3821,7 +3821,7 @@
           "provenance": "Synthetic engineering fixture; not a medical recommendation",
           "expected_behavior": "supported",
           "actual": "supported",
-          "latency_ms": 26.346600032411516
+          "latency_ms": 58.43580001965165
         },
         {
           "case_id": "p6-g19",
@@ -3858,7 +3858,7 @@
           "provenance": "Synthetic engineering fixture; not a medical recommendation",
           "expected_behavior": "contradicted",
           "actual": "unsupported",
-          "latency_ms": 29.91800004383549
+          "latency_ms": 53.27509995549917
         },
         {
           "case_id": "governed-nice-ng136-1.2.1",
@@ -3919,7 +3919,7 @@
             "label_note": "Contradicted claims are synthetic negative assertions, never publisher recommendations."
           },
           "actual": "supported",
-          "latency_ms": 53.9989999961108
+          "latency_ms": 113.18370001390576
         },
         {
           "case_id": "governed-nice-ng136-1.2.2",
@@ -3978,7 +3978,7 @@
             "label_note": "Contradicted claims are synthetic negative assertions, never publisher recommendations."
           },
           "actual": "unsupported",
-          "latency_ms": 44.881499954499304
+          "latency_ms": 114.64119999436662
         },
         {
           "case_id": "governed-nice-ng136-1.2.6",
@@ -4039,7 +4039,7 @@
             "label_note": "Contradicted claims are synthetic negative assertions, never publisher recommendations."
           },
           "actual": "uncertain",
-          "latency_ms": 52.69069998757914
+          "latency_ms": 84.21949995681643
         },
         {
           "case_id": "governed-nice-ng136-1.2.7",
@@ -4098,7 +4098,7 @@
             "label_note": "Contradicted claims are synthetic negative assertions, never publisher recommendations."
           },
           "actual": "uncertain",
-          "latency_ms": 82.33629999449477
+          "latency_ms": 169.57129997899756
         },
         {
           "case_id": "governed-nice-ng136-1.2.10",
@@ -4158,7 +4158,7 @@
             "label_note": "Contradicted claims are synthetic negative assertions, never publisher recommendations."
           },
           "actual": "supported",
-          "latency_ms": 48.6504000145942
+          "latency_ms": 101.10570001415908
         },
         {
           "case_id": "governed-nice-ng238-1.1.5",
@@ -4216,7 +4216,7 @@
             "label_note": "Contradicted claims are synthetic negative assertions, never publisher recommendations."
           },
           "actual": "uncertain",
-          "latency_ms": 38.44709997065365
+          "latency_ms": 60.30730000929907
         },
         {
           "case_id": "governed-nice-ng238-1.3.4",
@@ -4275,7 +4275,7 @@
             "label_note": "Contradicted claims are synthetic negative assertions, never publisher recommendations."
           },
           "actual": "unsupported",
-          "latency_ms": 39.94739998597652
+          "latency_ms": 63.103699998464435
         },
         {
           "case_id": "governed-nice-ng238-1.3.5",
@@ -4336,7 +4336,7 @@
             "label_note": "Contradicted claims are synthetic negative assertions, never publisher recommendations."
           },
           "actual": "supported",
-          "latency_ms": 46.870000020135194
+          "latency_ms": 82.92030001757666
         }
       ]
     },
@@ -4351,8 +4351,8 @@
         "uncertain_rate": 0.3225806451612903,
         "citation_precision": 1.0,
         "citation_recall": 0.8,
-        "verification_p50_ms": 28.679899987764657,
-        "verification_p95_ms": 61.90105000860058
+        "verification_p50_ms": 62.20699998084456,
+        "verification_p95_ms": 292.2086000035051
       },
       "results": [
         {
@@ -4391,7 +4391,7 @@
           "provenance": "Synthetic engineering fixture; not a medical recommendation",
           "expected_behavior": "supported",
           "actual": "supported",
-          "latency_ms": 29.801999975461513
+          "latency_ms": 73.86549998773262
         },
         {
           "case_id": "g6",
@@ -4425,7 +4425,7 @@
           "provenance": "Synthetic engineering fixture; not a medical recommendation",
           "expected_behavior": "unsupported",
           "actual": "unsupported",
-          "latency_ms": 28.679899987764657
+          "latency_ms": 53.58369997702539
         },
         {
           "case_id": "g7",
@@ -4459,7 +4459,7 @@
           "provenance": "Synthetic engineering fixture; not a medical recommendation",
           "expected_behavior": "contradicted",
           "actual": "unsupported",
-          "latency_ms": 27.99779997440055
+          "latency_ms": 59.49429998872802
         },
         {
           "case_id": "g8",
@@ -4493,7 +4493,7 @@
           "provenance": "Synthetic engineering fixture; not a medical recommendation",
           "expected_behavior": "insufficient",
           "actual": "uncertain",
-          "latency_ms": 28.364400030113757
+          "latency_ms": 62.20699998084456
         },
         {
           "case_id": "g9",
@@ -4535,7 +4535,7 @@
           "provenance": "Synthetic engineering fixture; not a medical recommendation",
           "expected_behavior": "unsupported",
           "actual": "uncertain",
-          "latency_ms": 45.99690000759438
+          "latency_ms": 85.02070000395179
         },
         {
           "case_id": "p6-g2",
@@ -4572,7 +4572,7 @@
           "provenance": "Synthetic engineering fixture; not a medical recommendation",
           "expected_behavior": "contradicted",
           "actual": "unsupported",
-          "latency_ms": 29.14930001134053
+          "latency_ms": 55.47830002615228
         },
         {
           "case_id": "p6-g3",
@@ -4609,7 +4609,7 @@
           "provenance": "Synthetic engineering fixture; not a medical recommendation",
           "expected_behavior": "contradicted",
           "actual": "unsupported",
-          "latency_ms": 25.721200043335557
+          "latency_ms": 56.495799974072725
         },
         {
           "case_id": "p6-g5",
@@ -4646,7 +4646,7 @@
           "provenance": "Synthetic engineering fixture; not a medical recommendation",
           "expected_behavior": "contradicted",
           "actual": "unsupported",
-          "latency_ms": 27.198800002224743
+          "latency_ms": 53.01889998372644
         },
         {
           "case_id": "p6-g6",
@@ -4687,7 +4687,7 @@
           "provenance": "Synthetic engineering fixture; not a medical recommendation",
           "expected_behavior": "supported",
           "actual": "supported",
-          "latency_ms": 29.572000028565526
+          "latency_ms": 64.0014000236988
         },
         {
           "case_id": "p6-g8",
@@ -4724,7 +4724,7 @@
           "provenance": "Synthetic engineering fixture; not a medical recommendation",
           "expected_behavior": "insufficient",
           "actual": "uncertain",
-          "latency_ms": 23.260199988726526
+          "latency_ms": 66.14300003275275
         },
         {
           "case_id": "p6-g9",
@@ -4761,7 +4761,7 @@
           "provenance": "Synthetic engineering fixture; not a medical recommendation",
           "expected_behavior": "unsupported",
           "actual": "uncertain",
-          "latency_ms": 19.71709995996207
+          "latency_ms": 55.18700001994148
         },
         {
           "case_id": "p6-g11",
@@ -4802,7 +4802,7 @@
           "provenance": "Synthetic engineering fixture; not a medical recommendation",
           "expected_behavior": "supported",
           "actual": "supported",
-          "latency_ms": 29.152399976737797
+          "latency_ms": 69.1901000100188
         },
         {
           "case_id": "p6-g12",
@@ -4843,7 +4843,7 @@
           "provenance": "Synthetic engineering fixture; not a medical recommendation",
           "expected_behavior": "supported",
           "actual": "supported",
-          "latency_ms": 28.29129999736324
+          "latency_ms": 47.04540001694113
         },
         {
           "case_id": "p6-g14",
@@ -4880,7 +4880,7 @@
           "provenance": "Synthetic engineering fixture; not a medical recommendation",
           "expected_behavior": "unsupported",
           "actual": "uncertain",
-          "latency_ms": 26.004599989391863
+          "latency_ms": 43.777899991255254
         },
         {
           "case_id": "p6-g15",
@@ -4917,7 +4917,7 @@
           "provenance": "Synthetic engineering fixture; not a medical recommendation",
           "expected_behavior": "contradicted",
           "actual": "unsupported",
-          "latency_ms": 28.867000015452504
+          "latency_ms": 45.90139997890219
         },
         {
           "case_id": "p6-g17",
@@ -4954,7 +4954,7 @@
           "provenance": "Synthetic engineering fixture; not a medical recommendation",
           "expected_behavior": "contradicted",
           "actual": "unsupported",
-          "latency_ms": 28.41719996649772
+          "latency_ms": 56.163800007198006
         },
         {
           "case_id": "p6-g18",
@@ -4995,7 +4995,7 @@
           "provenance": "Synthetic engineering fixture; not a medical recommendation",
           "expected_behavior": "supported",
           "actual": "supported",
-          "latency_ms": 32.06379996845499
+          "latency_ms": 62.09010002203286
         },
         {
           "case_id": "p6-g20",
@@ -5032,7 +5032,7 @@
           "provenance": "Synthetic engineering fixture; not a medical recommendation",
           "expected_behavior": "unsupported",
           "actual": "unsupported",
-          "latency_ms": 28.408800018951297
+          "latency_ms": 70.73229999514297
         },
         {
           "case_id": "p6-g21",
@@ -5073,7 +5073,7 @@
           "provenance": "Synthetic engineering fixture; not a medical recommendation",
           "expected_behavior": "supported",
           "actual": "supported",
-          "latency_ms": 31.04979998897761
+          "latency_ms": 62.54280003486201
         },
         {
           "case_id": "p6-provenance-wrong_id",
@@ -5112,7 +5112,7 @@
           "provenance": "Synthetic engineering fixture; not a medical recommendation",
           "expected_behavior": "unsupported",
           "actual": "unsupported",
-          "latency_ms": 0.0496999709866941
+          "latency_ms": 0.10840001050382853
         },
         {
           "case_id": "p6-provenance-stale",
@@ -5151,7 +5151,7 @@
           "provenance": "Synthetic engineering fixture; not a medical recommendation",
           "expected_behavior": "unsupported",
           "actual": "unsupported",
-          "latency_ms": 0.03430002834647894
+          "latency_ms": 0.07830001413822174
         },
         {
           "case_id": "p6-provenance-wrong_jurisdiction",
@@ -5190,7 +5190,7 @@
           "provenance": "Synthetic engineering fixture; not a medical recommendation",
           "expected_behavior": "unsupported",
           "actual": "unsupported",
-          "latency_ms": 163.93719997722656
+          "latency_ms": 335.40420001372695
         },
         {
           "case_id": "p6-provenance-verifier_unavailable",
@@ -5229,7 +5229,7 @@
           "provenance": "Synthetic engineering fixture; not a medical recommendation",
           "expected_behavior": "unsupported",
           "actual": "uncertain",
-          "latency_ms": 0.09589997353032231
+          "latency_ms": 0.15219999477267265
         },
         {
           "case_id": "governed-nice-ng136-1.2.3",
@@ -5290,7 +5290,7 @@
             "label_note": "Contradicted claims are synthetic negative assertions, never publisher recommendations."
           },
           "actual": "supported",
-          "latency_ms": 54.12620003335178
+          "latency_ms": 104.69850001391023
         },
         {
           "case_id": "governed-nice-ng136-1.2.12",
@@ -5350,7 +5350,7 @@
             "label_note": "Contradicted claims are synthetic negative assertions, never publisher recommendations."
           },
           "actual": "uncertain",
-          "latency_ms": 46.966299996711314
+          "latency_ms": 71.11070002429187
         },
         {
           "case_id": "governed-nice-ng136-1.4.1",
@@ -5409,7 +5409,7 @@
             "label_note": "Contradicted claims are synthetic negative assertions, never publisher recommendations."
           },
           "actual": "uncertain",
-          "latency_ms": 26.127499993890524
+          "latency_ms": 71.3050999911502
         },
         {
           "case_id": "governed-nice-ng136-1.4.6",
@@ -5468,7 +5468,7 @@
             "label_note": "Contradicted claims are synthetic negative assertions, never publisher recommendations."
           },
           "actual": "uncertain",
-          "latency_ms": 32.06170001067221
+          "latency_ms": 64.32599999243394
         },
         {
           "case_id": "governed-nice-ng238-1.1.6",
@@ -5526,7 +5526,7 @@
             "label_note": "Contradicted claims are synthetic negative assertions, never publisher recommendations."
           },
           "actual": "unsupported",
-          "latency_ms": 28.366299986373633
+          "latency_ms": 173.9114000229165
         },
         {
           "case_id": "governed-nice-ng238-1.1.7",
@@ -5587,7 +5587,7 @@
             "label_note": "Contradicted claims are synthetic negative assertions, never publisher recommendations."
           },
           "actual": "uncertain",
-          "latency_ms": 69.67589998384938
+          "latency_ms": 249.0129999932833
         },
         {
           "case_id": "governed-nice-ng238-1.1.8",
@@ -5648,7 +5648,7 @@
             "label_note": "Contradicted claims are synthetic negative assertions, never publisher recommendations."
           },
           "actual": "supported",
-          "latency_ms": 35.15720000723377
+          "latency_ms": 58.40599996736273
         },
         {
           "case_id": "governed-nice-ng238-1.3.2",
@@ -5707,7 +5707,7 @@
             "label_note": "Contradicted claims are synthetic negative assertions, never publisher recommendations."
           },
           "actual": "unsupported",
-          "latency_ms": 48.712899966631085
+          "latency_ms": 450.73539996519685
         }
       ]
     }
@@ -5730,20 +5730,20 @@
     },
     "latency": {
       "dense": {
-        "median_ms": 12.52689998364076,
-        "p95_ms": 16.095999989192933
+        "median_ms": 29.463999962899834,
+        "p95_ms": 118.54323998559263
       },
       "bm25": {
-        "median_ms": 1.343499985523522,
-        "p95_ms": 13.245059980545191
+        "median_ms": 3.081900009419769,
+        "p95_ms": 21.692159969825298
       },
       "reranking": {
-        "median_ms": 1082.790299959015,
-        "p95_ms": 1175.61904998729
+        "median_ms": 1957.3763000080362,
+        "p95_ms": 2382.178300002124
       },
       "full_retrieval": {
-        "median_ms": 1073.6331999651156,
-        "p95_ms": 1214.4408000051044
+        "median_ms": 1993.1190999923274,
+        "p95_ms": 2493.581540021114
       }
     },
     "prior": {
