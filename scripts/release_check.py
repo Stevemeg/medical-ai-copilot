@@ -100,7 +100,9 @@ def main():
     parser.add_argument("--write-manifest", action="store_true")
     args = parser.parse_args()
     if args.write_manifest:
-        (ROOT / "release_manifest.json").write_text(json.dumps(manifest(), indent=2) + "\n", encoding="utf-8")
+        (ROOT / "release_manifest.json").write_text(
+            json.dumps(manifest(), indent=2) + "\n", encoding="utf-8", newline="\n"
+        )
     print(json.dumps(check(args.release), indent=2))
 
 

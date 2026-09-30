@@ -406,7 +406,7 @@ def main():
         baseline_version=baseline["version"], thresholds=baseline["gates"], gate_failures=failures, passed=not failures
     )
     args.output.parent.mkdir(parents=True, exist_ok=True)
-    args.output.write_text(json.dumps(report, indent=2) + "\n", encoding="utf-8")
+    args.output.write_text(json.dumps(report, indent=2) + "\n", encoding="utf-8", newline="\n")
     print(json.dumps({"passed": not failures, "failures": failures, "report": str(args.output)}, indent=2))
     return int(bool(failures))
 

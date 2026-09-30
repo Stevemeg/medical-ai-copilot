@@ -25,6 +25,8 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
       - uses: actions/setup-python@v5
         with:
           python-version: '3.11'
@@ -39,7 +41,13 @@ jobs:
       - run: pytest -m 'not postgres' --cov=backend --cov=embeddings --cov-report=xml --junitxml=reports/tests.xml
       - run: node eval/ui_smoke.js
       - run: python -m backend.index_provenance
-      - run: python -m scripts.release_check
+      - name: Verify knowledge and available release attestation
+        run: |
+          if [ -f release_manifest.json ]; then
+            python -m scripts.release_check --release
+          else
+            python -m scripts.release_check
+          fi
       - run: python -m scripts.validate_abdm
       - uses: actions/upload-artifact@v4
         if: always()
