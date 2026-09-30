@@ -30,7 +30,7 @@ jobs:
           python-version: '3.11'
           cache: pip
       - name: Generate ephemeral test keys
-        run: python -c "import os,secrets; f=open(os.environ['GITHUB_ENV'],'a'); f.write('AUDIT_HMAC_KEY='+secrets.token_hex(32)+'\nDEV_JWT_KEY='+secrets.token_hex(32)+'\n')"
+        run: python3 -m scripts.ci_test_keys
       - run: pip install torch==2.14.0 --index-url https://download.pytorch.org/whl/cpu
       - run: pip install -r requirements-dev.txt
       - run: ruff check .
@@ -69,7 +69,7 @@ jobs:
           python-version: '3.11'
           cache: pip
       - name: Generate ephemeral test keys
-        run: python -c "import os,secrets; f=open(os.environ['GITHUB_ENV'],'a'); f.write('AUDIT_HMAC_KEY='+secrets.token_hex(32)+'\nDEV_JWT_KEY='+secrets.token_hex(32)+'\n')"
+        run: python3 -m scripts.ci_test_keys
       - run: pip install torch==2.14.0 --index-url https://download.pytorch.org/whl/cpu
       - run: pip install -r requirements-dev.txt
       - run: alembic upgrade head
@@ -96,7 +96,7 @@ jobs:
           python-version: '3.11'
           cache: pip
       - name: Generate ephemeral test keys
-        run: python -c "import os,secrets; f=open(os.environ['GITHUB_ENV'],'a'); f.write('AUDIT_HMAC_KEY='+secrets.token_hex(32)+'\nDEV_JWT_KEY='+secrets.token_hex(32)+'\n')"
+        run: python3 -m scripts.ci_test_keys
       - run: pip install torch==2.14.0 --index-url https://download.pytorch.org/whl/cpu
       - run: pip install -r requirements-dev.txt
       - uses: actions/cache@v4
@@ -142,7 +142,7 @@ jobs:
           python-version: '3.11'
           cache: pip
       - name: Generate ephemeral test keys
-        run: python -c "import os,secrets; f=open(os.environ['GITHUB_ENV'],'a'); f.write('AUDIT_HMAC_KEY='+secrets.token_hex(32)+'\nDEV_JWT_KEY='+secrets.token_hex(32)+'\n')"
+        run: python3 -m scripts.ci_test_keys
       - run: pip install torch==2.14.0 --index-url https://download.pytorch.org/whl/cpu
       - run: pip install -r requirements-dev.txt
       - run: python -m scripts.security_audit
@@ -164,7 +164,7 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - name: Generate ephemeral Docker test keys
-        run: python3 -c "import os,secrets; f=open(os.environ['GITHUB_ENV'],'a'); f.write('AUDIT_HMAC_KEY='+secrets.token_hex(32)+'\nDEV_JWT_KEY='+secrets.token_hex(32)+'\n')"
+        run: python3 -m scripts.ci_test_keys
       - run: docker compose build
       - run: docker compose up -d --wait
       - run: docker compose exec -T api python -m scripts.docker_smoke

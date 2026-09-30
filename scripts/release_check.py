@@ -47,6 +47,9 @@ def manifest() -> dict:
             for label in ("clinical", "anatomy")
         },
         "evaluation_baseline_version": "1.0.0",
+        "evaluation_report_sha256": sha256_file(ROOT / "eval/final_system_report.json"),
+        "model_manifest_sha256": sha256_file(ROOT / "model_manifest.json"),
+        "abdm_manifest_sha256": sha256_file(ROOT / "data/abdm/manifest.json"),
         "fhir_version": "4.0.1",
         "smart_version": "2.2.0",
         "cds_hooks_version": "2.0.1",
@@ -54,6 +57,18 @@ def manifest() -> dict:
         "abdm_ig_version": "6.5.0",
         "python_version": platform.python_version(),
     }
+
+
+def validate_attestation(recorded: dict, report: dict, expected: dict) -> None:
+    if not report["passed"] or report["git"]["dirty"] or report["mode"] != "local_models":
+        raise ValueError("Clean, passing model evaluation required")
+    for key, value in expected.items():
+        if key not in {"git_sha", "python_version"} and recorded.get(key) != value:
+            raise ValueError("Release metadata mismatch: " + key)
+    if recorded["git_sha"] != report["git"]["sha"]:
+        raise ValueError("Manifest and evaluated code SHA differ")
+    if recorded["python_version"] != report["environment"]["python"]:
+        raise ValueError("Manifest and evaluation environment differ")
 
 
 def check(release: bool = False) -> dict:
@@ -70,12 +85,7 @@ def check(release: bool = False) -> dict:
     if release:
         report = json.loads(report_path.read_text(encoding="utf-8"))
         recorded = json.loads((ROOT / "release_manifest.json").read_text(encoding="utf-8"))
-        if not report["passed"] or report["git"]["dirty"] or report["mode"] != "local_models":
-            raise ValueError("Clean, passing model evaluation required")
-        if recorded["source_digest"] != source_digest():
-            raise ValueError("Release source digest mismatch")
-        if recorded["git_sha"] != report["git"]["sha"]:
-            raise ValueError("Manifest and evaluated code SHA differ")
+        validate_attestation(recorded, report, manifest())
         import re
 
         if not re.fullmatch(r"[0-9a-f]{40}", recorded["git_sha"]):

@@ -40,6 +40,10 @@ DATA = ROOT / "eval/cases/v1"
 
 def load(suite):
     rows = [json.loads(line) for line in (DATA / f"{suite}.jsonl").read_text(encoding="utf-8").splitlines()]
+    if suite == "grounding":
+        rows += [
+            json.loads(line) for line in (DATA / "grounding_governed.jsonl").read_text(encoding="utf-8").splitlines()
+        ]
     for row in rows:
         if (
             not {
@@ -106,6 +110,13 @@ def grounding(cases, verifier):
     rows = []
     for case in cases:
         units = [unit(ident, value) for ident, value in case["evidence"].items()]
+        registry = None
+        if "governed_unit" in case:
+            from backend.evidence_models import EvidenceUnit
+            from backend.source_registry import SourceRegistry
+
+            units = [EvidenceUnit.model_validate(case["governed_unit"])]
+            registry = SourceRegistry()
         if case.get("failure") == "stale":
             units[0].lifecycle_status = Lifecycle.SUPERSEDED
         claim = AnswerClaim(claim_id=case["case_id"], text=case["claim"], evidence_ids=case["cited_ids"])
@@ -130,7 +141,7 @@ def grounding(cases, verifier):
             claim.evidence_ids = [units[0].evidence_unit_id]
             actual = verify_claim(claim, retrieval_for(units), local_verifier, SourceRegistry()).support_status.value
         else:
-            actual = verify_claim(claim, retrieval, local_verifier).support_status.value
+            actual = verify_claim(claim, retrieval, local_verifier, registry).support_status.value
         rows.append({**case, "actual": actual, "latency_ms": (perf_counter() - started) * 1000})
     positive = [r for r in rows if r["expected"] == "supported"]
     negative = [r for r in rows if r["expected"] != "supported"]
@@ -335,7 +346,7 @@ def main():
     from eval.contracts import run as run_contracts
 
     report = {
-        "dataset_version": "1.0.0",
+        "dataset_version": "1.1.0",
         "timestamp": datetime.now(timezone.utc).isoformat(),
         "git": state,
         "environment": {

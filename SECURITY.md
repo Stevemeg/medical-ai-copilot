@@ -1,4 +1,4 @@
-﻿# Security and operational threat model
+# Security and operational threat model
 
 ## Trust boundaries
 
@@ -48,3 +48,5 @@ Schedule hourly with a local cron/Kubernetes maintenance job under the deploymen
 ## Release operation
 
 Use the one-shot migration service before starting upgraded API instances. Never run migrations in every worker. Test upgrade/downgrade/re-upgrade only on an empty disposable DB: supported downgrades reject populated immutable history rather than deleting it. Take backups and test restoration before real operational upgrades. Never regenerate an audit key for an existing persisted database without a separately designed key-rotation procedure.
+
+The first hosted CI run also identified runner-provided setuptools79.0.1 (`PYSEC-2026-3447`); runtime requirements now pin the already locally audited setuptools84.0.0. The scanner audits the complete installed distribution inventory with resolution disabled. For the exact official PyTorch `2.14.0+cpu` wheel, it explicitly checks upstream `2.14.0` advisories and records that mapping; no package is silently skipped. Unknown skipped packages fail. GitHub test keys are generated per job and masked before being written to its environment.

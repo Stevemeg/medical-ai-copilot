@@ -84,6 +84,19 @@ def test_final_output_injection_and_failure_safety_contracts():
     assert safety()["pass_rate"] == 1
 
 
+def test_governed_grounding_passages_resolve_to_exact_current_units():
+    units = {u["evidence_unit_id"]: u for u in json.loads(Path("data/evidence_units.json").read_text(encoding="utf-8"))}
+    cases = [c for c in load("grounding") if "governed_unit" in c]
+    identifiers = set()
+    for case in cases:
+        supplied = case["governed_unit"]
+        assert units[supplied["evidence_unit_id"]] == supplied
+        assert supplied["lifecycle_status"] == "current"
+        identifiers.add(supplied["evidence_unit_id"])
+    assert len(identifiers) == len(cases) == 16
+    assert {c["split"] for c in cases} == {"development", "held_out"}
+
+
 def test_no_preview_abdm_profiles():
     manifest = json.loads(Path("data/abdm/manifest.json").read_text())
     assert manifest["version"] == "6.5.0"

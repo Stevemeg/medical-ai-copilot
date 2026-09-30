@@ -94,7 +94,7 @@ python -m scripts.release_check
 
 Set `PHASE5_TEST_DATABASE_URL` to a migrated, isolated PostgreSQL test database to include database tests; set `RUN_MODEL_INTEGRATION=1` to include the local-model integration test. `python -m eval.run_all --models --postgres` includes PostgreSQL contracts. No paid provider, live NICE endpoint, OIDC provider, or SMART sandbox is required by CI. GitHub Actions has tests, postgres, evaluation, security, and docker jobs. Branch protection must be configured separately; workflow presence alone does not enforce merge policy.
 
-The internal model corpus contains 42 retrieval cases and 34 claim/evidence cases, with separate development and held-out splits. These are engineering measurements, not clinical validation or an accuracy guarantee. The executed [final system report](eval/final_system_report.json) records counts, model metrics, safety results, thresholds, environment, timestamp, and source SHA. [Release metadata](release_manifest.json) binds registry/index checksums, schema and standard versions to the evaluated source.
+The internal model corpus contains 42 retrieval cases and 50 claim/evidence cases, with separate development and held-out splits. These are engineering measurements, not clinical validation or an accuracy guarantee. The executed [final system report](eval/final_system_report.json) records counts, model metrics, safety results, thresholds, environment, timestamp, and source SHA. [Release metadata](release_manifest.json) binds registry/index checksums, schema and standard versions to the evaluated source.
 
 ### Safety boundaries
 
